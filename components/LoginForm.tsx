@@ -1,84 +1,87 @@
-"use client";
+// src/components/LoginForm.tsx
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Field, buttonClassName, inputClassName } from "@/components/formStyles";
-
-type LoginValues = {
-  email: string;
-  password: string;
-};
+import { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/game";
-  const [formError, setFormError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginValues>();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  const onSubmit = async ({ email, password }: LoginValues) => {
-    setFormError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setFormError(error.message === "Invalid login credentials"
-        ? "Неверный email или пароль."
-        : error.message);
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
       return;
     }
 
-    router.push(nextPath);
-    router.refresh();
+    if (data?.user) {
+      // Проверяем, есть ли у пользователя страна и роль
+      const { data: profile } = await supabase
+        .from('User')
+        .select('country, publicRole')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.country && profile?.publicRole) {
+        // Если страна и роль уже выбраны — сразу в игру
+        router.push('/game');
+      } else {
+        // Если нет — отправляем на выбор страны
+        router.push('/choose-country');
+      }
+      router.refresh();
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Field label="Email" error={errors.email?.message}>
+    <form onSubmit={handleLogin} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-300">Email</label>
         <input
           type="email"
-          autoComplete="email"
-          className={inputClassName}
-          placeholder="agent@field.ops"
-          {...register("email", {
-            required: "Укажите email",
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Некорректный email",
-            },
-          })}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+          placeholder="agent@spyme.ru"
+          required
         />
-      </Field>
-      <Field label="Пароль" error={errors.password?.message}>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-300">Пароль</label>
         <input
           type="password"
-          autoComplete="current-password"
-          className={inputClassName}
-          {...register("password", {
-            required: "Введите пароль",
-            minLength: { value: 6, message: "Минимум 6 символов" },
-          })}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+          placeholder="••••••••"
+          required
         />
-      </Field>
-      {formError ? (
-        <p className="mb-3 font-mono text-xs text-danger">{formError}</p>
-      ) : null}
-      <button type="submit" className={buttonClassName} disabled={isSubmitting}>
-        {isSubmitting ? "Проверка допуска…" : "Войти"}
+      </div>
+      {error && <div className="text-red-400 text-sm">{error}</div>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
+      >
+        {loading ? 'Вход...' : 'Войти'}
       </button>
-      <p className="mt-5 text-center font-mono text-xs text-neon/70">
-        Нет доступа?{" "}
-        <Link href="/register" className="text-neon underline decoration-neon/40 underline-offset-4">
-          Регистрация
-        </Link>
+      <p className="text-gray-400 text-sm mt-4 text-center">
+        Нет аккаунта? <Link href="/register" className="text-green-400 hover:underline">Зарегистрируйтесь</Link>
       </p>
     </form>
   );

@@ -1,53 +1,260 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { COUNTRIES, ROLES } from "@/lib/game/options";
+'use client';
 
-export default async function GamePage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { getCurrentDay, getCurrentPhase, getPhaseName, isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
 
-  if (!user) {
-    redirect("/login");
+export default function GamePage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [spyTarget, setSpyTarget] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [gameCycle, setGameCycle] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [posting, setPosting] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setUser(user);
+
+      const { data: profileData } = await supabase
+        .from('User')
+        .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord')
+        .eq('id', user.id)
+        .single();
+      setProfile(profileData);
+
+      // Если пользователь — шпион, загружаем данные его цели
+if (profileData?.isSpy && profileData.spyMissionTargetId) {
+  const { data: targetData } = await supabase
+    .from('User')
+    .select('username, country, publicRole')
+    .eq('id', profileData.spyMissionTargetId)
+    .single();
+  setSpyTarget(targetData);
+}
+
+      if (profileData?.country) {
+        const { data: postsData } = await supabase
+          .from('Post')
+          .select(`*, author:authorId (username)`)
+          .eq('country', profileData.country)
+          .order('createdAt', { ascending: false });
+        setPosts(postsData || []);
+      }
+
+      // Загрузка игрового цикла
+      const { data: cycleData } = await supabase
+        .from('GameCycle')
+        .select('*')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+      setGameCycle(cycleData);
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [router]);
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim() || !user) return;
+    setPosting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('Post')
+        .insert([
+          {
+            authorId: user.id,
+            content: newPostContent,
+            country: profile?.country || 'US',
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error('Ошибка Supabase при создании поста:', error);
+        alert('Ошибка: ' + error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPosts([data[0], ...posts]);
+        setNewPostContent('');
+        setIsModalOpen(false);
+      }
+    } catch (err) {
+      console.error('Неизвестная ошибка:', err);
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-green-400 text-xl">Загрузка...</div>
+      </div>
+    );
   }
 
-  const countryCode = user.user_metadata?.country as string | undefined;
-  const roleId = user.user_metadata?.role as string | undefined;
-  const country = COUNTRIES.find((item) => item.code === countryCode)?.name ?? "не назначена";
-  const role = ROLES.find((item) => item.id === roleId)?.label ?? "не назначена";
+  const isSpy = profile?.isSpy === true;
+  const currentDay = gameCycle ? getCurrentDay(gameCycle.startDate) : 1;
+  const currentPhase = getCurrentPhase(currentDay);
+  const phaseName = getPhaseName(currentPhase);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-ink text-neon">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(57,255,20,0.1),_transparent_55%)]" />
-      <div className="relative mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-xs tracking-[0.4em] text-neon/70">LIVE OPS // CLASSIFIED</p>
-        <h1 className="mt-3 font-display text-4xl tracking-[0.22em] drop-shadow-[0_0_18px_rgba(57,255,20,0.45)]">
-          Игровой канал
-        </h1>
-        <div className="mt-8 border border-neon/35 bg-panel/80 p-6 shadow-neon">
-          <p className="font-mono text-sm text-neon/80">
-            Агент: <span className="text-neon">{user.email}</span>
-          </p>
-          <p className="mt-2 font-mono text-sm text-neon/80">
-            Страна прикрытия: <span className="text-neon">{country}</span>
-          </p>
-          <p className="mt-2 font-mono text-sm text-neon/80">
-            Роль: <span className="text-neon">{role}</span>
-          </p>
-          <p className="mt-6 font-mono text-xs leading-6 text-neon/55">
-            Канал защищён. Неавторизованный доступ перенаправляется на /login.
-          </p>
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <h1 className="text-3xl font-bold text-green-400 mb-6">
+        Добро пожаловать в игру SpyMe!
+      </h1>
+
+      <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
+        <div>
+          <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
+          <p className="text-gray-400">Страна: {profile?.country}</p>
+          <p className="text-gray-400">Роль: {profile?.publicRole}</p>
         </div>
-        <form action="/auth/signout" method="post" className="mt-6">
-          <button
-            type="submit"
-            className="border border-neon/40 px-4 py-2 font-mono text-xs uppercase tracking-[0.22em] text-neon/80 hover:border-neon hover:text-neon"
+
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            router.push('/login');
+          }}
+          className="mt-3 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
+        >
+          Выйти
+        </button>
+
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Link
+            href="/chat"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
           >
-            Выйти из сети
-          </button>
-        </form>
+            💬 Чаты
+          </Link>
+
+          {isSpy && spyTarget && (
+  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+    <p className="text-purple-300 font-semibold">🕵️ Ваша миссия</p>
+    <p className="text-white mt-1">
+      Завербовать: <span className="font-semibold">{spyTarget.username}</span>
+    </p>
+    <p className="text-gray-400 text-sm">
+      Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
+    </p>
+    <p className="text-yellow-400 text-sm mt-2">
+      Прогресс: {profile.spyMissionProgress}%
+    </p>
+    <p className="text-gray-400 text-xs mt-1">
+      Кодовое слово: <span className="text-purple-300">{profile.spyCodeWord}</span>
+    </p>
+  </div>
+)}
+
+          {profile?.publicRole === 'REPORTER' && (
+  <>
+    <button
+      onClick={() => setIsModalOpen(true)}
+      className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
+    >
+      ➕ Создать пост
+    </button>
+    <Link
+      href="/investigate"
+      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
+    >
+      🔍 Расследования
+    </Link>
+  </>
+)} {profile?.publicRole === 'MILITARY' && (
+  <Link
+    href="/evidence"
+    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
+  >
+    📂 Улики
+  </Link>
+)}
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+          <h2 className="text-xl font-semibold text-green-400">📰 Лента новостей</h2>
+          {posts.length === 0 ? (
+            <p className="text-gray-400 mt-2">Нет новостей в вашей стране</p>
+          ) : (
+            <div className="mt-3 space-y-4">
+              {posts.map((post) => (
+                <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
+                  <p className="text-gray-400 text-sm">
+                    {post.author?.username || 'Неизвестный'} · {new Date(post.createdAt).toLocaleDateString()}
+                  </p>
+                  <p className="text-white mt-1">{post.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+  <h2 className="text-xl font-semibold text-green-400">📊 Игровой день</h2>
+  {gameCycle ? (
+    <>
+      <p className="text-gray-400 mt-2">День {currentDay} из 14</p>
+      <p className="text-gray-400">Фаза: {phaseName}</p>
+      {isInOnboarding(profile?.onboardingEndsAt) && (
+        <p className="text-yellow-400 mt-2 text-sm">
+          🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
+        </p>
+      )}
+    </>
+  ) : (
+    <p className="text-gray-400 mt-2">Загрузка...</p>
+  )}
+</div>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
+            <h3 className="text-xl font-semibold text-white mb-4">Создать пост</h3>
+            <textarea
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 h-32"
+              placeholder="О чём хотите сообщить?"
+            />
+            <div className="flex justify-end space-x-3 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleCreatePost}
+                disabled={posting}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50"
+              >
+                {posting ? 'Публикация...' : 'Опубликовать'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

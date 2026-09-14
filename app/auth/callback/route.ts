@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/onboarding";
+  const next = searchParams.get("next") ?? "/choose-country"; // Изменено с /onboarding
 
   if (code) {
     const supabase = createClient();
@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    // Если ошибка, можно добавить логирование или перенаправить на логин с сообщением
   }
 
   return NextResponse.redirect(`${origin}/login`);

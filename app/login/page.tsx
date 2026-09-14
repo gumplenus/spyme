@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 import { Suspense } from "react";
 import { AuthShell } from "@/components/AuthShell";
 import { LoginForm } from "@/components/LoginForm";
