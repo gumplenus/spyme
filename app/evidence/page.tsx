@@ -68,11 +68,14 @@ export default function EvidencePage() {
 
     if (target.isSpy === true) {
       // Успешная ликвидация
+      const { data: { user: militaryUser } } = await supabase.auth.getUser();
+
       const { error: banError } = await supabase
         .from('User')
         .update({
           isBanned: true,
           banReason: 'Ликвидирован Военным за шпионаж',
+          eliminatedBy: militaryUser?.id,
         })
         .eq('id', evidence.target_id);
 
