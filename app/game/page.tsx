@@ -6,6 +6,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentDay, getCurrentPhase, getPhaseName, isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
 
+const COUNTRIES = [
+  { code: 'US', name: 'США' },
+  { code: 'RU', name: 'Россия' },
+  { code: 'DE', name: 'Германия' },
+  { code: 'IL', name: 'Израиль' },
+  { code: 'GB', name: 'Великобритания' },
+];
+
 export default function GamePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -28,23 +36,36 @@ export default function GamePage() {
   const [transferSuccess, setTransferSuccess] = useState<string>('');
   const [transferring, setTransferring] = useState(false);
 
+  // Для смены страны (Политик)
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [countryError, setCountryError] = useState<string>('');
+  const [countrySuccess, setCountrySuccess] = useState<string>('');
+  const [changingCountry, setChangingCountry] = useState(false);
+
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setUser(user);
+
+    const { data: profileData } = await supabase
+      .from('User')
+      .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange')
+      .eq('id', user.id)
+      .single();
+    setProfile(profileData);
+    return profileData;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
+      const profileData = await fetchProfile();
+      if (!profileData) return;
 
-      const { data: profileData } = await supabase
-        .from('User')
-        .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance')
-        .eq('id', user.id)
-        .single();
-      setProfile(profileData);
-
-      if (profileData?.isSpy && profileData.spyMissionTargetId) {
+      if (profileData.isSpy && profileData.spyMissionTargetId) {
         const { data: targetData } = await supabase
           .from('User')
           .select('username, country, publicRole')
@@ -53,7 +74,7 @@ export default function GamePage() {
         setSpyTarget(targetData);
       }
 
-      if (profileData?.country) {
+      if (profileData.country) {
         const { data: postsData } = await supabase
           .from('Post')
           .select(`*, author:authorId (username)`)
@@ -189,6 +210,70 @@ export default function GamePage() {
     return recipient?.username || 'Неизвестный';
   };
 
+  // ============ СМЕНА СТРАНЫ (ПОЛИТИК) ============
+  const openCountryModal = () => {
+    setSelectedCountry('');
+    setCountryError('');
+    setCountrySuccess('');
+    setIsCountryOpen(true);
+  };
+
+  const handleChangeCountry = async () => {
+    if (!user || !selectedCountry) {
+      setCountryError('Выберите страну');
+      return;
+    }
+
+    if (selectedCountry === profile?.country) {
+      setCountryError('Вы уже в этой стране');
+      return;
+    }
+
+    setChangingCountry(true);
+    setCountryError('');
+    setCountrySuccess('');
+
+    const { data, error } = await supabase.rpc('change_country', {
+      politician_id: user.id,
+      new_country: selectedCountry,
+    });
+
+    if (error) {
+      setCountryError('Ошибка: ' + error.message);
+      setChangingCountry(false);
+      return;
+    }
+
+    if (data && data.success === false) {
+      setCountryError(data.error || 'Ошибка смены страны');
+      setChangingCountry(false);
+      return;
+    }
+
+    const countryName = COUNTRIES.find((c) => c.code === selectedCountry)?.name || selectedCountry;
+    setCountrySuccess(`✅ Вы переехали в ${countryName}! Иммунитет на 48 часов.`);
+
+    // Обновляем профиль
+    await fetchProfile();
+
+    setTimeout(() => {
+      setIsCountryOpen(false);
+      setCountrySuccess('');
+    }, 3000);
+
+    setChangingCountry(false);
+  };
+
+  // Вычисляем оставшиеся часы иммунитета
+  const getImmunityHours = () => {
+    if (!profile?.lastCountryChange) return 0;
+    const lastChange = new Date(profile.lastCountryChange);
+    const now = new Date();
+    const diffHours = (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60);
+    const remaining = 48 - diffHours;
+    return remaining > 0 ? Math.ceil(remaining) : 0;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -202,6 +287,8 @@ export default function GamePage() {
   const currentPhase = getCurrentPhase(currentDay);
   const phaseName = getPhaseName(currentPhase);
   const isBusinessman = profile?.publicRole === 'BUSINESSMAN';
+  const isPolitician = profile?.publicRole === 'POLITICIAN';
+  const immunityHours = isPolitician ? getImmunityHours() : 0;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -215,6 +302,9 @@ export default function GamePage() {
           <p className="text-gray-400">Страна: {profile?.country}</p>
           <p className="text-gray-400">Роль: {profile?.publicRole}</p>
           <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
+          {isPolitician && immunityHours > 0 && (
+            <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
+          )}
         </div>
 
         <button
@@ -294,6 +384,15 @@ export default function GamePage() {
             </button>
           )}
 
+          {isPolitician && (
+            <button
+              onClick={openCountryModal}
+              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold"
+            >
+              🌍 Сменить страну
+            </button>
+          )}
+
           <Link
             href="/results"
             className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white text-sm"
@@ -340,6 +439,7 @@ export default function GamePage() {
         </div>
       </div>
 
+      {/* Модальное окно создания поста */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
@@ -369,6 +469,7 @@ export default function GamePage() {
         </div>
       )}
 
+      {/* Модальное окно перевода ВЛИ */}
       {isTransferOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
@@ -443,6 +544,73 @@ export default function GamePage() {
                 className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold disabled:opacity-50"
               >
                 {transferring ? 'Перевод...' : 'Перевести'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно смены страны (Политик) */}
+      {isCountryOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
+            <h3 className="text-xl font-semibold text-white mb-2">🌍 Сменить страну</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Текущая страна: <span className="text-white font-semibold">{profile?.country}</span>
+            </p>
+            {immunityHours > 0 && (
+              <p className="text-blue-400 text-sm mb-4">
+                🛡️ Иммунитет: {immunityHours} ч.
+              </p>
+            )}
+            <p className="text-yellow-400 text-xs mb-4">
+              ⚠️ Смена страны доступна раз в 48 часов. После смены вы получаете иммунитет на 48 часов.
+            </p>
+
+            <div className="space-y-3 mb-4">
+              {COUNTRIES.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => setSelectedCountry(c.code)}
+                  disabled={c.code === profile?.country}
+                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
+                    selectedCountry === c.code
+                      ? 'bg-cyan-500 text-black border-cyan-400 font-semibold'
+                      : c.code === profile?.country
+                      ? 'bg-gray-700/50 text-gray-500 border-gray-700 cursor-not-allowed'
+                      : 'bg-gray-700 text-white border-gray-600 hover:border-cyan-400'
+                  }`}
+                >
+                  {c.name} {c.code === profile?.country && '(текущая)'}
+                </button>
+              ))}
+            </div>
+
+            {countryError && (
+              <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded mb-4">
+                {countryError}
+              </div>
+            )}
+
+            {countrySuccess && (
+              <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded mb-4">
+                {countrySuccess}
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsCountryOpen(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleChangeCountry}
+                disabled={changingCountry || !selectedCountry || selectedCountry === profile?.country}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black font-semibold disabled:opacity-50"
+              >
+                {changingCountry ? 'Переезд...' : 'Переехать'}
               </button>
             </div>
           </div>

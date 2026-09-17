@@ -53,10 +53,10 @@ export default function EvidencePage() {
     setEliminating(evidence.id);
     setMessage(null);
 
-    // Проверяем, является ли цель шпионом
+    // Загружаем данные цели (включая иммунитет)
     const { data: target, error: targetError } = await supabase
       .from('User')
-      .select('isSpy, username')
+      .select('isSpy, username, publicRole, lastCountryChange')
       .eq('id', evidence.target_id)
       .single();
 
@@ -66,6 +66,25 @@ export default function EvidencePage() {
       return;
     }
 
+    // Проверка дипломатического иммунитета
+    if (target.publicRole === 'POLITICIAN' && target.lastCountryChange) {
+      const lastChange = new Date(target.lastCountryChange);
+      const now = new Date();
+      const hoursSince = (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60);
+
+      if (hoursSince < 48) {
+        const remaining = Math.ceil(48 - hoursSince);
+        setMessage({
+          text: `🛡️ ${target.username} под дипломатическим иммунитетом. Ликвидация невозможна. Подождите ${remaining} ч.`,
+          type: 'error',
+        });
+        setEliminating(null);
+        setTimeout(() => setMessage(null), 5000);
+        return;
+      }
+    }
+
+    // Проверка на шпиона
     if (target.isSpy === true) {
       // Успешная ликвидация
       const { data: { user: militaryUser } } = await supabase.auth.getUser();
@@ -86,7 +105,6 @@ export default function EvidencePage() {
           text: `✅ ${target.username} ликвидирован! Он был шпионом.`,
           type: 'success',
         });
-        // Убираем улику из списка
         setEvidences((prev) => prev.filter((e) => e.id !== evidence.id));
       }
     } else {
@@ -98,7 +116,6 @@ export default function EvidencePage() {
     }
 
     setEliminating(null);
-    // Скрываем сообщение через 5 секунд
     setTimeout(() => setMessage(null), 5000);
   };
 
