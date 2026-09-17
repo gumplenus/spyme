@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
-import "./globals.css";
+import type { ReactNode } from 'react';
+import './globals.css';
+import { AssistantWidget } from '@/components/AssistantWidget';
 
 export const metadata = {
-  title: "SpyMe",
-  description: "Шпионский триллер. Допуск только по легенде.",
+  title: 'SpyMe',
+  description: 'Шпионский триллер. Допуск только по легенде.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -17,7 +18,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-ink text-neon antialiased">{children}</body>
+      <body className="bg-ink text-neon antialiased">
+        {children}
+        <AssistantWidget />
+      </body>
     </html>
   );
 }

@@ -18,6 +18,16 @@ export default function GamePage() {
   const [newPostContent, setNewPostContent] = useState('');
   const [posting, setPosting] = useState(false);
 
+  // Для переводов ВЛИ
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [transferRecipient, setTransferRecipient] = useState<string>('');
+  const [transferAmount, setTransferAmount] = useState<string>('');
+  const [transferComment, setTransferComment] = useState<string>('');
+  const [transferError, setTransferError] = useState<string>('');
+  const [transferSuccess, setTransferSuccess] = useState<string>('');
+  const [transferring, setTransferring] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -29,20 +39,19 @@ export default function GamePage() {
 
       const { data: profileData } = await supabase
         .from('User')
-        .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord')
+        .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance')
         .eq('id', user.id)
         .single();
       setProfile(profileData);
 
-      // Если пользователь — шпион, загружаем данные его цели
-if (profileData?.isSpy && profileData.spyMissionTargetId) {
-  const { data: targetData } = await supabase
-    .from('User')
-    .select('username, country, publicRole')
-    .eq('id', profileData.spyMissionTargetId)
-    .single();
-  setSpyTarget(targetData);
-}
+      if (profileData?.isSpy && profileData.spyMissionTargetId) {
+        const { data: targetData } = await supabase
+          .from('User')
+          .select('username, country, publicRole')
+          .eq('id', profileData.spyMissionTargetId)
+          .single();
+        setSpyTarget(targetData);
+      }
 
       if (profileData?.country) {
         const { data: postsData } = await supabase
@@ -53,7 +62,6 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
         setPosts(postsData || []);
       }
 
-      // Загрузка игрового цикла
       const { data: cycleData } = await supabase
         .from('GameCycle')
         .select('*')
@@ -102,6 +110,85 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
     }
   };
 
+  const openTransferModal = async () => {
+    if (!user) return;
+
+    const { data: users } = await supabase
+      .from('User')
+      .select('id, username, country, publicRole, balance')
+      .neq('id', user.id)
+      .order('username');
+
+    setAllUsers(users || []);
+    setTransferRecipient('');
+    setTransferAmount('');
+    setTransferComment('');
+    setTransferError('');
+    setTransferSuccess('');
+    setIsTransferOpen(true);
+  };
+
+  const handleTransfer = async () => {
+    if (!user || !transferRecipient || !transferAmount) {
+      setTransferError('Выберите получателя и укажите сумму');
+      return;
+    }
+
+    const amount = parseInt(transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setTransferError('Сумма должна быть больше 0');
+      return;
+    }
+
+    if (amount > (profile?.balance || 0)) {
+      setTransferError(`Недостаточно ВЛИ. У вас ${profile?.balance || 0}`);
+      return;
+    }
+
+    setTransferring(true);
+    setTransferError('');
+    setTransferSuccess('');
+
+    const { data, error } = await supabase.rpc('transfer_balance', {
+      sender: user.id,
+      recipient: transferRecipient,
+      amount: amount,
+    });
+
+    if (error) {
+      setTransferError('Ошибка: ' + error.message);
+      setTransferring(false);
+      return;
+    }
+
+    if (data && data.success === false) {
+      setTransferError(data.error || 'Ошибка перевода');
+      setTransferring(false);
+      return;
+    }
+
+    setTransferSuccess(`✅ Переведено ${amount} ВЛИ игроку ${getRecipientName()}`);
+    setProfile({ ...profile, balance: profile.balance - amount });
+
+    setAllUsers((prev) =>
+      prev.map((u) =>
+        u.id === transferRecipient ? { ...u, balance: u.balance + amount } : u
+      )
+    );
+
+    setTimeout(() => {
+      setIsTransferOpen(false);
+      setTransferSuccess('');
+    }, 3000);
+
+    setTransferring(false);
+  };
+
+  const getRecipientName = () => {
+    const recipient = allUsers.find((u) => u.id === transferRecipient);
+    return recipient?.username || 'Неизвестный';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -114,6 +201,7 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
   const currentDay = gameCycle ? getCurrentDay(gameCycle.startDate) : 1;
   const currentPhase = getCurrentPhase(currentDay);
   const phaseName = getPhaseName(currentPhase);
+  const isBusinessman = profile?.publicRole === 'BUSINESSMAN';
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -126,6 +214,7 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
           <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
           <p className="text-gray-400">Страна: {profile?.country}</p>
           <p className="text-gray-400">Роль: {profile?.publicRole}</p>
+          <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
         </div>
 
         <button
@@ -147,46 +236,70 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
           </Link>
 
           {isSpy && spyTarget && (
-  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-    <p className="text-purple-300 font-semibold">🕵️ Ваша миссия</p>
-    <p className="text-white mt-1">
-      Завербовать: <span className="font-semibold">{spyTarget.username}</span>
-    </p>
-    <p className="text-gray-400 text-sm">
-      Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
-    </p>
-    <p className="text-yellow-400 text-sm mt-2">
-      Прогресс: {profile.spyMissionProgress}%
-    </p>
-    <p className="text-gray-400 text-xs mt-1">
-      Кодовое слово: <span className="text-purple-300">{profile.spyCodeWord}</span>
-    </p>
-  </div>
-)}
+            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+              <p className="text-purple-300 font-semibold">🕵️ Ваша миссия</p>
+              <p className="text-white mt-1">
+                Завербовать: <span className="font-semibold">{spyTarget.username}</span>
+              </p>
+              <p className="text-gray-400 text-sm">
+                Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
+              </p>
+              {profile.spyMissionCompleted ? (
+                <p className="text-green-400 font-semibold text-sm mt-2">
+                  🎉 Миссия выполнена! Информация собрана.
+                </p>
+              ) : (
+                <p className="text-yellow-400 text-sm mt-2">
+                  Прогресс: {profile.spyMissionProgress}%
+                </p>
+              )}
+              <p className="text-gray-400 text-xs mt-1">
+                Кодовое слово: <span className="text-purple-300">{profile.spyCodeWord}</span>
+              </p>
+            </div>
+          )}
 
           {profile?.publicRole === 'REPORTER' && (
-  <>
-    <button
-      onClick={() => setIsModalOpen(true)}
-      className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
-    >
-      ➕ Создать пост
-    </button>
-    <Link
-      href="/investigate"
-      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
-    >
-      🔍 Расследования
-    </Link>
-  </>
-)} {profile?.publicRole === 'MILITARY' && (
-  <Link
-    href="/evidence"
-    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
-  >
-    📂 Улики
-  </Link>
-)}
+            <>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
+              >
+                ➕ Создать пост
+              </button>
+              <Link
+                href="/investigate"
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
+              >
+                🔍 Расследования
+              </Link>
+            </>
+          )}
+
+          {profile?.publicRole === 'MILITARY' && (
+            <Link
+              href="/evidence"
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
+            >
+              📂 Улики
+            </Link>
+          )}
+
+          {isBusinessman && (
+            <button
+              onClick={openTransferModal}
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
+            >
+              💰 Перевести ВЛИ
+            </button>
+          )}
+
+          <Link
+            href="/results"
+            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white text-sm"
+          >
+            📊 Отчёт
+          </Link>
         </div>
       </div>
 
@@ -210,25 +323,25 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
         </div>
 
         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-  <h2 className="text-xl font-semibold text-green-400">📊 Игровой день</h2>
-  {gameCycle ? (
-    <>
-      <p className="text-gray-400 mt-2">День {currentDay} из 14</p>
-      <p className="text-gray-400">Фаза: {phaseName}</p>
-      {isInOnboarding(profile?.onboardingEndsAt) && (
-        <p className="text-yellow-400 mt-2 text-sm">
-          🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
-        </p>
-      )}
-    </>
-  ) : (
-    <p className="text-gray-400 mt-2">Загрузка...</p>
-  )}
-</div>
+          <h2 className="text-xl font-semibold text-green-400">📊 Игровой день</h2>
+          {gameCycle ? (
+            <>
+              <p className="text-gray-400 mt-2">День {currentDay} из 14</p>
+              <p className="text-gray-400">Фаза: {phaseName}</p>
+              {isInOnboarding(profile?.onboardingEndsAt) && (
+                <p className="text-yellow-400 mt-2 text-sm">
+                  🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-gray-400 mt-2">Загрузка...</p>
+          )}
+        </div>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
             <h3 className="text-xl font-semibold text-white mb-4">Создать пост</h3>
             <textarea
@@ -250,6 +363,86 @@ if (profileData?.isSpy && profileData.spyMissionTargetId) {
                 className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50"
               >
                 {posting ? 'Публикация...' : 'Опубликовать'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isTransferOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-white mb-2">💰 Перевести ВЛИ</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Кому</label>
+                <select
+                  value={transferRecipient}
+                  onChange={(e) => setTransferRecipient(e.target.value)}
+                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+                >
+                  <option value="">— Выберите игрока —</option>
+                  {allUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.username} ({u.country}, {u.publicRole})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Сумма (ВЛИ)</label>
+                <input
+                  type="number"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  min="1"
+                  placeholder="100"
+                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Комментарий (опционально)</label>
+                <input
+                  type="text"
+                  value={transferComment}
+                  onChange={(e) => setTransferComment(e.target.value)}
+                  placeholder="За расследование"
+                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+                />
+              </div>
+
+              {transferError && (
+                <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">
+                  {transferError}
+                </div>
+              )}
+
+              {transferSuccess && (
+                <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">
+                  {transferSuccess}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setIsTransferOpen(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleTransfer}
+                disabled={transferring || !transferRecipient || !transferAmount}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold disabled:opacity-50"
+              >
+                {transferring ? 'Перевод...' : 'Перевести'}
               </button>
             </div>
           </div>
