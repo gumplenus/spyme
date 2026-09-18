@@ -9,7 +9,6 @@ export default function ResultsPage() {
   const router = useRouter();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [finishing, setFinishing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const fetchStats = async () => {
@@ -33,24 +32,6 @@ export default function ResultsPage() {
   useEffect(() => {
     fetchStats();
   }, []);
-
-  const finishCycle = async () => {
-    setFinishing(true);
-    setMessage(null);
-
-    const { data, error } = await supabase.rpc('finish_cycle');
-
-    if (error) {
-      setMessage('Ошибка: ' + error.message);
-    } else {
-      setMessage('✅ Цикл завершён! Создан новый цикл.');
-      setTimeout(() => {
-        fetchStats();
-        setMessage(null);
-      }, 3000);
-    }
-    setFinishing(false);
-  };
 
   if (loading) {
     return (
@@ -85,7 +66,7 @@ export default function ResultsPage() {
       </p>
 
       {message && (
-        <div className="mb-6 p-3 rounded-lg border bg-green-900/40 border-green-500 text-green-300 text-center">
+        <div className="mb-6 p-3 rounded-lg border bg-red-900/40 border-red-500 text-red-300 text-center">
           {message}
         </div>
       )}
@@ -132,25 +113,18 @@ export default function ResultsPage() {
             Страна: {stats.best_military?.country || '—'}
           </p>
           <p className="text-gray-400 text-sm">
-            Улик обработано: {stats.best_military?.count || 0}
+            Ликвидаций: {stats.best_military?.count || 0}
           </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto flex flex-wrap gap-3 justify-center">
+      <div className="max-w-4xl mx-auto flex justify-center">
         <Link
           href="/game"
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold"
         >
           ← Назад в игру
         </Link>
-        <button
-          onClick={finishCycle}
-          disabled={finishing}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold disabled:opacity-50"
-        >
-          {finishing ? 'Завершение...' : '🔄 Завершить цикл'}
-        </button>
       </div>
     </div>
   );

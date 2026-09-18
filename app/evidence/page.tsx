@@ -101,6 +101,12 @@ export default function EvidencePage() {
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
+        // Удаляем улику из базы
+        await supabase
+          .from('Evidence')
+          .delete()
+          .eq('id', evidence.id);
+
         setMessage({
           text: `✅ ${target.username} ликвидирован! Он был шпионом.`,
           type: 'success',
