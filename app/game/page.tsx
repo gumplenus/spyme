@@ -26,7 +26,6 @@ export default function GamePage() {
   const [newPostContent, setNewPostContent] = useState('');
   const [posting, setPosting] = useState(false);
 
-  // Для переводов ВЛИ
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [transferRecipient, setTransferRecipient] = useState<string>('');
@@ -36,7 +35,6 @@ export default function GamePage() {
   const [transferSuccess, setTransferSuccess] = useState<string>('');
   const [transferring, setTransferring] = useState(false);
 
-  // Для смены страны (Политик)
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [countryError, setCountryError] = useState<string>('');
@@ -47,15 +45,22 @@ export default function GamePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push('/login');
-      return;
+      return null;
     }
     setUser(user);
 
     const { data: profileData } = await supabase
       .from('User')
-      .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange')
+      .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange, isBanned, militaryBlockedUntil')
       .eq('id', user.id)
       .single();
+
+    // Проверка на бан
+    if (profileData?.isBanned === true) {
+      router.push('/banned');
+      return null;
+    }
+
     setProfile(profileData);
     return profileData;
   };
@@ -210,7 +215,6 @@ export default function GamePage() {
     return recipient?.username || 'Неизвестный';
   };
 
-  // ============ СМЕНА СТРАНЫ (ПОЛИТИК) ============
   const openCountryModal = () => {
     setSelectedCountry('');
     setCountryError('');
@@ -253,7 +257,6 @@ export default function GamePage() {
     const countryName = COUNTRIES.find((c) => c.code === selectedCountry)?.name || selectedCountry;
     setCountrySuccess(`✅ Вы переехали в ${countryName}! Иммунитет на 48 часов.`);
 
-    // Обновляем профиль
     await fetchProfile();
 
     setTimeout(() => {
@@ -264,7 +267,6 @@ export default function GamePage() {
     setChangingCountry(false);
   };
 
-  // Вычисляем оставшиеся часы иммунитета
   const getImmunityHours = () => {
     if (!profile?.lastCountryChange) return 0;
     const lastChange = new Date(profile.lastCountryChange);
@@ -272,6 +274,14 @@ export default function GamePage() {
     const diffHours = (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60);
     const remaining = 48 - diffHours;
     return remaining > 0 ? Math.ceil(remaining) : 0;
+  };
+
+  const getMilitaryBlockHours = () => {
+    if (!profile?.militaryBlockedUntil) return 0;
+    const blocked = new Date(profile.militaryBlockedUntil);
+    const now = new Date();
+    const diffHours = (blocked.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return diffHours > 0 ? Math.ceil(diffHours) : 0;
   };
 
   if (loading) {
@@ -288,7 +298,9 @@ export default function GamePage() {
   const phaseName = getPhaseName(currentPhase);
   const isBusinessman = profile?.publicRole === 'BUSINESSMAN';
   const isPolitician = profile?.publicRole === 'POLITICIAN';
+  const isMilitary = profile?.publicRole === 'MILITARY';
   const immunityHours = isPolitician ? getImmunityHours() : 0;
+  const militaryBlockHours = isMilitary ? getMilitaryBlockHours() : 0;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -306,6 +318,15 @@ export default function GamePage() {
             <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
           )}
         </div>
+
+        {militaryBlockHours > 0 && (
+          <div className="mt-4 p-3 bg-red-900/40 border border-red-500 rounded-lg">
+            <p className="text-red-300 font-semibold">🚫 Вы заблокированы</p>
+            <p className="text-red-200 text-sm mt-1">
+              Вы ошиблись при ликвидации. Блокировка снимется через {militaryBlockHours} ч.
+            </p>
+          </div>
+        )}
 
         <button
           onClick={async () => {
@@ -366,13 +387,22 @@ export default function GamePage() {
             </>
           )}
 
-          {profile?.publicRole === 'MILITARY' && (
+          {isMilitary && militaryBlockHours === 0 && (
             <Link
               href="/evidence"
               className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
             >
               📂 Улики
             </Link>
+          )}
+
+          {isMilitary && militaryBlockHours > 0 && (
+            <span
+              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+              title="Вы заблокированы"
+            >
+              📂 Улики (заблокировано)
+            </span>
           )}
 
           {isBusinessman && (
@@ -439,7 +469,6 @@ export default function GamePage() {
         </div>
       </div>
 
-      {/* Модальное окно создания поста */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
@@ -469,7 +498,6 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Модальное окно перевода ВЛИ */}
       {isTransferOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
@@ -550,7 +578,6 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Модальное окно смены страны (Политик) */}
       {isCountryOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">

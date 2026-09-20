@@ -44,11 +44,11 @@ export default function ResultsPage() {
   if (!stats) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-4">
-        <h1 className="text-3xl font-bold text-green-400 mb-6">📊 Отчёт цикла</h1>
-        <p className="text-gray-400">Не удалось загрузить статистику.</p>
-        <Link href="/game" className="text-green-400 hover:underline mt-4 inline-block">
+        <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
           ← Назад в игру
         </Link>
+        <h1 className="text-3xl font-bold text-green-400 mb-6">📊 Отчёт цикла</h1>
+        <p className="text-gray-400">Не удалось загрузить статистику.</p>
       </div>
     );
   }
@@ -58,6 +58,10 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
+      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
+        ← Назад в игру
+      </Link>
+
       <h1 className="text-4xl font-bold text-green-400 mb-2 text-center">
         📊 Отчёт цикла #{stats.cycle_id}
       </h1>

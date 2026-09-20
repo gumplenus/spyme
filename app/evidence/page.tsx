@@ -12,6 +12,7 @@ export default function EvidencePage() {
   const [loading, setLoading] = useState(true);
   const [eliminating, setEliminating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +24,7 @@ export default function EvidencePage() {
 
       const { data: profileData } = await supabase
         .from('User')
-        .select('username, country, publicRole')
+        .select('id, username, country, publicRole, militaryBlockedUntil')
         .eq('id', user.id)
         .single();
       setProfile(profileData);
@@ -31,6 +32,16 @@ export default function EvidencePage() {
       if (profileData?.publicRole !== 'MILITARY') {
         router.push('/game');
         return;
+      }
+
+      // Проверка блокировки
+      if (profileData.militaryBlockedUntil) {
+        const blocked = new Date(profileData.militaryBlockedUntil);
+        if (blocked > new Date()) {
+          setBlockedUntil(blocked);
+          setLoading(false);
+          return;
+        }
       }
 
       const { data: evidencesData, error } = await supabase
@@ -53,7 +64,6 @@ export default function EvidencePage() {
     setEliminating(evidence.id);
     setMessage(null);
 
-    // Загружаем данные цели (включая иммунитет)
     const { data: target, error: targetError } = await supabase
       .from('User')
       .select('isSpy, username, publicRole, lastCountryChange')
@@ -86,7 +96,6 @@ export default function EvidencePage() {
 
     // Проверка на шпиона
     if (target.isSpy === true) {
-      // Успешная ликвидация
       const { data: { user: militaryUser } } = await supabase.auth.getUser();
 
       const { error: banError } = await supabase
@@ -101,7 +110,6 @@ export default function EvidencePage() {
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
-        // Удаляем улику из базы
         await supabase
           .from('Evidence')
           .delete()
@@ -114,15 +122,31 @@ export default function EvidencePage() {
         setEvidences((prev) => prev.filter((e) => e.id !== evidence.id));
       }
     } else {
-      // Цель не шпион — штраф
-      setMessage({
-        text: `❌ ${target.username} не был шпионом. Военный получает штраф.`,
-        type: 'error',
-      });
+      // Цель не шпион — ШТРАФ: блокировка Военного на 24 часа
+      const blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      const { error: blockError } = await supabase
+        .from('User')
+        .update({
+          militaryBlockedUntil: blockUntil.toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (blockError) {
+        setMessage({ text: 'Ошибка блокировки: ' + blockError.message, type: 'error' });
+      } else {
+        setMessage({
+          text: `❌ ${target.username} не был шпионом. Вы заблокированы на 24 часа.`,
+          type: 'error',
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
     }
 
     setEliminating(null);
-    setTimeout(() => setMessage(null), 5000);
   };
 
   if (loading) {
@@ -133,17 +157,47 @@ export default function EvidencePage() {
     );
   }
 
+  // Экран блокировки
+  if (blockedUntil) {
+    const hoursLeft = Math.ceil((blockedUntil.getTime() - Date.now()) / (1000 * 60 * 60));
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+        <div className="bg-gray-800 p-8 rounded-xl border border-red-700 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h1 className="text-3xl font-bold text-red-500 mb-4">
+            Вы заблокированы
+          </h1>
+          <p className="text-gray-300 mb-2">
+            Вы ошиблись при ликвидации.
+          </p>
+          <p className="text-yellow-400 font-semibold mb-6">
+            Осталось: {hoursLeft} ч.
+          </p>
+          <p className="text-gray-500 text-xs mb-6">
+            Во время блокировки вы не можете просматривать улики и ликвидировать игроков.
+          </p>
+          <Link
+            href="/game"
+            className="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold"
+          >
+            ← Назад в игру
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
+      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
+        ← Назад в игру
+      </Link>
+
       <h1 className="text-3xl font-bold text-green-400 mb-6">📂 Входящие улики</h1>
 
       <p className="text-gray-400 mb-4">
         Ваша страна: <span className="text-white">{profile?.country}</span>
       </p>
-
-      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-        ← Назад в игру
-      </Link>
 
       {message && (
         <div
