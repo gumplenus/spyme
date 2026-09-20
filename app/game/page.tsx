@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentDay, getCurrentPhase, getPhaseName, isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
+import { isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
 
 const COUNTRIES = [
   { code: 'US', name: 'США' },
@@ -20,7 +20,6 @@ export default function GamePage() {
   const [profile, setProfile] = useState<any>(null);
   const [spyTarget, setSpyTarget] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [gameCycle, setGameCycle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
@@ -42,8 +41,6 @@ export default function GamePage() {
   const [changingCountry, setChangingCountry] = useState(false);
 
   const [passiveIncomeMessage, setPassiveIncomeMessage] = useState<string | null>(null);
-
-  // Уведомления
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -75,7 +72,7 @@ export default function GamePage() {
       const profileData = await fetchProfile();
       if (!profileData) return;
 
-      // ====== ПАССИВНЫЙ ДОХОД ======
+      // ПАССИВНЫЙ ДОХОД
       if (profileData.publicRole === 'BUSINESSMAN') {
         const { data: incomeData, error: incomeError } = await supabase.rpc('apply_passive_income', {
           businessman_id: profileData.id,
@@ -90,7 +87,7 @@ export default function GamePage() {
         }
       }
 
-      // ====== УВЕДОМЛЕНИЯ ======
+      // УВЕДОМЛЕНИЯ
       const { data: notifData } = await supabase
         .from('Notification')
         .select('*')
@@ -120,14 +117,6 @@ export default function GamePage() {
           .order('createdAt', { ascending: false });
         setPosts(postsData || []);
       }
-
-      const { data: cycleData } = await supabase
-        .from('GameCycle')
-        .select('*')
-        .order('id', { ascending: false })
-        .limit(1)
-        .single();
-      setGameCycle(cycleData);
 
       setLoading(false);
     };
@@ -340,9 +329,6 @@ export default function GamePage() {
   }
 
   const isSpy = profile?.isSpy === true;
-  const currentDay = gameCycle ? getCurrentDay(gameCycle.startDate) : 1;
-  const currentPhase = getCurrentPhase(currentDay);
-  const phaseName = getPhaseName(currentPhase);
   const isBusinessman = profile?.publicRole === 'BUSINESSMAN';
   const isPolitician = profile?.publicRole === 'POLITICIAN';
   const isMilitary = profile?.publicRole === 'MILITARY';
@@ -369,6 +355,11 @@ export default function GamePage() {
           <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
           {isPolitician && immunityHours > 0 && (
             <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
+          )}
+          {isInOnboarding(profile?.onboardingEndsAt) && (
+            <p className="text-yellow-400 font-semibold">
+              🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
+            </p>
           )}
         </div>
 
@@ -477,49 +468,37 @@ export default function GamePage() {
           )}
 
           <Link
-            href="/results"
-            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white text-sm"
+            href="/stats"
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
           >
-            📊 Отчёт
+            📊 Статистика
+          </Link>
+
+          <Link
+            href="/rules"
+            className="px-4 py-2 bg-teal-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
+          >
+            📖 Правила
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-          <h2 className="text-xl font-semibold text-green-400">📰 Лента новостей</h2>
-          {posts.length === 0 ? (
-            <p className="text-gray-400 mt-2">Нет новостей в вашей стране</p>
-          ) : (
-            <div className="mt-3 space-y-4">
-              {posts.map((post) => (
-                <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
-                  <p className="text-gray-400 text-sm">
-                    {post.author?.username || 'Неизвестный'} · {new Date(post.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className="text-white mt-1">{post.content}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-          <h2 className="text-xl font-semibold text-green-400">📊 Игровой день</h2>
-          {gameCycle ? (
-            <>
-              <p className="text-gray-400 mt-2">День {currentDay} из 14</p>
-              <p className="text-gray-400">Фаза: {phaseName}</p>
-              {isInOnboarding(profile?.onboardingEndsAt) && (
-                <p className="text-yellow-400 mt-2 text-sm">
-                  🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
+      <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <h2 className="text-xl font-semibold text-green-400">📰 Лента новостей</h2>
+        {posts.length === 0 ? (
+          <p className="text-gray-400 mt-2">Нет новостей в вашей стране</p>
+        ) : (
+          <div className="mt-3 space-y-4">
+            {posts.map((post) => (
+              <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
+                <p className="text-gray-400 text-sm">
+                  {post.author?.username || 'Неизвестный'} · {new Date(post.createdAt).toLocaleDateString()}
                 </p>
-              )}
-            </>
-          ) : (
-            <p className="text-gray-400 mt-2">Загрузка...</p>
-          )}
-        </div>
+                <p className="text-white mt-1">{post.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Модальное окно уведомлений */}

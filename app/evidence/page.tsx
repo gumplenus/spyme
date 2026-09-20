@@ -34,7 +34,6 @@ export default function EvidencePage() {
         return;
       }
 
-      // Проверка блокировки
       if (profileData.militaryBlockedUntil) {
         const blocked = new Date(profileData.militaryBlockedUntil);
         if (blocked > new Date()) {
@@ -60,19 +59,54 @@ export default function EvidencePage() {
     fetchData();
   }, [router]);
 
+  const incrementCounter = async (counterName: 'eliminationsCount' | 'eliminationsFailed') => {
+    if (!profile?.id) return;
+
+    const { data: currentProfile } = await supabase
+      .from('User')
+      .select(counterName)
+      .eq('id', profile.id)
+      .single();
+
+    if (currentProfile) {
+      const currentValue = (currentProfile as any)[counterName] || 0;
+      await supabase
+        .from('User')
+        .update({ [counterName]: currentValue + 1 })
+        .eq('id', profile.id);
+    }
+  };
+
   const eliminateTarget = async (evidence: any) => {
     setEliminating(evidence.id);
     setMessage(null);
 
     const { data: target, error: targetError } = await supabase
       .from('User')
-      .select('isSpy, username, publicRole, lastCountryChange')
+      .select('isSpy, isBanned, username, publicRole, lastCountryChange')
       .eq('id', evidence.target_id)
       .single();
 
     if (targetError || !target) {
       setMessage({ text: 'Ошибка: цель не найдена', type: 'error' });
       setEliminating(null);
+      return;
+    }
+
+    // Если цель уже забанена — удаляем все улики на неё, не считаем ликвидацию
+    if (target.isBanned === true) {
+      await supabase
+        .from('Evidence')
+        .delete()
+        .eq('targetId', evidence.target_id);
+
+      setMessage({
+        text: `ℹ️ ${target.username} уже был ликвидирован ранее. Улики удалены.`,
+        type: 'error',
+      });
+      setEvidences((prev) => prev.filter((e) => e.target_id !== evidence.target_id));
+      setEliminating(null);
+      setTimeout(() => setMessage(null), 5000);
       return;
     }
 
@@ -110,19 +144,22 @@ export default function EvidencePage() {
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
+        // Удаляем ВСЕ улики на этого шпиона
         await supabase
           .from('Evidence')
           .delete()
-          .eq('id', evidence.id);
+          .eq('targetId', evidence.target_id);
+
+        await incrementCounter('eliminationsCount');
 
         setMessage({
           text: `✅ ${target.username} ликвидирован! Он был шпионом.`,
           type: 'success',
         });
-        setEvidences((prev) => prev.filter((e) => e.id !== evidence.id));
+        setEvidences((prev) => prev.filter((e) => e.target_id !== evidence.target_id));
       }
     } else {
-      // Цель не шпион — ШТРАФ: блокировка Военного на 24 часа
+      // Цель не шпион — ШТРАФ
       const blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       const { error: blockError } = await supabase
@@ -135,6 +172,8 @@ export default function EvidencePage() {
       if (blockError) {
         setMessage({ text: 'Ошибка блокировки: ' + blockError.message, type: 'error' });
       } else {
+        await incrementCounter('eliminationsFailed');
+
         setMessage({
           text: `❌ ${target.username} не был шпионом. Вы заблокированы на 24 часа.`,
           type: 'error',
@@ -157,7 +196,6 @@ export default function EvidencePage() {
     );
   }
 
-  // Экран блокировки
   if (blockedUntil) {
     const hoursLeft = Math.ceil((blockedUntil.getTime() - Date.now()) / (1000 * 60 * 60));
     return (

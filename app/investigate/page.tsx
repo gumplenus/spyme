@@ -25,7 +25,6 @@ export default function InvestigatePage() {
       }
       setCurrentUserId(user.id);
 
-      // Автоматически завершаем расследования, у которых прошло 24 часа
       await supabase.rpc('complete_investigations');
 
       const { data: invData } = await supabase
@@ -60,20 +59,6 @@ export default function InvestigatePage() {
     if (!currentUserId) return;
     setStarting(true);
 
-    const { data: existing } = await supabase
-      .from('Investigation')
-      .select('id')
-      .eq('reporterId', currentUserId)
-      .eq('targetId', targetId)
-      .eq('status', 'IN_PROGRESS')
-      .single();
-
-    if (existing) {
-      alert('У вас уже есть активное расследование этого игрока');
-      setStarting(false);
-      return;
-    }
-
     const { error } = await supabase
       .from('Investigation')
       .insert({
@@ -83,10 +68,24 @@ export default function InvestigatePage() {
       });
 
     if (error) {
-      console.error('Ошибка запуска расследования:', error);
       alert('Ошибка: ' + error.message);
     } else {
+      // Увеличиваем счётчик расследований у Репортера
+      const { data: currentProfile } = await supabase
+        .from('User')
+        .select('investigationsCount')
+        .eq('id', currentUserId)
+        .single();
+
+      if (currentProfile) {
+        await supabase
+          .from('User')
+          .update({ investigationsCount: (currentProfile.investigationsCount || 0) + 1 })
+          .eq('id', currentUserId);
+      }
+
       setIsModalOpen(false);
+
       const { data: invData } = await supabase
         .from('Investigation')
         .select(`*, target:targetId (username, country, publicRole)`)
@@ -101,21 +100,6 @@ export default function InvestigatePage() {
     if (!currentUserId) return;
     setTransferring(inv.id);
 
-    // Проверяем, нет ли уже улики по этому расследованию
-    const { data: existing } = await supabase
-      .from('Evidence')
-      .select('id')
-      .eq('reporterId', currentUserId)
-      .eq('targetId', inv.targetId)
-      .single();
-
-    if (existing) {
-      alert('Улика на этого игрока уже передана');
-      setTransferring(null);
-      return;
-    }
-
-    // Вычисляем силу улики из текста отчёта
     let strength = 50;
     const match = inv.result?.match(/Вероятность шпионажа: (\d+)%/);
     if (match) strength = parseInt(match[1]);
@@ -132,11 +116,24 @@ export default function InvestigatePage() {
       });
 
     if (error) {
-      console.error('Ошибка передачи улики:', error);
       alert('Ошибка: ' + error.message);
     } else {
+      // Увеличиваем счётчик переданных улик
+      const { data: currentProfile } = await supabase
+        .from('User')
+        .select('evidencesTransferred')
+        .eq('id', currentUserId)
+        .single();
+
+      if (currentProfile) {
+        await supabase
+          .from('User')
+          .update({ evidencesTransferred: (currentProfile.evidencesTransferred || 0) + 1 })
+          .eq('id', currentUserId);
+      }
+
       setSuccessMessage('Улика передана Военному вашей страны');
-      setTimeout(() => setSuccessMessage(null), 4000); // исчезнет через 4 сек
+      setTimeout(() => setSuccessMessage(null), 4000);
     }
     setTransferring(null);
   };
@@ -151,14 +148,17 @@ export default function InvestigatePage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="flex justify-between items-center mb-6">
+      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
+        ← Назад в игру
+      </Link>
 
       {successMessage && (
-  <div className="mb-4 p-3 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-sm">
-    ✅ {successMessage}
-  </div>
-)}
+        <div className="mb-4 p-3 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-sm">
+          ✅ {successMessage}
+        </div>
+      )}
 
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-green-400">🔍 Расследования</h1>
         <button
           onClick={openNewInvestigationModal}
@@ -168,19 +168,12 @@ export default function InvestigatePage() {
         </button>
       </div>
 
-      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-        ← Назад в игру
-      </Link>
-
       {investigations.length === 0 ? (
         <p className="text-gray-400 mt-8">У вас ещё нет расследований.</p>
       ) : (
         <div className="space-y-3 mt-4">
           {investigations.map((inv) => (
-            <div
-              key={inv.id}
-              className="bg-gray-800 p-4 rounded-xl border border-gray-700"
-            >
+            <div key={inv.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700">
               <p className="text-white font-semibold">
                 🎯 {inv.target?.username || 'Неизвестный'}
               </p>
