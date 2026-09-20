@@ -41,6 +41,12 @@ export default function GamePage() {
   const [countrySuccess, setCountrySuccess] = useState<string>('');
   const [changingCountry, setChangingCountry] = useState(false);
 
+  const [passiveIncomeMessage, setPassiveIncomeMessage] = useState<string | null>(null);
+
+  // Уведомления
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -51,11 +57,10 @@ export default function GamePage() {
 
     const { data: profileData } = await supabase
       .from('User')
-      .select('username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange, isBanned, militaryBlockedUntil')
+      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange, isBanned, militaryBlockedUntil')
       .eq('id', user.id)
       .single();
 
-    // Проверка на бан
     if (profileData?.isBanned === true) {
       router.push('/banned');
       return null;
@@ -69,6 +74,34 @@ export default function GamePage() {
     const fetchData = async () => {
       const profileData = await fetchProfile();
       if (!profileData) return;
+
+      // ====== ПАССИВНЫЙ ДОХОД ======
+      if (profileData.publicRole === 'BUSINESSMAN') {
+        const { data: incomeData, error: incomeError } = await supabase.rpc('apply_passive_income', {
+          businessman_id: profileData.id,
+        });
+
+        if (!incomeError && incomeData && incomeData.success && incomeData.income > 0) {
+          setPassiveIncomeMessage(`💰 Пассивный доход: +${incomeData.income} ВЛИ (за ${incomeData.days} дн.)`);
+          setTimeout(() => setPassiveIncomeMessage(null), 8000);
+
+          profileData.balance = profileData.balance + incomeData.income;
+          setProfile({ ...profileData });
+        }
+      }
+
+      // ====== УВЕДОМЛЕНИЯ ======
+      const { data: notifData } = await supabase
+        .from('Notification')
+        .select('*')
+        .eq('userId', profileData.id)
+        .eq('isRead', false)
+        .order('createdAt', { ascending: false });
+
+      if (notifData && notifData.length > 0) {
+        setNotifications(notifData);
+        setIsNotificationsOpen(true);
+      }
 
       if (profileData.isSpy && profileData.spyMissionTargetId) {
         const { data: targetData } = await supabase
@@ -101,6 +134,20 @@ export default function GamePage() {
 
     fetchData();
   }, [router]);
+
+  const markNotificationsAsRead = async () => {
+    if (!user || notifications.length === 0) return;
+
+    const ids = notifications.map((n) => n.id);
+
+    await supabase
+      .from('Notification')
+      .update({ isRead: true })
+      .in('id', ids);
+
+    setIsNotificationsOpen(false);
+    setNotifications([]);
+  };
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !user) return;
@@ -308,6 +355,12 @@ export default function GamePage() {
         Добро пожаловать в игру SpyMe!
       </h1>
 
+      {passiveIncomeMessage && (
+        <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
+          {passiveIncomeMessage}
+        </div>
+      )}
+
       <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
         <div>
           <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
@@ -468,6 +521,37 @@ export default function GamePage() {
           )}
         </div>
       </div>
+
+      {/* Модальное окно уведомлений */}
+      {isNotificationsOpen && notifications.length > 0 && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-green-500 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold text-green-400 mb-4 text-center">
+              🔔 Уведомления
+            </h3>
+            <div className="space-y-3 mb-6">
+              {notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className="p-4 bg-gray-700 rounded-lg border border-gray-600"
+                >
+                  <p className="text-white font-semibold">{n.title}</p>
+                  <p className="text-gray-300 text-sm mt-1">{n.message}</p>
+                  <p className="text-gray-500 text-xs mt-2">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={markNotificationsAsRead}
+              className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold"
+            >
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
