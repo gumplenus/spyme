@@ -103,7 +103,7 @@ export default function ChatList() {
       </Link>
 
       {chats.length === 0 ? (
-        <p className="text-gray-400 mt-8">Нет сообщений. Нажмите "Новое сообщение", чтобы начать диалог.</p>
+        <p className="text-gray-400 mt-8">Нет сообщений. Нажмите «Новое сообщение», чтобы начать диалог.</p>
       ) : (
         <div className="space-y-3 mt-4">
           {chats.map((chat) => (
