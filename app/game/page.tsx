@@ -72,7 +72,15 @@ export default function GamePage() {
       const profileData = await fetchProfile();
       if (!profileData) return;
 
-      // ПАССИВНЫЙ ДОХОД
+      // ====== БАЛАНС ШПИОНОВ ======
+      // Проверяем и активируем нового шпиона, если нужно
+      try {
+        await supabase.rpc('balance_spies');
+      } catch (err) {
+        console.error('Ошибка балансировки шпионов:', err);
+      }
+
+      // ====== ПАССИВНЫЙ ДОХОД ======
       if (profileData.publicRole === 'BUSINESSMAN') {
         const { data: incomeData, error: incomeError } = await supabase.rpc('apply_passive_income', {
           businessman_id: profileData.id,
@@ -87,7 +95,7 @@ export default function GamePage() {
         }
       }
 
-      // УВЕДОМЛЕНИЯ
+      // ====== УВЕДОМЛЕНИЯ ======
       const { data: notifData } = await supabase
         .from('Notification')
         .select('*')
@@ -390,29 +398,46 @@ export default function GamePage() {
             💬 Чаты
           </Link>
 
-          {isSpy && spyTarget && (
-            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-              <p className="text-purple-300 font-semibold">🕵️ Ваша миссия</p>
-              <p className="text-white mt-1">
-                Завербовать: <span className="font-semibold">{spyTarget.username}</span>
-              </p>
-              <p className="text-gray-400 text-sm">
-                Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
-              </p>
-              {profile.spyMissionCompleted ? (
-                <p className="text-green-400 font-semibold text-sm mt-2">
-                  🎉 Миссия выполнена! Информация собрана.
-                </p>
-              ) : (
-                <p className="text-yellow-400 text-sm mt-2">
-                  Прогресс: {profile.spyMissionProgress}%
-                </p>
-              )}
-              <p className="text-gray-400 text-xs mt-1">
-                Кодовое слово: <span className="text-purple-300">{profile.spyCodeWord}</span>
-              </p>
-            </div>
-          )}
+          {isSpy && (
+  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+    <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
+    <p className="text-gray-300 text-sm mt-2">
+      Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
+    </p>
+
+    {spyTarget ? (
+      <>
+        <p className="text-purple-300 font-semibold mt-3">🎯 Первая миссия (пример):</p>
+        <p className="text-white mt-1">
+          Завербовать: <span className="font-semibold">{spyTarget.username}</span>
+        </p>
+        <p className="text-gray-400 text-sm">
+          Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
+        </p>
+        {profile.spyMissionCompleted ? (
+          <p className="text-green-400 font-semibold text-sm mt-2">
+            🎉 Первая миссия выполнена!
+          </p>
+        ) : (
+          <p className="text-yellow-400 text-sm mt-2">
+            Прогресс: {profile.spyMissionProgress}%
+          </p>
+        )}
+        <p className="text-gray-400 text-xs mt-2">
+          Дальше — сами решайте, что делать. Главное — не попадайтесь!
+        </p>
+      </>
+    ) : (
+      <p className="text-gray-400 text-sm mt-2">
+        Цель не назначена. Играйте свою роль и не попадайтесь.
+      </p>
+    )}
+
+    <p className="text-gray-400 text-xs mt-3">
+      Кодовое слово: <span className="text-purple-300 font-semibold">{profile.spyCodeWord}</span>
+    </p>
+  </div>
+)}
 
           {profile?.publicRole === 'REPORTER' && (
             <>
@@ -475,8 +500,15 @@ export default function GamePage() {
           </Link>
 
           <Link
+            href="/leaderboard"
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm"
+          >
+            🏆 Рейтинг
+          </Link>
+
+          <Link
             href="/rules"
-            className="px-4 py-2 bg-teal-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
+            className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm"
           >
             📖 Правила
           </Link>
@@ -501,7 +533,6 @@ export default function GamePage() {
         )}
       </div>
 
-      {/* Модальное окно уведомлений */}
       {isNotificationsOpen && notifications.length > 0 && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-green-500 max-h-[80vh] overflow-y-auto">
