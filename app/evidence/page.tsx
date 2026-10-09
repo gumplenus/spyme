@@ -44,9 +44,18 @@ export default function EvidencePage() {
       }
 
       const { data: evidencesData, error } = await supabase
-        .rpc('get_evidences_for_military', {
-          military_country: profileData.country,
-        });
+        .from('Evidence')
+        .select(`
+          id,
+          content,
+          strength,
+          createdAt,
+          targetId,
+          target:targetId (username, country, publicRole),
+          reporter:reporterId (username)
+        `)
+        .eq('recipientId', user.id)
+        .order('createdAt', { ascending: false });
 
       if (error) {
         console.error('Ошибка загрузки улик:', error);
@@ -84,7 +93,7 @@ export default function EvidencePage() {
     const { data: target, error: targetError } = await supabase
       .from('User')
       .select('isSpy, isBanned, username, publicRole, lastCountryChange')
-      .eq('id', evidence.target_id)
+      .eq('id', evidence.targetId)
       .single();
 
     if (targetError || !target) {
@@ -93,24 +102,22 @@ export default function EvidencePage() {
       return;
     }
 
-    // Если цель уже забанена — удаляем все улики на неё, не считаем ликвидацию
     if (target.isBanned === true) {
       await supabase
         .from('Evidence')
         .delete()
-        .eq('targetId', evidence.target_id);
+        .eq('targetId', evidence.targetId);
 
       setMessage({
         text: `ℹ️ ${target.username} уже был ликвидирован ранее. Улики удалены.`,
         type: 'error',
       });
-      setEvidences((prev) => prev.filter((e) => e.target_id !== evidence.target_id));
+      setEvidences((prev) => prev.filter((e) => e.targetId !== evidence.targetId));
       setEliminating(null);
       setTimeout(() => setMessage(null), 5000);
       return;
     }
 
-    // Проверка дипломатического иммунитета
     if (target.publicRole === 'POLITICIAN' && target.lastCountryChange) {
       const lastChange = new Date(target.lastCountryChange);
       const now = new Date();
@@ -128,7 +135,6 @@ export default function EvidencePage() {
       }
     }
 
-    // Проверка на шпиона
     if (target.isSpy === true) {
       const { data: { user: militaryUser } } = await supabase.auth.getUser();
 
@@ -139,16 +145,15 @@ export default function EvidencePage() {
           banReason: 'Ликвидирован Военным за шпионаж',
           eliminatedBy: militaryUser?.id,
         })
-        .eq('id', evidence.target_id);
+        .eq('id', evidence.targetId);
 
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
-        // Удаляем ВСЕ улики на этого шпиона
         await supabase
           .from('Evidence')
           .delete()
-          .eq('targetId', evidence.target_id);
+          .eq('targetId', evidence.targetId);
 
         await incrementCounter('eliminationsCount');
 
@@ -156,10 +161,9 @@ export default function EvidencePage() {
           text: `✅ ${target.username} ликвидирован! Он был шпионом.`,
           type: 'success',
         });
-        setEvidences((prev) => prev.filter((e) => e.target_id !== evidence.target_id));
+        setEvidences((prev) => prev.filter((e) => e.targetId !== evidence.targetId));
       }
     } else {
-      // Цель не шпион — ШТРАФ
       const blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       const { error: blockError } = await supabase
@@ -256,13 +260,13 @@ export default function EvidencePage() {
           {evidences.map((e) => (
             <div key={e.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700">
               <p className="text-white font-semibold">
-                🎯 {e.target_username || 'Неизвестный'}
+                🎯 {e.target?.username || 'Неизвестный'}
               </p>
               <p className="text-gray-400 text-sm">
-                Страна: {e.target_country} · Роль: {e.target_role}
+                Страна: {e.target?.country} · Роль: {e.target?.publicRole}
               </p>
               <p className="text-gray-500 text-xs mt-2">
-                От: {e.reporter_username || 'Неизвестный'} · {new Date(e.created_at).toLocaleString()}
+                От: {e.reporter?.username || 'Неизвестный'} · {new Date(e.createdAt).toLocaleString()}
               </p>
               <p className="text-gray-300 text-sm mt-2 bg-gray-900 p-2 rounded">
                 {e.content}
