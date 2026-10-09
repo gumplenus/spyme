@@ -86,9 +86,10 @@ export function AssistantWidget() {
     }, 300);
   };
 
-  if (
+    if (
     pathname?.startsWith('/login') ||
     pathname?.startsWith('/register') ||
+    pathname?.startsWith('/chat') ||
     pathname === '/'
   ) {
     return null;
