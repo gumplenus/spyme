@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import PlayerSelector, { Player } from '@/components/PlayerSelector';
 
 export default function ChatList() {
   const router = useRouter();
   const [chats, setChats] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function ChatList() {
         const userIds = Array.from(uniqueUsers.keys());
         const { data: profiles } = await supabase
           .from('User')
-          .select('id, username')
+          .select('id, username, country, publicRole')
           .in('id', userIds);
 
         const chatList = Array.from(uniqueUsers.values()).map((chat: any) => {
@@ -54,6 +55,8 @@ export default function ChatList() {
           return {
             ...chat,
             username: profile?.username || 'Неизвестный',
+            country: profile?.country || null,
+            publicRole: profile?.publicRole || null,
           };
         });
 
@@ -71,7 +74,7 @@ export default function ChatList() {
 
     const { data: users } = await supabase
       .from('User')
-      .select('id, username')
+      .select('id, username, country, publicRole')
       .neq('id', currentUserId);
 
     setAllUsers(users || []);
@@ -113,13 +116,18 @@ export default function ChatList() {
               className="block bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
             >
               <div className="flex justify-between items-center">
-                <div>
+                <div className="min-w-0">
                   <p className="text-white font-semibold">{chat.username}</p>
-                  <p className="text-gray-400 text-sm truncate max-w-xs">
+                  <p className="text-gray-500 text-xs">
+                    {chat.publicRole && chat.country
+                      ? `${chat.publicRole} · ${chat.country}`
+                      : chat.country || chat.publicRole || ''}
+                  </p>
+                  <p className="text-gray-400 text-sm truncate max-w-xs mt-1">
                     {chat.lastMessage}
                   </p>
                 </div>
-                <p className="text-gray-500 text-xs">
+                <p className="text-gray-500 text-xs whitespace-nowrap ml-2">
                   {new Date(chat.lastMessageTime).toLocaleDateString()}
                 </p>
               </div>
@@ -131,23 +139,13 @@ export default function ChatList() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold text-white mb-4">Выберите собеседника</h3>
-            {allUsers.length === 0 ? (
-              <p className="text-gray-400">Нет других игроков</p>
-            ) : (
-              <div className="space-y-2">
-                {allUsers.map((u) => (
-                  <Link
-                    key={u.id}
-                    href={`/chat/${u.id}`}
-                    onClick={() => setIsModalOpen(false)}
-                    className="block bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    <p className="text-white">{u.username || 'Неизвестный'}</p>
-                  </Link>
-                ))}
-              </div>
-            )}
+            <PlayerSelector
+              title="Выберите собеседника"
+              players={allUsers}
+              getHref={(p) => `/chat/${p.id}`}
+              onSelect={() => setIsModalOpen(false)}
+              emptyText="Нет игроков по заданным фильтрам"
+            />
             <button
               onClick={() => setIsModalOpen(false)}
               className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
