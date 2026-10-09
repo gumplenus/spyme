@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
+import PlayerSelector, { Player } from '@/components/PlayerSelector';
 
 const COUNTRIES = [
   { code: 'US', name: 'США' },
@@ -26,7 +27,7 @@ export default function GamePage() {
   const [posting, setPosting] = useState(false);
 
   const [isTransferOpen, setIsTransferOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<Player[]>([]);
   const [transferRecipient, setTransferRecipient] = useState<string>('');
   const [transferAmount, setTransferAmount] = useState<string>('');
   const [transferComment, setTransferComment] = useState<string>('');
@@ -72,15 +73,12 @@ export default function GamePage() {
       const profileData = await fetchProfile();
       if (!profileData) return;
 
-      // ====== БАЛАНС ШПИОНОВ ======
-      // Проверяем и активируем нового шпиона, если нужно
       try {
         await supabase.rpc('balance_spies');
       } catch (err) {
         console.error('Ошибка балансировки шпионов:', err);
       }
 
-      // ====== ПАССИВНЫЙ ДОХОД ======
       if (profileData.publicRole === 'BUSINESSMAN') {
         const { data: incomeData, error: incomeError } = await supabase.rpc('apply_passive_income', {
           businessman_id: profileData.id,
@@ -95,7 +93,6 @@ export default function GamePage() {
         }
       }
 
-      // ====== УВЕДОМЛЕНИЯ ======
       const { data: notifData } = await supabase
         .from('Notification')
         .select('*')
@@ -185,7 +182,7 @@ export default function GamePage() {
 
     const { data: users } = await supabase
       .from('User')
-      .select('id, username, country, publicRole, balance')
+      .select('id, username, country, publicRole')
       .neq('id', user.id)
       .order('username');
 
@@ -239,12 +236,6 @@ export default function GamePage() {
 
     setTransferSuccess(`✅ Переведено ${amount} ВЛИ игроку ${getRecipientName()}`);
     setProfile({ ...profile, balance: profile.balance - amount });
-
-    setAllUsers((prev) =>
-      prev.map((u) =>
-        u.id === transferRecipient ? { ...u, balance: u.balance + amount } : u
-      )
-    );
 
     setTimeout(() => {
       setIsTransferOpen(false);
@@ -399,45 +390,45 @@ export default function GamePage() {
           </Link>
 
           {isSpy && (
-  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-    <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
-    <p className="text-gray-300 text-sm mt-2">
-      Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
-    </p>
+            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+              <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
+              <p className="text-gray-300 text-sm mt-2">
+                Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
+              </p>
 
-    {spyTarget ? (
-      <>
-        <p className="text-purple-300 font-semibold mt-3">🎯 Первая миссия (пример):</p>
-        <p className="text-white mt-1">
-          Завербовать: <span className="font-semibold">{spyTarget.username}</span>
-        </p>
-        <p className="text-gray-400 text-sm">
-          Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
-        </p>
-        {profile.spyMissionCompleted ? (
-          <p className="text-green-400 font-semibold text-sm mt-2">
-            🎉 Первая миссия выполнена!
-          </p>
-        ) : (
-          <p className="text-yellow-400 text-sm mt-2">
-            Прогресс: {profile.spyMissionProgress}%
-          </p>
-        )}
-        <p className="text-gray-400 text-xs mt-2">
-          Дальше — сами решайте, что делать. Главное — не попадайтесь!
-        </p>
-      </>
-    ) : (
-      <p className="text-gray-400 text-sm mt-2">
-        Цель не назначена. Играйте свою роль и не попадайтесь.
-      </p>
-    )}
+              {spyTarget ? (
+                <>
+                  <p className="text-purple-300 font-semibold mt-3">🎯 Первая миссия (пример):</p>
+                  <p className="text-white mt-1">
+                    Завербовать: <span className="font-semibold">{spyTarget.username}</span>
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
+                  </p>
+                  {profile.spyMissionCompleted ? (
+                    <p className="text-green-400 font-semibold text-sm mt-2">
+                      🎉 Первая миссия выполнена!
+                    </p>
+                  ) : (
+                    <p className="text-yellow-400 text-sm mt-2">
+                      Прогресс: {profile.spyMissionProgress}%
+                    </p>
+                  )}
+                  <p className="text-gray-400 text-xs mt-2">
+                    Дальше — сами решайте, что делать. Главное — не попадайтесь!
+                  </p>
+                </>
+              ) : (
+                <p className="text-gray-400 text-sm mt-2">
+                  Цель не назначена. Играйте свою роль и не попадайтесь.
+                </p>
+              )}
 
-    <p className="text-gray-400 text-xs mt-3">
-      Кодовое слово: <span className="text-purple-300 font-semibold">{profile.spyCodeWord}</span>
-    </p>
-  </div>
-)}
+              <p className="text-gray-400 text-xs mt-3">
+                Кодовое слово: <span className="text-purple-300 font-semibold">{profile.spyCodeWord}</span>
+              </p>
+            </div>
+          )}
 
           {profile?.publicRole === 'REPORTER' && (
             <>
@@ -474,14 +465,12 @@ export default function GamePage() {
             </span>
           )}
 
-          {isBusinessman && (
-            <button
-              onClick={openTransferModal}
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
-            >
-              💰 Перевести ВЛИ
-            </button>
-          )}
+          <button
+            onClick={openTransferModal}
+            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
+          >
+            💰 Перевести ВЛИ
+          </button>
 
           {isPolitician && (
             <button
@@ -600,23 +589,36 @@ export default function GamePage() {
               Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
             </p>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Кому</label>
-                <select
-                  value={transferRecipient}
-                  onChange={(e) => setTransferRecipient(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+            {!transferRecipient ? (
+              <PlayerSelector
+                title="Выберите получателя"
+                players={allUsers}
+                onSelect={(p) => setTransferRecipient(p.id)}
+                emptyText="Нет игроков по заданным фильтрам"
+              />
+            ) : (
+              <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-white font-medium">
+                    {allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
+                    {allUsers.find((u) => u.id === transferRecipient)?.country
+                      ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}`
+                      : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setTransferRecipient('')}
+                  className="text-gray-400 hover:text-red-400 text-sm underline"
                 >
-                  <option value="">— Выберите игрока —</option>
-                  {allUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.username} ({u.country}, {u.publicRole})
-                    </option>
-                  ))}
-                </select>
+                  Изменить
+                </button>
               </div>
+            )}
 
+            <div className="space-y-4 mt-4">
               <div>
                 <label className="block text-sm text-gray-300 mb-1">Сумма (ВЛИ)</label>
                 <input
