@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import PlayerSelector, { Player } from '@/components/PlayerSelector';
 
 export default function InvestigatePage() {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [investigations, setInvestigations] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -70,7 +71,6 @@ export default function InvestigatePage() {
     if (error) {
       alert('Ошибка: ' + error.message);
     } else {
-      // Увеличиваем счётчик расследований у Репортера
       const { data: currentProfile } = await supabase
         .from('User')
         .select('investigationsCount')
@@ -118,7 +118,6 @@ export default function InvestigatePage() {
     if (error) {
       alert('Ошибка: ' + error.message);
     } else {
-      // Увеличиваем счётчик переданных улик
       const { data: currentProfile } = await supabase
         .from('User')
         .select('evidencesTransferred')
@@ -208,26 +207,12 @@ export default function InvestigatePage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold text-white mb-4">Кого расследовать?</h3>
-            {allUsers.length === 0 ? (
-              <p className="text-gray-400">Нет других игроков</p>
-            ) : (
-              <div className="space-y-2">
-                {allUsers.map((u) => (
-                  <button
-                    key={u.id}
-                    onClick={() => startInvestigation(u.id)}
-                    disabled={starting}
-                    className="w-full text-left bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-                  >
-                    <p className="text-white font-semibold">{u.username || 'Неизвестный'}</p>
-                    <p className="text-gray-400 text-xs">
-                      {u.country} · {u.publicRole}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
+            <PlayerSelector
+              title="Кого расследовать?"
+              players={allUsers}
+              onSelect={(p) => startInvestigation(p.id)}
+              emptyText="Нет игроков по заданным фильтрам"
+            />
             <button
               onClick={() => setIsModalOpen(false)}
               className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
