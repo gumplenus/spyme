@@ -9,12 +9,15 @@ import PlayerSelector, { Player } from '@/components/PlayerSelector';
 export default function InvestigatePage() {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserCountry, setCurrentUserCountry] = useState<string | null>(null);
   const [investigations, setInvestigations] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<Player[]>([]);
+  const [militaryList, setMilitaryList] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [starting, setStarting] = useState(false);
   const [transferring, setTransferring] = useState<string | null>(null);
+  const [evidenceToTransfer, setEvidenceToTransfer] = useState<any>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,6 +28,13 @@ export default function InvestigatePage() {
         return;
       }
       setCurrentUserId(user.id);
+
+      const { data: profileData } = await supabase
+        .from('User')
+        .select('country')
+        .eq('id', user.id)
+        .single();
+      setCurrentUserCountry(profileData?.country || null);
 
       await supabase.rpc('complete_investigations');
 
@@ -96,9 +106,25 @@ export default function InvestigatePage() {
     setStarting(false);
   };
 
-  const transferEvidence = async (inv: any) => {
-    if (!currentUserId) return;
-    setTransferring(inv.id);
+  const openTransferModal = async (inv: any) => {
+    if (!currentUserId || !currentUserCountry) return;
+
+    const { data: militaries } = await supabase
+      .from('User')
+      .select('id, username, country, publicRole')
+      .eq('publicRole', 'MILITARY')
+      .eq('country', currentUserCountry)
+      .neq('id', currentUserId);
+
+    setMilitaryList(militaries || []);
+    setEvidenceToTransfer(inv);
+  };
+
+    const transferEvidence = async (recipientId: string) => {
+    if (!currentUserId || !evidenceToTransfer) return;
+    setTransferring(evidenceToTransfer.id);
+
+    const inv = evidenceToTransfer;
 
     let strength = 50;
     const match = inv.result?.match(/Вероятность шпионажа: (\d+)%/);
@@ -109,6 +135,7 @@ export default function InvestigatePage() {
       .insert({
         reporterId: currentUserId,
         targetId: inv.targetId,
+        recipientId,
         type: 'SYSTEM_REPORT',
         content: inv.result,
         strength,
@@ -117,24 +144,39 @@ export default function InvestigatePage() {
 
     if (error) {
       alert('Ошибка: ' + error.message);
-    } else {
-      const { data: currentProfile } = await supabase
-        .from('User')
-        .select('evidencesTransferred')
-        .eq('id', currentUserId)
-        .single();
-
-      if (currentProfile) {
-        await supabase
-          .from('User')
-          .update({ evidencesTransferred: (currentProfile.evidencesTransferred || 0) + 1 })
-          .eq('id', currentUserId);
-      }
-
-      setSuccessMessage('Улика передана Военному вашей страны');
-      setTimeout(() => setSuccessMessage(null), 4000);
+      setTransferring(null);
+      setEvidenceToTransfer(null);
+      return;
     }
+
+    // Удаляем расследование — улика передана, история не нужна
+    await supabase
+      .from('Investigation')
+      .delete()
+      .eq('id', inv.id);
+
+    // Счётчик переданных улик
+    const { data: currentProfile } = await supabase
+      .from('User')
+      .select('evidencesTransferred')
+      .eq('id', currentUserId)
+      .single();
+
+    if (currentProfile) {
+      await supabase
+        .from('User')
+        .update({ evidencesTransferred: (currentProfile.evidencesTransferred || 0) + 1 })
+        .eq('id', currentUserId);
+    }
+
+    // Убираем расследование из UI
+    setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
+
+    setSuccessMessage('Улика передана Военному вашей страны');
+    setTimeout(() => setSuccessMessage(null), 4000);
+
     setTransferring(null);
+    setEvidenceToTransfer(null);
   };
 
   if (loading) {
@@ -192,7 +234,7 @@ export default function InvestigatePage() {
               )}
               {inv.status === 'COMPLETED' && (
                 <button
-                  onClick={() => transferEvidence(inv)}
+                  onClick={() => openTransferModal(inv)}
                   disabled={transferring === inv.id}
                   className="mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm disabled:opacity-50"
                 >
@@ -218,6 +260,25 @@ export default function InvestigatePage() {
               className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
             >
               Закрыть
+            </button>
+          </div>
+        </div>
+      )}
+
+      {evidenceToTransfer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <PlayerSelector
+              title="Выберите Военного"
+              players={militaryList}
+              onSelect={(p) => transferEvidence(p.id)}
+              emptyText="Нет Военных в вашей стране"
+            />
+            <button
+              onClick={() => setEvidenceToTransfer(null)}
+              className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
+            >
+              Отмена
             </button>
           </div>
         </div>
