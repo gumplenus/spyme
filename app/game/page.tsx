@@ -44,6 +44,8 @@ export default function GamePage() {
   const [passiveIncomeMessage, setPassiveIncomeMessage] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [postSearch, setPostSearch] = useState('');
+  const [postCountryFilter, setPostCountryFilter] = useState('');
 
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -67,6 +69,40 @@ export default function GamePage() {
     setProfile(profileData);
     return profileData;
   };
+
+  useEffect(() => {
+  if (!profile?.id) return;
+
+  const timer = setTimeout(async () => {
+    let query = supabase
+      .from('Post')
+      .select(`*, author:authorId (username, country)`)
+      .order('createdAt', { ascending: false });
+
+    if (postCountryFilter) {
+      query = query.eq('country', postCountryFilter);
+    }
+
+    if (postSearch.trim()) {
+      const { data: matchingUsers } = await supabase
+        .from('User')
+        .select('id')
+        .ilike('username', `%${postSearch.trim()}%`);
+
+      if (matchingUsers && matchingUsers.length > 0) {
+        query = query.in('authorId', matchingUsers.map((u: any) => u.id));
+      } else {
+        setPosts([]);
+        return;
+      }
+    }
+
+    const { data } = await query;
+    setPosts(data || []);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [profile?.id, postSearch, postCountryFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,15 +148,6 @@ export default function GamePage() {
           .eq('id', profileData.spyMissionTargetId)
           .single();
         setSpyTarget(targetData);
-      }
-
-      if (profileData.country) {
-        const { data: postsData } = await supabase
-          .from('Post')
-          .select(`*, author:authorId (username)`)
-          .eq('country', profileData.country)
-          .order('createdAt', { ascending: false });
-        setPosts(postsData || []);
       }
 
       setLoading(false);
@@ -504,16 +531,54 @@ export default function GamePage() {
         </div>
       </div>
 
-      <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-        <h2 className="text-xl font-semibold text-green-400">📰 Лента новостей</h2>
+            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <h2 className="text-xl font-semibold text-green-400 mb-3">📰 Лента новостей</h2>
+
+        <div className="space-y-2 mb-4">
+          <input
+            type="text"
+            value={postSearch}
+            onChange={(e) => setPostSearch(e.target.value)}
+            placeholder="Поиск по имени репортёра..."
+            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+          />
+          <div className="flex gap-2">
+            <select
+              value={postCountryFilter}
+              onChange={(e) => setPostCountryFilter(e.target.value)}
+              className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+            >
+              <option value="">Все страны</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {(postSearch || postCountryFilter) && (
+              <button
+                onClick={() => {
+                  setPostSearch('');
+                  setPostCountryFilter('');
+                }}
+                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm"
+              >
+                Сбросить
+              </button>
+            )}
+          </div>
+        </div>
+
         {posts.length === 0 ? (
-          <p className="text-gray-400 mt-2">Нет новостей в вашей стране</p>
+          <p className="text-gray-400">Нет постов по заданным фильтрам</p>
         ) : (
-          <div className="mt-3 space-y-4">
+          <div className="space-y-4">
             {posts.map((post) => (
               <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
                 <p className="text-gray-400 text-sm">
-                  {post.author?.username || 'Неизвестный'} · {new Date(post.createdAt).toLocaleDateString()}
+                  {post.author?.username || 'Неизвестный'}
+                  {post.author?.country ? ` · ${post.author.country}` : ''}
+                  {' · '}{new Date(post.createdAt).toLocaleDateString()}
                 </p>
                 <p className="text-white mt-1">{post.content}</p>
               </div>
