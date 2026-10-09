@@ -363,9 +363,6 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
-      <h1 className="text-3xl font-bold text-green-400 mb-6">
-        Добро пожаловать в игру SpyMe!
-      </h1>
 
       {passiveIncomeMessage && (
         <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
