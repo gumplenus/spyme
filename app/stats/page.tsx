@@ -21,7 +21,7 @@ export default function StatsPage() {
       // Если шпион — обновляем счётчик дней
       const { data: profileData } = await supabase
         .from('User')
-        .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, spyCodeWord, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
+        .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
         .eq('id', user.id)
         .single();
 
@@ -34,7 +34,7 @@ export default function StatsPage() {
         // Перезагружаем профиль с обновлённым счётчиком
         const { data: updatedProfile } = await supabase
           .from('User')
-          .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, spyCodeWord, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
+          .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
           .eq('id', user.id)
           .single();
 
@@ -191,9 +191,6 @@ export default function StatsPage() {
                 <p className="text-gray-400 text-sm mt-1">Прогресс миссии</p>
               </div>
             </div>
-            <p className="text-gray-400 text-sm text-center">
-              Кодовое слово: <span className="text-purple-300 font-semibold">{profile.spyCodeWord || '—'}</span>
-            </p>
             {profile.spyMissionCompleted && (
               <p className="text-green-400 text-sm text-center mt-2">
                 🎉 Первая миссия выполнена

@@ -57,7 +57,7 @@ export default function GamePage() {
 
     const { data: profileData } = await supabase
       .from('User')
-      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, spyCodeWord, balance, lastCountryChange, isBanned, militaryBlockedUntil')
+      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, balance, lastCountryChange, isBanned, militaryBlockedUntil')
       .eq('id', user.id)
       .single();
 
@@ -454,10 +454,6 @@ export default function GamePage() {
                   Цель не назначена. Играйте свою роль и не попадайтесь.
                 </p>
               )}
-
-              <p className="text-gray-400 text-xs mt-3">
-                Кодовое слово: <span className="text-purple-300 font-semibold">{profile.spyCodeWord}</span>
-              </p>
             </div>
           )}
 

@@ -13,7 +13,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [contactUsername, setContactUsername] = useState('');
-  const [isSpy, setIsSpy] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,13 +31,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         return;
       }
       setCurrentUserId(user.id);
-
-      const { data: myProfile } = await supabase
-        .from('User')
-        .select('isSpy')
-        .eq('id', user.id)
-        .single();
-      setIsSpy(myProfile?.isSpy === true);
 
       const { data: profile } = await supabase
         .from('User')
@@ -96,7 +88,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         senderId: currentUserId,
         recipientId: params.userId,
         content: newMessage.trim(),
-        isSpyCode: false,
         isZoned: false,
       })
       .select()
@@ -106,12 +97,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
       console.error('Ошибка отправки:', error);
       alert('Не удалось отправить сообщение');
     } else if (inserted) {
-      await supabase.rpc('check_spy_code', {
-        message_id: inserted.id,
-        sender_id: currentUserId,
-        message_text: newMessage.trim(),
-      });
-
       await supabase.rpc('increase_spy_progress', {
         sender: currentUserId,
         recipient: params.userId,
@@ -161,17 +146,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
                     isMine ? 'bg-green-500 text-white' : 'bg-gray-700 text-white'
                   }`}
                 >
-                  <p>
-                    {msg.content}
-                    {isSpy && msg.isSpyCode && (
-                      <span
-                        className="ml-2 text-yellow-300 text-xs cursor-help"
-                        title="Игрок использовал кодовое слово. Вероятно, он шпион."
-                      >
-                        ⚠️
-                      </span>
-                    )}
-                  </p>
+                  <p>{msg.content}</p>
                   <p className="text-xs opacity-70 mt-1">
                     {new Date(msg.createdAt).toLocaleTimeString()}
                   </p>
@@ -180,7 +155,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
             );
           })
         )}
-        {/* Невидимый "якорь" для скролла вниз */}
         <div ref={messagesEndRef} />
       </div>
 
