@@ -120,6 +120,39 @@ export default function InvestigatePage() {
     setEvidenceToTransfer(inv);
   };
 
+      const cancelInvestigation = async (inv: any) => {
+    if (!currentUserId) return;
+    if (!confirm('Отменить расследование? Оно не будет завершено.')) return;
+
+    // Удаляем расследование
+    const { error } = await supabase
+      .from('Investigation')
+      .delete()
+      .eq('id', inv.id);
+
+    if (error) {
+      alert('Ошибка отмены: ' + error.message);
+      return;
+    }
+
+    // Уменьшаем счётчик расследований (не ниже 0)
+    const { data: currentProfile } = await supabase
+      .from('User')
+      .select('investigationsCount')
+      .eq('id', currentUserId)
+      .single();
+
+    if (currentProfile && (currentProfile.investigationsCount || 0) > 0) {
+      await supabase
+        .from('User')
+        .update({ investigationsCount: currentProfile.investigationsCount - 1 })
+        .eq('id', currentUserId);
+    }
+
+    // Убираем из UI
+    setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
+  };
+
     const transferEvidence = async (recipientId: string) => {
     if (!currentUserId || !evidenceToTransfer) return;
     setTransferring(evidenceToTransfer.id);
@@ -227,6 +260,16 @@ export default function InvestigatePage() {
               <p className={`text-xs mt-1 ${inv.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-400'}`}>
                 Статус: {inv.status === 'COMPLETED' ? 'Завершено' : 'В процессе (24 ч)'}
               </p>
+
+              {inv.status !== 'COMPLETED' && (
+  <button
+    onClick={() => cancelInvestigation(inv)}
+    className="mt-3 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm"
+  >
+    ✕ Отменить расследование
+  </button>
+)}
+
               {inv.result && (
                 <p className="text-gray-300 text-sm mt-2 bg-gray-900 p-2 rounded">
                   {inv.result}
