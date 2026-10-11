@@ -30,19 +30,26 @@ export default function ChooseRolePage() {
   }, [router]);
 
   const selectRole = async (roleId: string) => {
-    if (!userId) return;
+  if (!userId) return;
 
-    const { error } = await supabase
-      .from('User')
-      .update({ publicRole: roleId })
-      .eq('id', userId);
+  const updates: Record<string, any> = { publicRole: roleId };
 
-    if (error) {
-      console.error('Ошибка сохранения роли:', error);
-    } else {
-      router.push('/game');
-    }
-  };
+  // Бизнесмен стартует с 1000 ВЛИ, остальные — с 500 (стартовый баланс из регистрации)
+  if (roleId === 'BUSINESSMAN') {
+    updates.balance = 1000;
+  }
+
+  const { error } = await supabase
+    .from('User')
+    .update(updates)
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Ошибка сохранения роли:', error);
+  } else {
+    router.push('/game');
+  }
+};
 
   if (loading) return <div className="text-white p-4">Загрузка...</div>;
 
