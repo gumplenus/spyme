@@ -43,7 +43,7 @@ export default function InvestigatePage() {
         .from('Investigation')
         .select(`
           *,
-          target:targetId (username, country, publicRole)
+          target:targetId (username, country, publicRole, avatarUrl)
         `)
         .eq('reporterId', user.id)
         .order('startedAt', { ascending: false });
@@ -60,7 +60,7 @@ export default function InvestigatePage() {
 
     const { data: users } = await supabase
       .from('User')
-      .select('id, username, country, publicRole')
+      .select('id, username, country, publicRole, avatarUrl')
       .neq('id', currentUserId);
 
     setAllUsers(users || []);
@@ -99,7 +99,7 @@ export default function InvestigatePage() {
 
       const { data: invData } = await supabase
         .from('Investigation')
-        .select(`*, target:targetId (username, country, publicRole)`)
+        .select(`*, target:targetId (username, country, publicRole, avatarUrl)`)
         .eq('reporterId', currentUserId)
         .order('startedAt', { ascending: false });
       setInvestigations(invData || []);
@@ -112,7 +112,7 @@ export default function InvestigatePage() {
 
     const { data: militaries } = await supabase
       .from('User')
-      .select('id, username, country, publicRole')
+      .select('id, username, country, publicRole, avatarUrl')
       .eq('publicRole', 'MILITARY')
       .eq('country', currentUserCountry)
       .neq('id', currentUserId);
@@ -255,12 +255,27 @@ const confirmCancelInvestigation = async () => {
         <div className="space-y-3 mt-4">
           {investigations.map((inv) => (
             <div key={inv.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-              <p className="text-white font-semibold">
-                🎯 {inv.target?.username || 'Неизвестный'}
-              </p>
-              <p className="text-gray-400 text-sm">
-                Страна: {inv.target?.country} · Роль: {inv.target?.publicRole}
-              </p>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                  {inv.target?.avatarUrl ? (
+                    <img
+                      src={inv.target.avatarUrl}
+                      alt={inv.target?.username || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg">👤</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white font-semibold truncate">
+                    🎯 {inv.target?.username || 'Неизвестный'}
+                  </p>
+                  <p className="text-gray-400 text-sm truncate">
+                    Страна: {inv.target?.country} · Роль: {inv.target?.publicRole}
+                  </p>
+                </div>
+              </div>
               <p className="text-gray-500 text-xs mt-2">
                 Начато: {new Date(inv.startedAt).toLocaleString()}
               </p>

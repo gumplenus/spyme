@@ -22,6 +22,7 @@ export type Player = {
   username: string | null;
   country: string | null;
   publicRole: string | null;
+  avatarUrl?: string | null;
 };
 
 type Props = {
@@ -138,16 +139,27 @@ export default function PlayerSelector({
       ) : (
         <div className="space-y-2">
           {filtered.map((p) => {
-            const content = (
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
+                        const content = (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                  {p.avatarUrl ? (
+                    <img
+                      src={p.avatarUrl}
+                      alt={p.username || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg">👤</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="text-white font-medium truncate">
                     {p.username || 'Неизвестный'}
                   </p>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-400 text-sm truncate">
                     {ROLE_ICONS[p.publicRole?.toUpperCase() || ''] || '👤'}{' '}
-{ROLE_LABELS[p.publicRole?.toUpperCase() || ''] || p.publicRole || 'Без роли'}
-{p.country ? ` · ${p.country}` : ''}
+                    {ROLE_LABELS[p.publicRole?.toUpperCase() || ''] || p.publicRole || 'Без роли'}
+                    {p.country ? ` · ${p.country}` : ''}
                   </p>
                 </div>
               </div>

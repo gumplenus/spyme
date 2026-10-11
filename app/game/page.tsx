@@ -76,7 +76,7 @@ export default function GamePage() {
   const timer = setTimeout(async () => {
     let query = supabase
       .from('Post')
-      .select(`*, author:authorId (username, country)`)
+      .select(`*, author:authorId (username, country, avatarUrl)`)
       .order('createdAt', { ascending: false });
 
     if (postCountryFilter) {
@@ -207,7 +207,7 @@ export default function GamePage() {
 
     const { data: users } = await supabase
       .from('User')
-      .select('id, username, country, publicRole')
+      .select('id, username, country, publicRole, avatarUrl')
       .neq('id', user.id)
       .order('username');
 
@@ -554,12 +554,27 @@ export default function GamePage() {
           <div className="space-y-4">
             {posts.map((post) => (
               <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
-                <p className="text-gray-400 text-sm">
-                  {post.author?.username || 'Неизвестный'}
-                  {post.author?.country ? ` · ${post.author.country}` : ''}
-                  {' · '}{new Date(post.createdAt).toLocaleDateString()}
-                </p>
-                <p className="text-white mt-1">{post.content}</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                    {post.author?.avatarUrl ? (
+                      <img
+                        src={post.author.avatarUrl}
+                        alt={post.author?.username || ''}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-base">👤</span>
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-gray-300 font-medium">
+                      {post.author?.username || 'Неизвестный'}
+                    </span>
+                    {post.author?.country ? ` · ${post.author.country}` : ''}
+                    {' · '}{new Date(post.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <p className="text-white">{post.content}</p>
               </div>
             ))}
           </div>
@@ -641,21 +656,34 @@ export default function GamePage() {
                 emptyText="Нет игроков по заданным фильтрам"
               />
             ) : (
-              <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between">
-                <div>
-                  <p className="text-white font-medium">
-                    {allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
-                    {allUsers.find((u) => u.id === transferRecipient)?.country
-                      ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}`
-                      : ''}
-                  </p>
+              <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                    {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
+                      <img
+                        src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg">👤</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white font-medium truncate">
+                      {allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}
+                    </p>
+                    <p className="text-gray-400 text-sm truncate">
+                      {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
+                      {allUsers.find((u) => u.id === transferRecipient)?.country
+                        ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}`
+                        : ''}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setTransferRecipient('')}
-                  className="text-gray-400 hover:text-red-400 text-sm underline"
+                  className="text-gray-400 hover:text-red-400 text-sm underline shrink-0"
                 >
                   Изменить
                 </button>

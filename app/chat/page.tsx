@@ -47,7 +47,7 @@ export default function ChatList() {
         const userIds = Array.from(uniqueUsers.keys());
         const { data: profiles } = await supabase
           .from('User')
-          .select('id, username, country, publicRole')
+          .select('id, username, country, publicRole, avatarUrl')
           .in('id', userIds);
 
         const chatList = Array.from(uniqueUsers.values()).map((chat: any) => {
@@ -57,6 +57,7 @@ export default function ChatList() {
             username: profile?.username || 'Неизвестный',
             country: profile?.country || null,
             publicRole: profile?.publicRole || null,
+            avatarUrl: profile?.avatarUrl || null,
           };
         });
 
@@ -74,7 +75,7 @@ export default function ChatList() {
 
     const { data: users } = await supabase
       .from('User')
-      .select('id, username, country, publicRole')
+      .select('id, username, country, publicRole, avatarUrl')
       .neq('id', currentUserId);
 
     setAllUsers(users || []);
@@ -115,22 +116,35 @@ export default function ChatList() {
               href={`/chat/${chat.userId}`}
               className="block bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
             >
-              <div className="flex justify-between items-start gap-3">
-  <div className="min-w-0 flex-1">
-    <p className="text-white font-semibold truncate">{chat.username}</p>
-    <p className="text-gray-500 text-xs truncate">
-      {chat.publicRole && chat.country
-        ? `${chat.publicRole} · ${chat.country}`
-        : chat.country || chat.publicRole || ''}
-    </p>
-    <p className="text-gray-400 text-sm truncate mt-1">
-      {chat.lastMessage}
-    </p>
-  </div>
-  <p className="text-gray-500 text-xs whitespace-nowrap shrink-0">
-    {new Date(chat.lastMessageTime).toLocaleDateString()}
-  </p>
-</div>
+                            <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                  {chat.avatarUrl ? (
+                    <img
+                      src={chat.avatarUrl}
+                      alt={chat.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl">👤</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="text-white font-semibold truncate">{chat.username}</p>
+                    <p className="text-gray-500 text-xs whitespace-nowrap shrink-0">
+                      {new Date(chat.lastMessageTime).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="text-gray-500 text-xs truncate">
+                    {chat.publicRole && chat.country
+                      ? `${chat.publicRole} · ${chat.country}`
+                      : chat.country || chat.publicRole || ''}
+                  </p>
+                  <p className="text-gray-400 text-sm truncate mt-1">
+                    {chat.lastMessage}
+                  </p>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
