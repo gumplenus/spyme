@@ -15,6 +15,8 @@ export default function SettingsPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,11 +29,12 @@ export default function SettingsPage() {
 
       const { data: profileData } = await supabase
         .from('User')
-        .select('id, username, email, notificationsEnabled, isBanned')
+        .select('id, username, email, notificationsEnabled, isBanned, avatarUrl')
         .eq('id', user.id)
         .single();
 
       setProfile(profileData);
+      setAvatarUrl(profileData?.avatarUrl || null);
       setLoading(false);
     };
 
@@ -88,6 +91,57 @@ export default function SettingsPage() {
     router.push('/');
   };
 
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Можно загружать только изображения');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Файл слишком большой. Максимум 2 МБ');
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filePath = `${userId}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert('Ошибка загрузки: ' + uploadError.message);
+      setUploadingAvatar(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+
+    const { error: updateError } = await supabase
+      .from('User')
+      .update({ avatarUrl: publicUrl })
+      .eq('id', userId);
+
+    if (updateError) {
+      alert('Ошибка сохранения: ' + updateError.message);
+    } else {
+      setAvatarUrl(publicUrl);
+      setMessage('Аватар обновлён');
+      setTimeout(() => setMessage(null), 3000);
+    }
+
+    setUploadingAvatar(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -113,6 +167,33 @@ export default function SettingsPage() {
 
         {/* Профиль */}
         <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-4">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Аватар"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl">👤</span>
+              )}
+            </div>
+            <div>
+              <label className="cursor-pointer inline-block px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-semibold">
+                {uploadingAvatar ? 'Загрузка...' : '📷 Загрузить аватар'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-gray-500 text-xs mt-2">JPG, PNG, WebP. Максимум 2 МБ.</p>
+            </div>
+          </div>
+
           <p className="text-gray-400 text-sm">Имя</p>
           <p className="text-white font-semibold">{profile?.username}</p>
           <p className="text-gray-400 text-sm mt-3">Email</p>
