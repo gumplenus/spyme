@@ -231,10 +231,13 @@ const confirmCancelInvestigation = async () => {
       </Link>
 
       {successMessage && (
-        <div className="mb-4 p-3 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-sm">
-          ✅ {successMessage}
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 pointer-events-none">
+    <div className="bg-gray-800 border border-green-500 rounded-xl p-6 max-w-sm w-full text-center shadow-2xl">
+      <div className="text-4xl mb-2">✅</div>
+      <p className="text-green-300 font-semibold">{successMessage}</p>
+    </div>
+  </div>
+)}
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-green-400">🔍 Расследования</h1>
