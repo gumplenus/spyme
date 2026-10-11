@@ -19,6 +19,7 @@ export default function InvestigatePage() {
   const [transferring, setTransferring] = useState<string | null>(null);
   const [evidenceToTransfer, setEvidenceToTransfer] = useState<any>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,38 +121,41 @@ export default function InvestigatePage() {
     setEvidenceToTransfer(inv);
   };
 
-      const cancelInvestigation = async (inv: any) => {
-    if (!currentUserId) return;
-    if (!confirm('Отменить расследование? Оно не будет завершено.')) return;
+      const openCancelModal = (inv: any) => {
+  setCancelTarget(inv);
+};
 
-    // Удаляем расследование
-    const { error } = await supabase
-      .from('Investigation')
-      .delete()
-      .eq('id', inv.id);
+const confirmCancelInvestigation = async () => {
+  if (!currentUserId || !cancelTarget) return;
 
-    if (error) {
-      alert('Ошибка отмены: ' + error.message);
-      return;
-    }
+  const inv = cancelTarget;
+  setCancelTarget(null);
 
-    // Уменьшаем счётчик расследований (не ниже 0)
-    const { data: currentProfile } = await supabase
+  const { error } = await supabase
+    .from('Investigation')
+    .delete()
+    .eq('id', inv.id);
+
+  if (error) {
+    alert('Ошибка отмены: ' + error.message);
+    return;
+  }
+
+  const { data: currentProfile } = await supabase
+    .from('User')
+    .select('investigationsCount')
+    .eq('id', currentUserId)
+    .single();
+
+  if (currentProfile && (currentProfile.investigationsCount || 0) > 0) {
+    await supabase
       .from('User')
-      .select('investigationsCount')
-      .eq('id', currentUserId)
-      .single();
+      .update({ investigationsCount: currentProfile.investigationsCount - 1 })
+      .eq('id', currentUserId);
+  }
 
-    if (currentProfile && (currentProfile.investigationsCount || 0) > 0) {
-      await supabase
-        .from('User')
-        .update({ investigationsCount: currentProfile.investigationsCount - 1 })
-        .eq('id', currentUserId);
-    }
-
-    // Убираем из UI
-    setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
-  };
+  setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
+};
 
     const transferEvidence = async (recipientId: string) => {
     if (!currentUserId || !evidenceToTransfer) return;
@@ -263,7 +267,7 @@ export default function InvestigatePage() {
 
               {inv.status !== 'COMPLETED' && (
   <button
-    onClick={() => cancelInvestigation(inv)}
+    onClick={() => openCancelModal(inv)}
     className="mt-3 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm"
   >
     ✕ Отменить расследование
@@ -326,6 +330,38 @@ export default function InvestigatePage() {
           </div>
         </div>
       )}
+
+          {cancelTarget && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-700">
+            <h3 className="text-xl font-semibold text-white mb-3">
+              ✕ Отменить расследование?
+            </h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Расследование цели{' '}
+              <span className="text-white font-semibold">
+                {cancelTarget.target?.username || 'Неизвестный'}
+              </span>{' '}
+              будет удалено. Прогресс не сохранится.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setCancelTarget(null)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={confirmCancelInvestigation}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+              >
+                Отменить расследование
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
