@@ -193,10 +193,17 @@ export default function GamePage() {
       }
 
       if (data && data.length > 0) {
-        setPosts([data[0], ...posts]);
-        setNewPostContent('');
-        setIsModalOpen(false);
-      }
+  const newPost = {
+    ...data[0],
+    author: {
+      username: profile?.username || 'Неизвестный',
+      country: profile?.country || null,
+    },
+  };
+  setPosts([newPost, ...posts]);
+  setNewPostContent('');
+  setIsModalOpen(false);
+}
     } catch (err) {
       console.error('Неизвестная ошибка:', err);
     } finally {

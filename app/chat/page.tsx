@@ -115,22 +115,22 @@ export default function ChatList() {
               href={`/chat/${chat.userId}`}
               className="block bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
             >
-              <div className="flex justify-between items-center">
-                <div className="min-w-0">
-                  <p className="text-white font-semibold">{chat.username}</p>
-                  <p className="text-gray-500 text-xs">
-                    {chat.publicRole && chat.country
-                      ? `${chat.publicRole} · ${chat.country}`
-                      : chat.country || chat.publicRole || ''}
-                  </p>
-                  <p className="text-gray-400 text-sm truncate max-w-xs mt-1">
-                    {chat.lastMessage}
-                  </p>
-                </div>
-                <p className="text-gray-500 text-xs whitespace-nowrap ml-2">
-                  {new Date(chat.lastMessageTime).toLocaleDateString()}
-                </p>
-              </div>
+              <div className="flex justify-between items-start gap-3">
+  <div className="min-w-0 flex-1">
+    <p className="text-white font-semibold truncate">{chat.username}</p>
+    <p className="text-gray-500 text-xs truncate">
+      {chat.publicRole && chat.country
+        ? `${chat.publicRole} · ${chat.country}`
+        : chat.country || chat.publicRole || ''}
+    </p>
+    <p className="text-gray-400 text-sm truncate mt-1">
+      {chat.lastMessage}
+    </p>
+  </div>
+  <p className="text-gray-500 text-xs whitespace-nowrap shrink-0">
+    {new Date(chat.lastMessageTime).toLocaleDateString()}
+  </p>
+</div>
             </Link>
           ))}
         </div>
