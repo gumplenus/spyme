@@ -359,14 +359,37 @@ export default function GamePage() {
   const immunityHours = isPolitician ? getImmunityHours() : 0;
   const militaryBlockHours = isMilitary ? getMilitaryBlockHours() : 0;
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-
-      {passiveIncomeMessage && (
-        <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
-          {passiveIncomeMessage}
+      return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+        <Link href="/game" className="text-lg font-bold text-green-400">
+          🕵️ SpyMe
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/settings"
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm"
+          >
+            ⚙️ Настройки
+          </Link>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/login');
+            }}
+            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
+          >
+            Выйти
+          </button>
         </div>
-      )}
+      </header>
+
+      <div className="pt-20 px-4 pb-4">
+        {passiveIncomeMessage && (
+          <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
+            {passiveIncomeMessage}
+          </div>
+        )}
 
       <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
         <div>
@@ -392,16 +415,6 @@ export default function GamePage() {
             </p>
           </div>
         )}
-
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            router.push('/login');
-          }}
-          className="mt-3 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
-        >
-          Выйти
-        </button>
 
         <div className="flex flex-wrap gap-2 mt-3">
           <Link
@@ -770,6 +783,7 @@ export default function GamePage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
