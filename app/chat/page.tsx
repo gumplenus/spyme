@@ -13,6 +13,7 @@ export default function ChatList() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deleteChatTarget, setDeleteChatTarget] = useState<any>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -25,11 +26,17 @@ export default function ChatList() {
 
       setCurrentUserId(user.id);
 
-      const { data: messages } = await supabase
+      const { data: allMessages } = await supabase
         .from('Message')
-        .select('senderId, recipientId, content, createdAt')
+        .select('senderId, recipientId, content, createdAt, deletedForSender, deletedForRecipient')
         .or(`senderId.eq.${user.id},recipientId.eq.${user.id}`)
         .order('createdAt', { ascending: false });
+
+      const messages = (allMessages || []).filter((m: any) => {
+        if (m.senderId === user.id && m.deletedForSender) return false;
+        if (m.recipientId === user.id && m.deletedForRecipient) return false;
+        return true;
+      });
 
       if (messages) {
         const uniqueUsers = new Map();
@@ -69,6 +76,31 @@ export default function ChatList() {
 
     fetchChats();
   }, [router]);
+
+    const openDeleteChatModal = (chat: any) => {
+    setDeleteChatTarget(chat);
+  };
+
+  const confirmDeleteChat = async () => {
+    if (!currentUserId || !deleteChatTarget) return;
+
+    const contactId = deleteChatTarget.userId;
+    setDeleteChatTarget(null);
+
+    await supabase
+      .from('Message')
+      .update({ deletedForSender: true })
+      .eq('senderId', currentUserId)
+      .eq('recipientId', contactId);
+
+    await supabase
+      .from('Message')
+      .update({ deletedForRecipient: true })
+      .eq('recipientId', currentUserId)
+      .eq('senderId', contactId);
+
+    setChats((prev) => prev.filter((c) => c.userId !== contactId));
+  };
 
   const openNewChatModal = async () => {
     if (!currentUserId) return;
@@ -110,13 +142,16 @@ export default function ChatList() {
         <p className="text-gray-400 mt-8">Нет сообщений. Нажмите «Новое сообщение», чтобы начать диалог.</p>
       ) : (
         <div className="space-y-3 mt-4">
-          {chats.map((chat) => (
-            <Link
+                    {chats.map((chat) => (
+            <div
               key={chat.userId}
-              href={`/chat/${chat.userId}`}
-              className="block bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
+              className="relative bg-gray-800 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
             >
-                            <div className="flex items-start gap-3">
+              <Link
+                href={`/chat/${chat.userId}`}
+                className="block p-4 pr-12"
+              >
+                <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                   {chat.avatarUrl ? (
                     <img
@@ -145,7 +180,15 @@ export default function ChatList() {
                   </p>
                 </div>
               </div>
-            </Link>
+              </Link>
+              <button
+                onClick={() => openDeleteChatModal(chat)}
+                className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-red-400 text-lg"
+                title="Удалить чат"
+              >
+                🗑
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -166,6 +209,37 @@ export default function ChatList() {
             >
               Закрыть
             </button>
+          </div>
+        </div>
+      )}
+
+            {deleteChatTarget && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-700">
+            <h3 className="text-xl font-semibold text-white mb-3">
+              🗑 Удалить чат?
+            </h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Чат с{' '}
+              <span className="text-white font-semibold">
+                {deleteChatTarget.username || 'Неизвестный'}
+              </span>{' '}
+              будет удалён только у вас. У собеседника переписка останется.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteChatTarget(null)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={confirmDeleteChat}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+              >
+                Удалить
+              </button>
+            </div>
           </div>
         </div>
       )}

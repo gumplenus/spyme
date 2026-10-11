@@ -51,7 +51,13 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         .or(`senderId.eq.${params.userId},recipientId.eq.${params.userId}`)
         .order('createdAt', { ascending: true });
 
-      setMessages(messagesData || []);
+      const visibleMessages = (messagesData || []).filter((m: any) => {
+        if (m.senderId === user.id && m.deletedForSender) return false;
+        if (m.recipientId === user.id && m.deletedForRecipient) return false;
+        return true;
+      });
+
+      setMessages(visibleMessages);
       setLoading(false);
     };
 
