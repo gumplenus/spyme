@@ -13,13 +13,13 @@ const COUNTRIES = [
   { code: 'DE', name: 'Германия' },
   { code: 'IL', name: 'Израиль' },
   { code: 'GB', name: 'Великобритания' },
+  { code: 'FR', name: 'Франция'}
 ];
 
 export default function GamePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [spyTarget, setSpyTarget] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +57,7 @@ export default function GamePage() {
 
     const { data: profileData } = await supabase
       .from('User')
-      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, spyMissionTargetId, spyMissionProgress, spyMissionCompleted, balance, lastCountryChange, isBanned, militaryBlockedUntil')
+      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, balance, lastCountryChange, isBanned, militaryBlockedUntil')
       .eq('id', user.id)
       .single();
 
@@ -139,15 +139,6 @@ export default function GamePage() {
       if (notifData && notifData.length > 0) {
         setNotifications(notifData);
         setIsNotificationsOpen(true);
-      }
-
-      if (profileData.isSpy && profileData.spyMissionTargetId) {
-        const { data: targetData } = await supabase
-          .from('User')
-          .select('username, country, publicRole')
-          .eq('id', profileData.spyMissionTargetId)
-          .single();
-        setSpyTarget(targetData);
       }
 
       setLoading(false);
@@ -421,41 +412,16 @@ export default function GamePage() {
           </Link>
 
           {isSpy && (
-            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-              <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
-              <p className="text-gray-300 text-sm mt-2">
-                Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
-              </p>
-
-              {spyTarget ? (
-                <>
-                  <p className="text-purple-300 font-semibold mt-3">🎯 Первая миссия (пример):</p>
-                  <p className="text-white mt-1">
-                    Завербовать: <span className="font-semibold">{spyTarget.username}</span>
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Страна: {spyTarget.country} · Роль: {spyTarget.publicRole}
-                  </p>
-                  {profile.spyMissionCompleted ? (
-                    <p className="text-green-400 font-semibold text-sm mt-2">
-                      🎉 Первая миссия выполнена!
-                    </p>
-                  ) : (
-                    <p className="text-yellow-400 text-sm mt-2">
-                      Прогресс: {profile.spyMissionProgress}%
-                    </p>
-                  )}
-                  <p className="text-gray-400 text-xs mt-2">
-                    Дальше — сами решайте, что делать. Главное — не попадайтесь!
-                  </p>
-                </>
-              ) : (
-                <p className="text-gray-400 text-sm mt-2">
-                  Цель не назначена. Играйте свою роль и не попадайтесь.
-                </p>
-              )}
-            </div>
-          )}
+  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+    <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
+    <p className="text-gray-300 text-sm mt-2">
+      Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
+    </p>
+    <p className="text-gray-400 text-xs mt-3">
+      Другие игроки не знают, что вы шпион. Действуйте осторожно.
+    </p>
+  </div>
+)}
 
           {profile?.publicRole === 'REPORTER' && (
             <>

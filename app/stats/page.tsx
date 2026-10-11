@@ -21,7 +21,7 @@ export default function StatsPage() {
       // Если шпион — обновляем счётчик дней
       const { data: profileData } = await supabase
         .from('User')
-        .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
+        .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
         .eq('id', user.id)
         .single();
 
@@ -34,7 +34,7 @@ export default function StatsPage() {
         // Перезагружаем профиль с обновлённым счётчиком
         const { data: updatedProfile } = await supabase
           .from('User')
-          .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, spyMissionProgress, spyMissionCompleted, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
+          .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
           .eq('id', user.id)
           .single();
 
@@ -177,27 +177,15 @@ export default function StatsPage() {
           </div>
         )}
 
-        {/* ШПИОН — ТОЛЬКО ЕМУ */}
         {isSpy && (
-          <div className="bg-purple-900/30 p-6 rounded-xl border border-purple-500">
-            <h2 className="text-2xl font-bold text-purple-300 mb-4">🕵️ Как Шпион (скрыто)</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-purple-900/50 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-purple-300">{profile.spySurvivalDays || 0}</p>
-                <p className="text-gray-400 text-sm mt-1">Дней в роли шпиона</p>
-              </div>
-              <div className="bg-purple-900/50 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-purple-300">{profile.spyMissionProgress || 0}%</p>
-                <p className="text-gray-400 text-sm mt-1">Прогресс миссии</p>
-              </div>
-            </div>
-            {profile.spyMissionCompleted && (
-              <p className="text-green-400 text-sm text-center mt-2">
-                🎉 Первая миссия выполнена
-              </p>
-            )}
-          </div>
-        )}
+  <div className="bg-purple-900/30 p-6 rounded-xl border border-purple-500">
+    <h2 className="text-2xl font-bold text-purple-300 mb-4">🕵️ Как Шпион (скрыто)</h2>
+    <div className="bg-purple-900/50 p-4 rounded-lg text-center">
+      <p className="text-3xl font-bold text-purple-300">{profile.spySurvivalDays || 0}</p>
+      <p className="text-gray-400 text-sm mt-1">Дней в роли шпиона</p>
+    </div>
+  </div>
+)}
       </div>
 
       <div className="max-w-4xl mx-auto mt-8 mb-4 flex justify-center">

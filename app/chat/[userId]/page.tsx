@@ -97,11 +97,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
       console.error('Ошибка отправки:', error);
       alert('Не удалось отправить сообщение');
     } else if (inserted) {
-      await supabase.rpc('increase_spy_progress', {
-        sender: currentUserId,
-        recipient: params.userId,
-        message_text: newMessage.trim(),
-      });
 
       setNewMessage('');
     }
