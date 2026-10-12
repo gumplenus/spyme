@@ -123,21 +123,24 @@ export default function ChatList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-green-400">💬 Чаты</h1>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+            ←
+          </Link>
+          <h1 className="text-xl sm:text-2xl font-bold text-green-400 truncate">💬 Чаты</h1>
+        </div>
         <button
           onClick={openNewChatModal}
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
+          className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm shrink-0"
         >
-          ➕ Новое сообщение
+          <span className="hidden sm:inline">➕ Новое сообщение</span>
+          <span className="sm:hidden">➕</span>
         </button>
-      </div>
+      </header>
 
-      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-        ← Назад в игру
-      </Link>
-
+      <div className="pt-20 px-4 pb-4">
       {chats.length === 0 ? (
         <p className="text-gray-400 mt-8">Нет сообщений. Нажмите «Новое сообщение», чтобы начать диалог.</p>
       ) : (
@@ -195,20 +198,25 @@ export default function ChatList() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <PlayerSelector
-              title="Выберите собеседника"
-              players={allUsers}
-              getHref={(p) => `/chat/${p.id}`}
-              onSelect={() => setIsModalOpen(false)}
-              emptyText="Нет игроков по заданным фильтрам"
-            />
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-            >
-              Закрыть
-            </button>
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
+              <h3 className="text-xl font-semibold text-white">Выберите собеседника</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6 pb-6 overflow-y-auto">
+              <PlayerSelector
+                players={allUsers}
+                getHref={(p) => `/chat/${p.id}`}
+                onSelect={() => setIsModalOpen(false)}
+                emptyText="Нет игроков по заданным фильтрам"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -243,6 +251,7 @@ export default function ChatList() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -642,8 +642,18 @@ export default function GamePage() {
 
       {isTransferOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold text-white mb-2">💰 Перевести ВЛИ</h3>
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
+              <h3 className="text-xl font-semibold text-white">💰 Перевести ВЛИ</h3>
+              <button
+                onClick={() => setIsTransferOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6 overflow-y-auto flex-1">
             <p className="text-gray-400 text-sm mb-4">
               Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
             </p>
@@ -727,7 +737,7 @@ export default function GamePage() {
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex justify-end space-x-3 mt-6 pb-6">
               <button
                 onClick={() => setIsTransferOpen(false)}
                 className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
@@ -741,6 +751,7 @@ export default function GamePage() {
               >
                 {transferring ? 'Перевод...' : 'Перевести'}
               </button>
+            </div>
             </div>
           </div>
         </div>

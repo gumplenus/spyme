@@ -313,38 +313,48 @@ const confirmCancelInvestigation = async () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <PlayerSelector
-              title="Кого расследовать?"
-              players={allUsers}
-              onSelect={(p) => startInvestigation(p.id)}
-              emptyText="Нет игроков по заданным фильтрам"
-            />
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-            >
-              Закрыть
-            </button>
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
+              <h3 className="text-xl font-semibold text-white">Кого расследовать?</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6 pb-6 overflow-y-auto">
+              <PlayerSelector
+                players={allUsers}
+                onSelect={(p) => startInvestigation(p.id)}
+                emptyText="Нет игроков по заданным фильтрам"
+              />
+            </div>
           </div>
         </div>
       )}
 
       {evidenceToTransfer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <PlayerSelector
-              title="Выберите Военного"
-              players={militaryList}
-              onSelect={(p) => transferEvidence(p.id)}
-              emptyText="Нет Военных в вашей стране"
-            />
-            <button
-              onClick={() => setEvidenceToTransfer(null)}
-              className="mt-4 w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-            >
-              Отмена
-            </button>
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
+              <h3 className="text-xl font-semibold text-white">Выберите Военного</h3>
+              <button
+                onClick={() => setEvidenceToTransfer(null)}
+                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6 pb-6 overflow-y-auto">
+              <PlayerSelector
+                players={militaryList}
+                onSelect={(p) => transferEvidence(p.id)}
+                emptyText="Нет Военных в вашей стране"
+              />
+            </div>
           </div>
         </div>
       )}
