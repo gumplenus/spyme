@@ -6,15 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
 import PlayerSelector, { Player } from '@/components/PlayerSelector';
-
-const COUNTRIES = [
-  { code: 'US', name: 'США' },
-  { code: 'RU', name: 'Россия' },
-  { code: 'DE', name: 'Германия' },
-  { code: 'IL', name: 'Израиль' },
-  { code: 'GB', name: 'Великобритания' },
-  { code: 'FR', name: 'Франция'}
-];
+import { COUNTRIES } from '@/lib/countries';
 
 export default function GamePage() {
   const router = useRouter();

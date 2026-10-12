@@ -3,20 +3,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-
-const COUNTRIES = [
-  { code: 'US', name: 'США' },
-  { code: 'RU', name: 'Россия' },
-  { code: 'GB', name: 'Великобритания' },
-  { code: 'DE', name: 'Германия' },
-  { code: 'IL', name: 'Израиль' },
-];
+import { COUNTRIES } from '@/lib/countries';
 
 export default function ChooseCountryPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -25,35 +17,34 @@ export default function ChooseCountryPage() {
         router.push('/login');
         return;
       }
-      setUser(user);
+      setUserId(user.id);
       setLoading(false);
     };
     getUser();
   }, [router]);
 
   const selectCountry = async (countryCode: string) => {
-    setLoading(true);
+    if (!userId) return;
+    
     const { error } = await supabase
       .from('User')
       .update({ country: countryCode })
-      .eq('id', user?.id);
-    
+      .eq('id', userId);
+
     if (error) {
-      setError(error.message);
-      setLoading(false);
+      console.error('Ошибка сохранения страны:', error);
     } else {
       router.push('/choose-role');
     }
   };
 
-  if (loading) return <div className="text-white p-8 text-center">Загрузка...</div>;
-  if (error) return <div className="text-red-400 p-8 text-center">Ошибка: {error}</div>;
+  if (loading) return <div className="text-white p-4">Загрузка...</div>;
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
       <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
       <p className="text-gray-400 mb-8">Выберите вашу страну</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl w-full">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl w-full">
         {COUNTRIES.map((country) => (
           <button
             key={country.code}

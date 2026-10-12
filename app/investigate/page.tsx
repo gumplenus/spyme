@@ -277,10 +277,21 @@ const confirmCancelInvestigation = async () => {
                 </div>
               </div>
               <p className="text-gray-500 text-xs mt-2">
-                Начато: {new Date(inv.startedAt).toLocaleString()}
+                Начато: {new Date(inv.startedAt + 'Z').toLocaleString()}
               </p>
               <p className={`text-xs mt-1 ${inv.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-400'}`}>
-                Статус: {inv.status === 'COMPLETED' ? 'Завершено' : 'В процессе (24 ч)'}
+                Статус: {inv.status === 'COMPLETED' ? 'Завершено' : (
+                  (() => {
+                    const started = new Date(inv.startedAt + 'Z').getTime();
+                    const endsAt = started + 24 * 60 * 60 * 1000;
+                    const remainingMs = endsAt - Date.now();
+                    if (remainingMs <= 0) return 'Завершается...';
+                    const hours = Math.floor(remainingMs / (60 * 60 * 1000));
+                    const minutes = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+                    if (hours > 0) return `Осталось: ${hours} ч ${minutes} мин`;
+                    return `Осталось: ${minutes} мин`;
+                  })()
+                )}
               </p>
 
               {inv.status !== 'COMPLETED' && (
