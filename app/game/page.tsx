@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isInOnboarding, hoursUntilOnboardingEnds } from '@/lib/gameCycle';
 import PlayerSelector, { Player } from '@/components/PlayerSelector';
 import { COUNTRIES } from '@/lib/countries';
 
@@ -391,11 +390,6 @@ export default function GamePage() {
           <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
           {isPolitician && immunityHours > 0 && (
             <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
-          )}
-          {isInOnboarding(profile?.onboardingEndsAt) && (
-            <p className="text-yellow-400 font-semibold">
-              🎓 Обучение: осталось {hoursUntilOnboardingEnds(profile.onboardingEndsAt)} ч.
-            </p>
           )}
         </div>
 
