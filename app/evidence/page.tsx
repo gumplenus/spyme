@@ -86,6 +86,26 @@ export default function EvidencePage() {
     }
   };
 
+    const dismissEvidence = async (evidenceId: string) => {
+    setEliminating(evidenceId);
+    setMessage(null);
+
+    const { error } = await supabase
+      .from('Evidence')
+      .delete()
+      .eq('id', evidenceId);
+
+    if (error) {
+      setMessage({ text: 'Ошибка удаления: ' + error.message, type: 'error' });
+    } else {
+      setMessage({ text: '🗑 Улика удалена', type: 'success' });
+      setEvidences((prev) => prev.filter((e) => e.id !== evidenceId));
+      setTimeout(() => setMessage(null), 3000);
+    }
+
+    setEliminating(null);
+  };
+
   const eliminateTarget = async (evidence: any) => {
     setEliminating(evidence.id);
     setMessage(null);
@@ -274,13 +294,22 @@ export default function EvidencePage() {
               <p className="text-orange-400 text-xs mt-2">
                 Сила улики: {e.strength}%
               </p>
-              <button
-                onClick={() => eliminateTarget(e)}
-                disabled={eliminating === e.id}
-                className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm disabled:opacity-50"
-              >
-                {eliminating === e.id ? 'Ликвидация...' : '⚔️ Ликвидировать'}
-              </button>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => eliminateTarget(e)}
+                  disabled={eliminating === e.id}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm disabled:opacity-50"
+                >
+                  {eliminating === e.id ? 'Ликвидация...' : '⚔️ Ликвидировать'}
+                </button>
+                <button
+                  onClick={() => dismissEvidence(e.id)}
+                  disabled={eliminating === e.id}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm disabled:opacity-50"
+                >
+                  🗑 Удалить
+                </button>
+              </div>
             </div>
           ))}
         </div>
