@@ -510,10 +510,10 @@ export default function GamePage() {
         </div>
       </div>
 
-            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-        <h2 className="text-xl font-semibold text-green-400 mb-3">📰 Лента новостей</h2>
+            <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col max-h-[600px] overflow-hidden">
+        <h2 className="text-xl font-semibold text-green-400 px-4 pt-4 pb-3 shrink-0">📰 Лента новостей</h2>
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 px-4 pb-3 shrink-0">
           <input
             type="text"
             value={postSearch}
@@ -548,6 +548,7 @@ export default function GamePage() {
           </div>
         </div>
 
+        <div className="overflow-y-auto flex-1 px-4 pb-4">
         {posts.length === 0 ? (
           <p className="text-gray-400">Нет постов по заданным фильтрам</p>
         ) : (
@@ -579,6 +580,7 @@ export default function GamePage() {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {isNotificationsOpen && notifications.length > 0 && (
