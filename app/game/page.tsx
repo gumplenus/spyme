@@ -409,12 +409,21 @@ export default function GamePage() {
         )}
 
         <div className="flex flex-wrap gap-2 mt-3">
-          <Link
-            href="/chat"
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
-          >
-            💬 Чаты
-          </Link>
+          {militaryBlockHours === 0 ? (
+            <Link
+              href="/chat"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
+            >
+              💬 Чаты
+            </Link>
+          ) : (
+            <span
+              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+              title="Вы заблокированы"
+            >
+              💬 Чаты (заблокировано)
+            </span>
+          )}
 
           {isSpy && (
   <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
@@ -463,12 +472,21 @@ export default function GamePage() {
             </span>
           )}
 
-          <button
-            onClick={openTransferModal}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
-          >
-            💰 Перевести ВЛИ
-          </button>
+          {militaryBlockHours === 0 ? (
+            <button
+              onClick={openTransferModal}
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
+            >
+              💰 Перевести ВЛИ
+            </button>
+          ) : (
+            <span
+              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+              title="Вы заблокированы"
+            >
+              💰 Перевести ВЛИ (заблокировано)
+            </span>
+          )}
 
           {isPolitician && (
             <button
