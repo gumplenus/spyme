@@ -286,7 +286,7 @@ export default function EvidencePage() {
                 Страна: {e.target?.country} · Роль: {e.target?.publicRole}
               </p>
               <p className="text-gray-500 text-xs mt-2">
-                От: {e.reporter?.username || 'Неизвестный'} · {new Date(e.createdAt).toLocaleString()}
+                От: {e.reporter?.username || 'Неизвестный'} · {new Date(e.createdAt + 'Z').toLocaleDateString()}
               </p>
               <p className="text-gray-300 text-sm mt-2 bg-gray-900 p-2 rounded">
                 {e.content}
