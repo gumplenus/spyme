@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const ROLES = [
   { id: 'REPORTER', name: 'Репортер', icon: '📰', desc: 'Пишу новости и расследую' },
@@ -55,6 +56,13 @@ export default function ChooseRolePage() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+      <Link
+        href="/choose-country"
+        className="absolute top-4 left-4 text-green-400 hover:underline text-sm"
+      >
+        ← Назад к выбору страны
+      </Link>
+
       <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
       <p className="text-gray-400 mb-8">Выберите свою роль в игре</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
