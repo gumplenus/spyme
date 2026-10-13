@@ -48,7 +48,7 @@ export default function GamePage() {
 
     const { data: profileData } = await supabase
       .from('User')
-      .select('id, username, country, publicRole, onboardingEndsAt, isSpy, spyActivated, balance, lastCountryChange, isBanned, militaryBlockedUntil')
+      .select('id, username, country, publicRole, isSpy, spyActivated, balance, lastCountryChange, isBanned, militaryBlockedUntil')
       .eq('id', user.id)
       .single();
 
