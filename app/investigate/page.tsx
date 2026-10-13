@@ -225,11 +225,24 @@ const confirmCancelInvestigation = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-        ← Назад в игру
-      </Link>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+            ←
+          </Link>
+          <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">🔍 Расследования</h1>
+        </div>
+        <button
+          onClick={openNewInvestigationModal}
+          className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold shrink-0"
+        >
+          <span className="hidden sm:inline">➕ Новое расследование</span>
+          <span className="sm:hidden">➕</span>
+        </button>
+      </header>
 
+      <div className="pt-20 px-4 pb-4">
       {successMessage && (
   <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 pointer-events-none">
     <div className="bg-gray-800 border border-green-500 rounded-xl p-6 max-w-sm w-full text-center shadow-2xl">
@@ -238,16 +251,6 @@ const confirmCancelInvestigation = async () => {
     </div>
   </div>
 )}
-
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-green-400">🔍 Расследования</h1>
-        <button
-          onClick={openNewInvestigationModal}
-          className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
-        >
-          ➕ Новое расследование
-        </button>
-      </div>
 
       {investigations.length === 0 ? (
         <p className="text-gray-400 mt-8">У вас ещё нет расследований.</p>
@@ -400,7 +403,7 @@ const confirmCancelInvestigation = async () => {
           </div>
         </div>
       )}
-
+      </div>
     </div>
   );
 }
