@@ -250,13 +250,15 @@ export default function EvidencePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-        ← Назад в игру
-      </Link>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
+        <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+          ←
+        </Link>
+        <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">📂 Входящие улики</h1>
+      </header>
 
-      <h1 className="text-3xl font-bold text-green-400 mb-6">📂 Входящие улики</h1>
-
+      <div className="pt-20 px-4 pb-4">
       <p className="text-gray-400 mb-4">
         Ваша страна: <span className="text-white">{profile?.country}</span>
       </p>
@@ -314,6 +316,7 @@ export default function EvidencePage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
