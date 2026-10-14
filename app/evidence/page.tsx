@@ -164,6 +164,8 @@ export default function EvidencePage() {
           isBanned: true,
           banReason: 'Ликвидирован Военным за шпионаж',
           eliminatedBy: militaryUser?.id,
+          email: `banned-${evidence.targetId}@spyme.deleted`,
+          username: `Ликвидирован #${evidence.targetId.slice(0, 6)}`,
         })
         .eq('id', evidence.targetId);
 
