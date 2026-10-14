@@ -68,11 +68,13 @@ export default function SettingsPage() {
     setDeleting(true);
 
     const anonymizedEmail = `deleted-${userId}@spyme.deleted`;
+    const anonymizedUsername = `Аккаунт удалён #${userId.slice(0, 6)}`;
 
+    // 1. Анонимизируем профиль в таблице User
     const { error } = await supabase
       .from('User')
       .update({
-        username: 'Аккаунт удалён',
+        username: anonymizedUsername,
         email: anonymizedEmail,
         avatarUrl: null,
         deletedAt: new Date().toISOString(),
@@ -87,6 +89,24 @@ export default function SettingsPage() {
       return;
     }
 
+    // 2. Освобождаем email в auth.users (чтобы можно было зарегистрироваться заново)
+    try {
+      const res = await fetch('/api/release-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, type: 'deleted' }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error('Не удалось освободить email:', data.error);
+        // Не блокируем удаление — просто логируем
+      }
+    } catch (err) {
+      console.error('Ошибка вызова release-email:', err);
+    }
+
+    // 3. Выход и редирект
     await supabase.auth.signOut();
     router.push('/');
   };

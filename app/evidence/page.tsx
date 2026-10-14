@@ -170,6 +170,17 @@ export default function EvidencePage() {
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
+        // Освобождаем email в auth.users (чтобы игрок мог зарегистрироваться заново)
+        try {
+          await fetch('/api/release-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: evidence.targetId, type: 'banned' }),
+          });
+        } catch (err) {
+          console.error('Ошибка вызова release-email:', err);
+        }
+
         await supabase
           .from('Evidence')
           .delete()
