@@ -55,18 +55,23 @@ export default function ChatList() {
         const { data: profiles } = await supabase
           .from('User')
           .select('id, username, country, publicRole, avatarUrl')
-          .in('id', userIds);
+          .in('id', userIds)
+          .eq('isBanned', false)
+          .is('deletedAt', null);
 
-        const chatList = Array.from(uniqueUsers.values()).map((chat: any) => {
-          const profile = profiles?.find((p: any) => p.id === chat.userId);
-          return {
-            ...chat,
-            username: profile?.username || 'Неизвестный',
-            country: profile?.country || null,
-            publicRole: profile?.publicRole || null,
-            avatarUrl: profile?.avatarUrl || null,
-          };
-        });
+        const chatList = Array.from(uniqueUsers.values())
+          .map((chat: any) => {
+            const profile = profiles?.find((p: any) => p.id === chat.userId);
+            if (!profile) return null;
+            return {
+              ...chat,
+              username: profile.username || 'Неизвестный',
+              country: profile.country || null,
+              publicRole: profile.publicRole || null,
+              avatarUrl: profile.avatarUrl || null,
+            };
+          })
+          .filter(Boolean);
 
         setChats(chatList);
       }
@@ -108,7 +113,9 @@ export default function ChatList() {
     const { data: users } = await supabase
       .from('User')
       .select('id, username, country, publicRole, avatarUrl')
-      .neq('id', currentUserId);
+      .neq('id', currentUserId)
+      .eq('isBanned', false)
+      .is('deletedAt', null);
 
     setAllUsers(users || []);
     setIsModalOpen(true);

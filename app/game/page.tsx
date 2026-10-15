@@ -200,6 +200,8 @@ export default function GamePage() {
       .from('User')
       .select('id, username, country, publicRole, avatarUrl')
       .neq('id', user.id)
+      .eq('isBanned', false)
+      .is('deletedAt', null)
       .order('username');
 
     setAllUsers(users || []);

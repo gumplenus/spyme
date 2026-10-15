@@ -91,6 +91,19 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUserId) return;
+
+    // Проверяем, что получатель не забанен и не удалён
+    const { data: recipientCheck } = await supabase
+      .from('User')
+      .select('isBanned, deletedAt')
+      .eq('id', params.userId)
+      .single();
+
+    if (recipientCheck?.isBanned || recipientCheck?.deletedAt) {
+      alert('Нельзя отправить сообщение этому игроку');
+      return;
+    }
+
     setSending(true);
 
     const { data: inserted, error } = await supabase

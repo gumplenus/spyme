@@ -61,7 +61,9 @@ export default function InvestigatePage() {
     const { data: users } = await supabase
       .from('User')
       .select('id, username, country, publicRole, avatarUrl')
-      .neq('id', currentUserId);
+      .neq('id', currentUserId)
+      .eq('isBanned', false)
+      .is('deletedAt', null);
 
     setAllUsers(users || []);
     setIsModalOpen(true);
@@ -115,7 +117,9 @@ export default function InvestigatePage() {
       .select('id, username, country, publicRole, avatarUrl')
       .eq('publicRole', 'MILITARY')
       .eq('country', currentUserCountry)
-      .neq('id', currentUserId);
+      .neq('id', currentUserId)
+      .eq('isBanned', false)
+      .is('deletedAt', null);
 
     setMilitaryList(militaries || []);
     setEvidenceToTransfer(inv);
