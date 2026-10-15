@@ -4,23 +4,34 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (!captchaToken) {
+      setError('Пожалуйста, дождитесь проверки капчи');
+      return;
+    }
+
+    setLoading(true);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        captchaToken,
+      },
     });
 
     if (signInError) {
@@ -37,7 +48,6 @@ export function LoginForm() {
         .single();
 
       if (!profile?.country || !profile?.publicRole) {
-        // Профиль не создан или не заполнен — выходим из auth и просим зарегистрироваться заново
         await supabase.auth.signOut();
         alert('Профиль не завершён. Пожалуйста, зарегистрируйтесь заново.');
         router.push('/register');
@@ -62,7 +72,7 @@ export function LoginForm() {
           required
         />
       </div>
-            <div>
+      <div>
         <label className="block text-sm font-medium text-gray-300">Пароль</label>
         <div className="relative">
           <input
@@ -96,10 +106,21 @@ export function LoginForm() {
           </button>
         </div>
       </div>
+
+      <div className="flex justify-center">
+        <Turnstile
+          siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
+          onSuccess={(token) => setCaptchaToken(token)}
+          onError={() => setCaptchaToken(null)}
+          onExpire={() => setCaptchaToken(null)}
+        />
+      </div>
+
       {error && <div className="text-red-400 text-sm">{error}</div>}
+
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !captchaToken}
         className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
       >
         {loading ? 'Вход...' : 'Войти'}

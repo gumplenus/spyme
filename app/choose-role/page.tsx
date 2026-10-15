@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 const ROLES = [
   { id: 'REPORTER', name: 'Репортер', icon: '📰', desc: 'Пишу новости и расследую' },
@@ -20,6 +21,7 @@ export default function ChooseRolePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [country, setCountry] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     const pendingUsername = localStorage.getItem('pendingUsername');
@@ -41,12 +43,20 @@ export default function ChooseRolePage() {
 
   const selectRole = async (roleId: string) => {
     if (saving) return;
+
+    if (!captchaToken) {
+      alert('Пожалуйста, дождитесь проверки капчи');
+      return;
+    }
+
     setSaving(true);
 
-    // 1. Создаём auth-пользователя
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        captchaToken,
+      },
     });
 
     if (signUpError) {
@@ -61,7 +71,6 @@ export default function ChooseRolePage() {
       return;
     }
 
-    // 2. Создаём профиль в User
     const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
     const { error: insertError } = await supabase
@@ -86,13 +95,11 @@ export default function ChooseRolePage() {
       return;
     }
 
-    // 3. Чистим localStorage
     localStorage.removeItem('pendingUsername');
     localStorage.removeItem('pendingEmail');
     localStorage.removeItem('pendingPassword');
     localStorage.removeItem('pendingCountry');
 
-    // 4. В игру
     router.push('/game');
     router.refresh();
   };
@@ -115,7 +122,7 @@ export default function ChooseRolePage() {
           <button
             key={role.id}
             onClick={() => selectRole(role.id)}
-            disabled={saving}
+            disabled={saving || !captchaToken}
             className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center disabled:opacity-50"
           >
             <span className="text-4xl mb-2">{role.icon}</span>
@@ -124,6 +131,16 @@ export default function ChooseRolePage() {
           </button>
         ))}
       </div>
+
+      <div className="mt-8">
+        <Turnstile
+          siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
+          onSuccess={(token) => setCaptchaToken(token)}
+          onError={() => setCaptchaToken(null)}
+          onExpire={() => setCaptchaToken(null)}
+        />
+      </div>
+
       {saving && (
         <p className="text-green-400 mt-6">Создаём аккаунт...</p>
       )}
