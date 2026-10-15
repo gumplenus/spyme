@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -16,62 +16,60 @@ export default function ChooseRolePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [country, setCountry] = useState('');
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUserId(user.id);
-      setEmail(user.email || null);
+    const pendingUsername = localStorage.getItem('pendingUsername');
+    const pendingEmail = localStorage.getItem('pendingEmail');
+    const pendingPassword = localStorage.getItem('pendingPassword');
+    const pendingCountry = localStorage.getItem('pendingCountry');
 
-      // Проверяем, есть ли уже готовый профиль
-      const { data: profile } = await supabase
-        .from('User')
-        .select('country, publicRole')
-        .eq('id', user.id)
-        .single();
+    if (!pendingUsername || !pendingEmail || !pendingPassword || !pendingCountry) {
+      router.push('/register');
+      return;
+    }
 
-      if (profile?.country && profile?.publicRole) {
-        // Игрок уже зарегистрирован — отправляем в игру
-        router.push('/game');
-        return;
-      }
-
-      const pendingUsername = localStorage.getItem('pendingUsername');
-      const pendingCountry = localStorage.getItem('pendingCountry');
-
-      if (!pendingUsername || !pendingCountry) {
-        // Незавершённая регистрация — отправляем на выбор страны
-        router.push('/choose-country');
-        return;
-      }
-
-      setUsername(pendingUsername);
-      setCountry(pendingCountry);
-      setLoading(false);
-    };
-    init();
+    setUsername(pendingUsername);
+    setEmail(pendingEmail);
+    setPassword(pendingPassword);
+    setCountry(pendingCountry);
+    setLoading(false);
   }, [router]);
 
   const selectRole = async (roleId: string) => {
-    if (!userId || !email || !username || !country || saving) return;
+    if (saving) return;
     setSaving(true);
 
+    // 1. Создаём auth-пользователя
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      alert('Ошибка регистрации: ' + signUpError.message);
+      setSaving(false);
+      return;
+    }
+
+    if (!signUpData.user) {
+      alert('Не удалось создать аккаунт');
+      setSaving(false);
+      return;
+    }
+
+    // 2. Создаём профиль в User
     const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from('User')
       .insert([
         {
-          id: userId,
-          email: email,
+          id: signUpData.user.id,
+          email: signUpData.user.email,
           username: username,
           country: country,
           publicRole: roleId,
@@ -81,19 +79,20 @@ export default function ChooseRolePage() {
         },
       ]);
 
-    if (error) {
-      console.error('Ошибка создания профиля:', error);
-      alert('Не удалось создать профиль: ' + error.message);
+    if (insertError) {
+      console.error('Ошибка создания профиля:', insertError);
+      alert('Не удалось создать профиль: ' + insertError.message);
       setSaving(false);
       return;
     }
 
-    // Чистим localStorage
+    // 3. Чистим localStorage
     localStorage.removeItem('pendingUsername');
-    localStorage.removeItem('pendingUserId');
-    localStorage.removeItem('pendingUserEmail');
+    localStorage.removeItem('pendingEmail');
+    localStorage.removeItem('pendingPassword');
     localStorage.removeItem('pendingCountry');
 
+    // 4. В игру
     router.push('/game');
     router.refresh();
   };
@@ -125,6 +124,9 @@ export default function ChooseRolePage() {
           </button>
         ))}
       </div>
+      {saving && (
+        <p className="text-green-400 mt-6">Создаём аккаунт...</p>
+      )}
     </div>
   );
 }

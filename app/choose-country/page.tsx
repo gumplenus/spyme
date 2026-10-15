@@ -1,40 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { COUNTRIES } from '@/lib/countries';
 
 export default function ChooseCountryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+    // Проверяем, что игрок начал регистрацию (есть данные в localStorage)
+    const pendingEmail = localStorage.getItem('pendingEmail');
+    const pendingPassword = localStorage.getItem('pendingPassword');
+    const pendingUsername = localStorage.getItem('pendingUsername');
 
-      // Проверяем, есть ли уже готовый профиль
-      const { data: profile } = await supabase
-        .from('User')
-        .select('country, publicRole')
-        .eq('id', user.id)
-        .single();
+    if (!pendingEmail || !pendingPassword || !pendingUsername) {
+      // Регистрация не начата — отправляем на регистрацию
+      router.push('/register');
+      return;
+    }
 
-      if (profile?.country && profile?.publicRole) {
-        // Игрок уже зарегистрирован — отправляем в игру
-        router.push('/game');
-        return;
-      }
-
-      setUserId(user.id);
-      setLoading(false);
-    };
-    getUser();
+    setLoading(false);
   }, [router]);
 
   const selectCountry = (countryCode: string) => {
@@ -46,6 +33,13 @@ export default function ChooseCountryPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+      <Link
+        href="/register"
+        className="absolute top-4 left-4 text-green-400 hover:underline text-sm"
+      >
+        ← Назад к регистрации
+      </Link>
+
       <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
       <p className="text-gray-400 mb-8">Выберите вашу страну</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl w-full">

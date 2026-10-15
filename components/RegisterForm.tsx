@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -32,26 +31,12 @@ export function RegisterForm() {
 
     setIsLoading(true);
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    // Никаких запросов — просто сохраняем данные в localStorage
+    localStorage.setItem("pendingUsername", username.trim());
+    localStorage.setItem("pendingEmail", email.trim());
+    localStorage.setItem("pendingPassword", password);
 
-    if (signUpError) {
-      setError(signUpError.message || "Ошибка регистрации");
-      setIsLoading(false);
-      return;
-    }
-
-    if (data?.user) {
-      // Сохраняем выбранное имя в localStorage — оно понадобится при финальном создании профиля
-      localStorage.setItem("pendingUsername", username.trim());
-      localStorage.setItem("pendingUserId", data.user.id);
-      localStorage.setItem("pendingUserEmail", data.user.email || "");
-
-      router.push("/choose-country");
-      router.refresh();
-    }
+    router.push("/choose-country");
   };
 
   const EyeIcon = ({ crossed }: { crossed: boolean }) =>

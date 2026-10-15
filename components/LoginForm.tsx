@@ -36,16 +36,15 @@ export function LoginForm() {
         .eq('id', data.user.id)
         .single();
 
-      if (!profile) {
-        // Профиль не создан — незавершённая регистрация
-        router.push('/choose-country');
-      } else if (!profile?.country) {
-        router.push('/choose-country');
-      } else if (!profile?.publicRole) {
-        router.push('/choose-role');
-      } else {
-        router.push('/game');
+      if (!profile?.country || !profile?.publicRole) {
+        // Профиль не создан или не заполнен — выходим из auth и просим зарегистрироваться заново
+        await supabase.auth.signOut();
+        alert('Профиль не завершён. Пожалуйста, зарегистрируйтесь заново.');
+        router.push('/register');
+        return;
       }
+
+      router.push('/game');
       router.refresh();
     }
   };

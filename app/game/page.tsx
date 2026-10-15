@@ -52,7 +52,14 @@ export default function GamePage() {
       .eq('id', user.id)
       .single();
 
-    if (profileData?.isBanned === true) {
+    if (!profileData) {
+      // Профиль не создан — регистрация не завершена, разлогиниваем
+      await supabase.auth.signOut();
+      router.push('/register');
+      return null;
+    }
+
+    if (profileData.isBanned === true) {
       router.push('/banned');
       return null;
     }
@@ -98,7 +105,10 @@ export default function GamePage() {
   useEffect(() => {
     const fetchData = async () => {
       const profileData = await fetchProfile();
-      if (!profileData) return;
+      if (!profileData) {
+        setLoading(false);
+        return;
+      }
 
       try {
         await supabase.rpc('balance_spies');
