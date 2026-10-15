@@ -44,27 +44,10 @@ export function RegisterForm() {
     }
 
     if (data?.user) {
-      const { error: insertError } = await supabase
-        .from("User")
-        .insert([
-          {
-            id: data.user.id,
-            email: data.user.email,
-            username: username.trim(),
-            country: null,
-            publicRole: null,
-            balance: 500,
-            createdAt: new Date().toISOString(),
-            isBanned: false,
-          },
-        ]);
-
-      if (insertError) {
-        console.error("Ошибка создания пользователя:", insertError);
-        setError("Не удалось создать профиль");
-        setIsLoading(false);
-        return;
-      }
+      // Сохраняем выбранное имя в localStorage — оно понадобится при финальном создании профиля
+      localStorage.setItem("pendingUsername", username.trim());
+      localStorage.setItem("pendingUserId", data.user.id);
+      localStorage.setItem("pendingUserEmail", data.user.email || "");
 
       router.push("/choose-country");
       router.refresh();

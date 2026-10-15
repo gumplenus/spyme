@@ -36,10 +36,15 @@ export function LoginForm() {
         .eq('id', data.user.id)
         .single();
 
-      if (profile?.country && profile?.publicRole) {
-        router.push('/game');
-      } else {
+      if (!profile) {
+        // Профиль не создан — незавершённая регистрация
         router.push('/choose-country');
+      } else if (!profile?.country) {
+        router.push('/choose-country');
+      } else if (!profile?.publicRole) {
+        router.push('/choose-role');
+      } else {
+        router.push('/game');
       }
       router.refresh();
     }

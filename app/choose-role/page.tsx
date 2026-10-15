@@ -15,42 +15,88 @@ const ROLES = [
 export default function ChooseRolePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
       }
       setUserId(user.id);
+      setEmail(user.email || null);
+
+      // Проверяем, есть ли уже готовый профиль
+      const { data: profile } = await supabase
+        .from('User')
+        .select('country, publicRole')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.country && profile?.publicRole) {
+        // Игрок уже зарегистрирован — отправляем в игру
+        router.push('/game');
+        return;
+      }
+
+      const pendingUsername = localStorage.getItem('pendingUsername');
+      const pendingCountry = localStorage.getItem('pendingCountry');
+
+      if (!pendingUsername || !pendingCountry) {
+        // Незавершённая регистрация — отправляем на выбор страны
+        router.push('/choose-country');
+        return;
+      }
+
+      setUsername(pendingUsername);
+      setCountry(pendingCountry);
       setLoading(false);
     };
-    getUser();
+    init();
   }, [router]);
 
   const selectRole = async (roleId: string) => {
-  if (!userId) return;
+    if (!userId || !email || !username || !country || saving) return;
+    setSaving(true);
 
-  const updates: Record<string, any> = { publicRole: roleId };
+    const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
-  // Бизнесмен стартует с 1000 ВЛИ, остальные — с 500 (стартовый баланс из регистрации)
-  if (roleId === 'BUSINESSMAN') {
-    updates.balance = 1000;
-  }
+    const { error } = await supabase
+      .from('User')
+      .insert([
+        {
+          id: userId,
+          email: email,
+          username: username,
+          country: country,
+          publicRole: roleId,
+          balance: balance,
+          createdAt: new Date().toISOString(),
+          isBanned: false,
+        },
+      ]);
 
-  const { error } = await supabase
-    .from('User')
-    .update(updates)
-    .eq('id', userId);
+    if (error) {
+      console.error('Ошибка создания профиля:', error);
+      alert('Не удалось создать профиль: ' + error.message);
+      setSaving(false);
+      return;
+    }
 
-  if (error) {
-    console.error('Ошибка сохранения роли:', error);
-  } else {
+    // Чистим localStorage
+    localStorage.removeItem('pendingUsername');
+    localStorage.removeItem('pendingUserId');
+    localStorage.removeItem('pendingUserEmail');
+    localStorage.removeItem('pendingCountry');
+
     router.push('/game');
-  }
-};
+    router.refresh();
+  };
 
   if (loading) return <div className="text-white p-4">Загрузка...</div>;
 
@@ -70,7 +116,8 @@ export default function ChooseRolePage() {
           <button
             key={role.id}
             onClick={() => selectRole(role.id)}
-            className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center"
+            disabled={saving}
+            className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center disabled:opacity-50"
           >
             <span className="text-4xl mb-2">{role.icon}</span>
             <span className="text-lg font-semibold text-white">{role.name}</span>

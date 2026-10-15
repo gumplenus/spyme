@@ -17,25 +17,29 @@ export default function ChooseCountryPage() {
         router.push('/login');
         return;
       }
+
+      // Проверяем, есть ли уже готовый профиль
+      const { data: profile } = await supabase
+        .from('User')
+        .select('country, publicRole')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.country && profile?.publicRole) {
+        // Игрок уже зарегистрирован — отправляем в игру
+        router.push('/game');
+        return;
+      }
+
       setUserId(user.id);
       setLoading(false);
     };
     getUser();
   }, [router]);
 
-  const selectCountry = async (countryCode: string) => {
-    if (!userId) return;
-    
-    const { error } = await supabase
-      .from('User')
-      .update({ country: countryCode })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Ошибка сохранения страны:', error);
-    } else {
-      router.push('/choose-role');
-    }
+  const selectCountry = (countryCode: string) => {
+    localStorage.setItem('pendingCountry', countryCode);
+    router.push('/choose-role');
   };
 
   if (loading) return <div className="text-white p-4">Загрузка...</div>;
