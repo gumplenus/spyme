@@ -22,6 +22,7 @@ export default function ChooseRolePage() {
   const [password, setPassword] = useState('');
   const [country, setCountry] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showConfirmScreen, setShowConfirmScreen] = useState(false);
 
   useEffect(() => {
     const pendingUsername = localStorage.getItem('pendingUsername');
@@ -100,11 +101,42 @@ export default function ChooseRolePage() {
     localStorage.removeItem('pendingPassword');
     localStorage.removeItem('pendingCountry');
 
+    // Если email нужно подтвердить — показываем экран ожидания
+    if (!signUpData.session) {
+      setShowConfirmScreen(true);
+      setSaving(false);
+      return;
+    }
+
+    // Иначе — сразу в игру
     router.push('/game');
     router.refresh();
   };
 
   if (loading) return <div className="text-white p-4">Загрузка...</div>;
+
+  if (showConfirmScreen) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+        <div className="bg-gray-800 p-8 rounded-xl border border-green-500 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">📧</div>
+          <h1 className="text-2xl font-bold text-green-400 mb-4">
+            Подтвердите email
+          </h1>
+          <p className="text-gray-300 mb-3">
+            Мы отправили письмо на <span className="text-white font-semibold">{email}</span>
+          </p>
+          <p className="text-gray-400 text-sm mb-6">
+            Перейдите по ссылке в письме, чтобы активировать аккаунт.
+            Если письмо не пришло, проверьте папку «Спам».
+          </p>
+          <p className="text-gray-500 text-xs">
+            Письмо приходит в течение 1–2 минут.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
