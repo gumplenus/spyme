@@ -1,27 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AuthCallbackPage() {
+function CallbackHandler() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState('Проверяем подтверждение...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Supabase автоматически обрабатывает токен из URL
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const token_hash = searchParams.get('token_hash');
+        const type = searchParams.get('type');
 
-        if (userError || !user) {
-          setError('Не удалось подтвердить email. Попробуйте войти заново.');
+        if (!token_hash || !type) {
+          setError('Ссылка недействительна. Запросите новое письмо.');
           setStatus('');
           return;
         }
 
-        // Проверяем, есть ли уже профиль в User
+        // Обмениваем токен на сессию
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: type as any,
+        });
+
+        if (verifyError || !verifyData.user) {
+          setError('Не удалось подтвердить email: ' + (verifyError?.message || 'неизвестная ошибка'));
+          setStatus('');
+          return;
+        }
+
+        const user = verifyData.user;
+
+        // Проверяем, есть ли уже профиль
         const { data: existingProfile } = await supabase
           .from('User')
           .select('id')
@@ -29,7 +44,6 @@ export default function AuthCallbackPage() {
           .single();
 
         if (existingProfile) {
-          // Профиль уже есть — просто в игру
           router.push('/game');
           return;
         }
@@ -37,6 +51,7 @@ export default function AuthCallbackPage() {
         // Берём данные из localStorage
         const pendingUsername = localStorage.getItem('pendingUsername');
         const pendingCountry = localStorage.getItem('pendingCountry');
+        const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
 
         if (!pendingUsername || !pendingCountry) {
           setError('Данные регистрации потеряны. Зарегистрируйтесь заново.');
@@ -46,9 +61,6 @@ export default function AuthCallbackPage() {
 
         setStatus('Создаём профиль...');
 
-        // Создаём профиль. Роль пока пустая — её выберем отдельно
-        // Или передадим из localStorage (роль игрок выбирал до signUp)
-        const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
         const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
 
         const { error: insertError } = await supabase
@@ -67,13 +79,11 @@ export default function AuthCallbackPage() {
           ]);
 
         if (insertError) {
-          console.error('Ошибка создания профиля:', insertError);
           setError('Не удалось создать профиль: ' + insertError.message);
           setStatus('');
           return;
         }
 
-        // Чистим localStorage
         localStorage.removeItem('pendingUsername');
         localStorage.removeItem('pendingEmail');
         localStorage.removeItem('pendingPassword');
@@ -89,7 +99,7 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
-  }, [router]);
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
@@ -115,5 +125,17 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-green-400 text-xl">Загрузка...</div>
+      </div>
+    }>
+      <CallbackHandler />
+    </Suspense>
   );
 }
