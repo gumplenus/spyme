@@ -125,6 +125,13 @@ export function LoginForm() {
       >
         {loading ? 'Вход...' : 'Войти'}
       </button>
+
+<p className="text-center">
+        <Link href="/forgot-password" className="text-gray-400 hover:text-green-400 text-sm">
+          Забыли пароль?
+        </Link>
+      </p>
+
       <p className="text-gray-400 text-sm mt-4 text-center">
         Нет аккаунта?{' '}
         <Link href="/register" className="text-green-400 hover:underline">
