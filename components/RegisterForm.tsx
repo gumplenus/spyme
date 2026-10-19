@@ -15,6 +15,17 @@ export function RegisterForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const checkUnique = async (field: "email" | "username", value: string) => {
+    const res = await fetch("/api/check-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ field, value }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !data.exists;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -29,14 +40,40 @@ export function RegisterForm() {
       return;
     }
 
+    if (password.length < 6) {
+      setError("Пароль должен быть минимум 6 символов");
+      return;
+    }
+
     setIsLoading(true);
 
-    // Никаких запросов — просто сохраняем данные в localStorage
-    localStorage.setItem("pendingUsername", username.trim());
-    localStorage.setItem("pendingEmail", email.trim());
-    localStorage.setItem("pendingPassword", password);
+    try {
+      // Проверка email
+      const emailFree = await checkUnique("email", email.trim());
+      if (!emailFree) {
+        setError("Этот email уже зарегистрирован. Войдите или используйте другой.");
+        setIsLoading(false);
+        return;
+      }
 
-    router.push("/choose-country");
+      // Проверка имени
+      const usernameFree = await checkUnique("username", username.trim());
+      if (!usernameFree) {
+        setError("Это имя уже занято. Придумайте другое.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Всё свободно — сохраняем в localStorage
+      localStorage.setItem("pendingUsername", username.trim());
+      localStorage.setItem("pendingEmail", email.trim());
+      localStorage.setItem("pendingPassword", password);
+
+      router.push("/choose-country");
+    } catch (err) {
+      setError("Ошибка проверки данных. Попробуйте ещё раз.");
+      setIsLoading(false);
+    }
   };
 
   const EyeIcon = ({ crossed }: { crossed: boolean }) =>
@@ -137,7 +174,7 @@ export function RegisterForm() {
         disabled={isLoading}
         className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
       >
-        {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+        {isLoading ? "Проверка..." : "Зарегистрироваться"}
       </button>
 
       <p className="text-gray-400 text-sm mt-4 text-center">

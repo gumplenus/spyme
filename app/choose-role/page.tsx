@@ -72,6 +72,17 @@ export default function ChooseRolePage() {
       return;
     }
 
+    // Сохраняем роль в localStorage — пригодится в /auth/callback
+    localStorage.setItem('pendingRole', roleId);
+
+    // Если email нужно подтвердить — показываем экран ожидания
+    if (!signUpData.session) {
+      setShowConfirmScreen(true);
+      setSaving(false);
+      return;
+    }
+
+    // Если сессия есть сразу (email уже подтверждён) — создаём профиль здесь
     const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
     const { error: insertError } = await supabase
@@ -100,15 +111,8 @@ export default function ChooseRolePage() {
     localStorage.removeItem('pendingEmail');
     localStorage.removeItem('pendingPassword');
     localStorage.removeItem('pendingCountry');
+    localStorage.removeItem('pendingRole');
 
-    // Если email нужно подтвердить — показываем экран ожидания
-    if (!signUpData.session) {
-      setShowConfirmScreen(true);
-      setSaving(false);
-      return;
-    }
-
-    // Иначе — сразу в игру
     router.push('/game');
     router.refresh();
   };
