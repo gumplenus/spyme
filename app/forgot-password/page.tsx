@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +18,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      email.trim()
+      email.trim(),
+      {
+        captchaToken: captchaToken || undefined,
+      }
     );
 
     if (resetError) {
@@ -79,9 +84,18 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
+          <div className="flex justify-center">
+            <Turnstile
+              siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
+              onSuccess={(token) => setCaptchaToken(token)}
+              onError={() => setCaptchaToken(null)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !captchaToken}
             className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
           >
             {loading ? 'Отправка...' : 'Отправить ссылку'}
