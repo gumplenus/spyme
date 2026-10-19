@@ -7,36 +7,53 @@ import { useRouter, useSearchParams } from 'next/navigation';
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState('Проверяем подтверждение...');
+  const [status, setStatus] = useState('Проверяем авторизацию...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        const code = searchParams.get('code');
         const token_hash = searchParams.get('token_hash');
         const type = searchParams.get('type');
 
-        if (!token_hash || !type) {
-          setError('Ссылка недействительна. Запросите новое письмо.');
+        let user = null;
+
+        // 1. OAuth (Яндекс) — обмениваем code на сессию
+        if (code) {
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError || !data.user) {
+            setError('Ошибка входа через Яндекс: ' + (exchangeError?.message || 'неизвестная ошибка'));
+            setStatus('');
+            return;
+          }
+          user = data.user;
+        }
+        // 2. Email (подтверждение почты) — обмениваем token_hash
+        else if (token_hash && type) {
+          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash,
+            type: type as any,
+          });
+          if (verifyError || !data.user) {
+            setError('Не удалось подтвердить email: ' + (verifyError?.message || 'неизвестная ошибка'));
+            setStatus('');
+            return;
+          }
+          user = data.user;
+        } else {
+          setError('Неверная ссылка. Попробуйте войти заново.');
           setStatus('');
           return;
         }
 
-        // Обмениваем токен на сессию
-        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: type as any,
-        });
-
-        if (verifyError || !verifyData.user) {
-          setError('Не удалось подтвердить email: ' + (verifyError?.message || 'неизвестная ошибка'));
+        if (!user) {
+          setError('Не удалось получить данные пользователя.');
           setStatus('');
           return;
         }
 
-        const user = verifyData.user;
-
-        // Проверяем, есть ли уже профиль
+        // Проверяем, есть ли уже профиль в базе
         const { data: existingProfile } = await supabase
           .from('User')
           .select('id')
@@ -48,25 +65,19 @@ function CallbackHandler() {
           return;
         }
 
-        // Берём данные из localStorage
+        // Если профиля нет — проверяем, откуда пришел игрок
         const pendingUsername = localStorage.getItem('pendingUsername');
         const pendingCountry = localStorage.getItem('pendingCountry');
         const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
 
-        if (!pendingUsername || !pendingCountry) {
-          setError('Данные регистрации потеряны. Зарегистрируйтесь заново.');
-          setStatus('');
-          return;
-        }
+        // Если есть данные в localStorage — это регистрация через email
+        if (pendingUsername && pendingCountry) {
+          setStatus('Создаём профиль...');
+          const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
 
-        setStatus('Создаём профиль...');
-
-        const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
-
-        const { error: insertError } = await supabase
-          .from('User')
-          .insert([
-            {
+          const { error: insertError } = await supabase
+            .from('User')
+            .insert([{
               id: user.id,
               email: user.email,
               username: pendingUsername,
@@ -75,23 +86,35 @@ function CallbackHandler() {
               balance: balance,
               createdAt: new Date().toISOString(),
               isBanned: false,
-            },
-          ]);
+            }]);
 
-        if (insertError) {
-          setError('Не удалось создать профиль: ' + insertError.message);
-          setStatus('');
-          return;
+          if (insertError) {
+            setError('Не удалось создать профиль: ' + insertError.message);
+            setStatus('');
+            return;
+          }
+
+          localStorage.removeItem('pendingUsername');
+          localStorage.removeItem('pendingEmail');
+          localStorage.removeItem('pendingPassword');
+          localStorage.removeItem('pendingCountry');
+          localStorage.removeItem('pendingRole');
+
+          router.push('/game');
+          router.refresh();
+        } 
+        // Если данных нет — это первый вход через OAuth (Яндекс)
+        else {
+          // Генерируем временное имя из email (например, vova из vova@yandex.ru)
+          const defaultUsername = user.email?.split('@')[0] || `agent_${user.id.slice(0, 6)}`;
+          
+          localStorage.setItem('pendingUsername', defaultUsername);
+          localStorage.setItem('pendingEmail', user.email || '');
+          localStorage.setItem('pendingUserId', user.id);
+
+          // Отправляем на выбор страны
+          router.push('/choose-country');
         }
-
-        localStorage.removeItem('pendingUsername');
-        localStorage.removeItem('pendingEmail');
-        localStorage.removeItem('pendingPassword');
-        localStorage.removeItem('pendingCountry');
-        localStorage.removeItem('pendingRole');
-
-        router.push('/game');
-        router.refresh();
       } catch (err: any) {
         setError('Ошибка: ' + (err.message || 'Неизвестная ошибка'));
         setStatus('');
@@ -110,16 +133,16 @@ function CallbackHandler() {
             <h1 className="text-2xl font-bold text-red-400 mb-4">Ошибка</h1>
             <p className="text-gray-300 mb-6">{error}</p>
             <a
-              href="/register"
+              href="/login"
               className="inline-block px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold"
             >
-              Зарегистрироваться заново
+              Вернуться к входу
             </a>
           </>
         ) : (
           <>
             <div className="text-6xl mb-4">⏳</div>
-            <h1 className="text-2xl font-bold text-green-400 mb-4">Подтверждение email</h1>
+            <h1 className="text-2xl font-bold text-green-400 mb-4">Авторизация</h1>
             <p className="text-gray-300">{status}</p>
           </>
         )}

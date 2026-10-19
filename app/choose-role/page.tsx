@@ -23,41 +23,96 @@ export default function ChooseRolePage() {
   const [country, setCountry] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showConfirmScreen, setShowConfirmScreen] = useState(false);
+  const [isOAuth, setIsOAuth] = useState(false);
 
   useEffect(() => {
-    const pendingUsername = localStorage.getItem('pendingUsername');
-    const pendingEmail = localStorage.getItem('pendingEmail');
-    const pendingPassword = localStorage.getItem('pendingPassword');
-    const pendingCountry = localStorage.getItem('pendingCountry');
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const pendingUsername = localStorage.getItem('pendingUsername');
+      const pendingCountry = localStorage.getItem('pendingCountry');
 
-    if (!pendingUsername || !pendingEmail || !pendingPassword || !pendingCountry) {
-      router.push('/register');
-      return;
-    }
+      if (!pendingUsername || !pendingCountry) {
+        router.push('/choose-country');
+        return;
+      }
 
-    setUsername(pendingUsername);
-    setEmail(pendingEmail);
-    setPassword(pendingPassword);
-    setCountry(pendingCountry);
-    setLoading(false);
+      setUsername(pendingUsername);
+      setCountry(pendingCountry);
+
+      if (user) {
+        // Игрок пришёл через OAuth (Яндекс) — он уже авторизован
+        setIsOAuth(true);
+        setEmail(user.email || '');
+      } else {
+        // Обычная регистрация через email
+        const pendingEmail = localStorage.getItem('pendingEmail');
+        const pendingPassword = localStorage.getItem('pendingPassword');
+        if (!pendingEmail || !pendingPassword) {
+          router.push('/register');
+          return;
+        }
+        setEmail(pendingEmail);
+        setPassword(pendingPassword);
+      }
+
+      setLoading(false);
+    };
+    init();
   }, [router]);
 
   const selectRole = async (roleId: string) => {
     if (saving) return;
+    setSaving(true);
 
-    if (!captchaToken) {
-      alert('Пожалуйста, дождитесь проверки капчи');
+    // ВЕТКА 1: OAuth (Яндекс)
+    if (isOAuth) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Сессия истекла. Войдите заново.');
+        setSaving(false);
+        router.push('/login');
+        return;
+      }
+
+      const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
+
+      const { error: insertError } = await supabase
+        .from('User')
+        .insert([{
+          id: user.id,
+          email: user.email,
+          username: username,
+          country: country,
+          publicRole: roleId,
+          balance: balance,
+          createdAt: new Date().toISOString(),
+          isBanned: false,
+        }]);
+
+      if (insertError) {
+        alert('Не удалось создать профиль: ' + insertError.message);
+        setSaving(false);
+        return;
+      }
+
+      localStorage.clear();
+      router.push('/game');
+      router.refresh();
       return;
     }
 
-    setSaving(true);
+    // ВЕТКА 2: Email
+    if (!captchaToken) {
+      alert('Пожалуйста, дождитесь проверки капчи');
+      setSaving(false);
+      return;
+    }
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        captchaToken,
-      },
+      options: { captchaToken },
     });
 
     if (signUpError) {
@@ -72,47 +127,37 @@ export default function ChooseRolePage() {
       return;
     }
 
-    // Сохраняем роль в localStorage — пригодится в /auth/callback
     localStorage.setItem('pendingRole', roleId);
 
-    // Если email нужно подтвердить — показываем экран ожидания
     if (!signUpData.session) {
       setShowConfirmScreen(true);
       setSaving(false);
       return;
     }
 
-    // Если сессия есть сразу (email уже подтверждён) — создаём профиль здесь
+    // Если сессия есть сразу (email уже подтверждён)
     const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
     const { error: insertError } = await supabase
       .from('User')
-      .insert([
-        {
-          id: signUpData.user.id,
-          email: signUpData.user.email,
-          username: username,
-          country: country,
-          publicRole: roleId,
-          balance: balance,
-          createdAt: new Date().toISOString(),
-          isBanned: false,
-        },
-      ]);
+      .insert([{
+        id: signUpData.user.id,
+        email: signUpData.user.email,
+        username: username,
+        country: country,
+        publicRole: roleId,
+        balance: balance,
+        createdAt: new Date().toISOString(),
+        isBanned: false,
+      }]);
 
     if (insertError) {
-      console.error('Ошибка создания профиля:', insertError);
       alert('Не удалось создать профиль: ' + insertError.message);
       setSaving(false);
       return;
     }
 
-    localStorage.removeItem('pendingUsername');
-    localStorage.removeItem('pendingEmail');
-    localStorage.removeItem('pendingPassword');
-    localStorage.removeItem('pendingCountry');
-    localStorage.removeItem('pendingRole');
-
+    localStorage.clear();
     router.push('/game');
     router.refresh();
   };
@@ -124,18 +169,12 @@ export default function ChooseRolePage() {
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
         <div className="bg-gray-800 p-8 rounded-xl border border-green-500 max-w-md w-full text-center">
           <div className="text-6xl mb-4">📧</div>
-          <h1 className="text-2xl font-bold text-green-400 mb-4">
-            Подтвердите email
-          </h1>
+          <h1 className="text-2xl font-bold text-green-400 mb-4">Подтвердите email</h1>
           <p className="text-gray-300 mb-3">
             Мы отправили письмо на <span className="text-white font-semibold">{email}</span>
           </p>
           <p className="text-gray-400 text-sm mb-6">
             Перейдите по ссылке в письме, чтобы активировать аккаунт.
-            Если письмо не пришло, проверьте папку «Спам».
-          </p>
-          <p className="text-gray-500 text-xs">
-            Письмо приходит в течение 1–2 минут.
           </p>
         </div>
       </div>
@@ -144,21 +183,19 @@ export default function ChooseRolePage() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <Link
-        href="/choose-country"
-        className="absolute top-4 left-4 text-green-400 hover:underline text-sm"
-      >
+      <Link href="/choose-country" className="absolute top-4 left-4 text-green-400 hover:underline text-sm">
         ← Назад к выбору страны
       </Link>
 
       <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
       <p className="text-gray-400 mb-8">Выберите свою роль в игре</p>
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
         {ROLES.map((role) => (
           <button
             key={role.id}
             onClick={() => selectRole(role.id)}
-            disabled={saving || !captchaToken}
+            disabled={saving || (!isOAuth && !captchaToken)}
             className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center disabled:opacity-50"
           >
             <span className="text-4xl mb-2">{role.icon}</span>
@@ -168,18 +205,20 @@ export default function ChooseRolePage() {
         ))}
       </div>
 
-      <div className="mt-8">
-        <Turnstile
-          siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
-          onSuccess={(token) => setCaptchaToken(token)}
-          onError={() => setCaptchaToken(null)}
-          onExpire={() => setCaptchaToken(null)}
-        />
-      </div>
-
-      {saving && (
-        <p className="text-green-400 mt-6">Создаём аккаунт...</p>
+      {/* Капчу показываем только для email-регистрации */}
+      {!isOAuth && (
+        <div className="mt-8">
+          <Turnstile
+            siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
+            onSuccess={(token) => setCaptchaToken(token)}
+            onError={() => setCaptchaToken(null)}
+            onExpire={() => setCaptchaToken(null)}
+            options={{ refreshExpired: 'auto' }}
+          />
+        </div>
       )}
+
+      {saving && <p className="text-green-400 mt-6">Создаём аккаунт...</p>}
     </div>
   );
 }
