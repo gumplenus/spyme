@@ -140,15 +140,31 @@ export function LoginForm() {
         onClick={() => {
           const clientId = '2ba54608b95e4966a1e9ac1eb7524058';
           const redirectUri = 'https://spyme.com.ru/auth/callback';
-          const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+          const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=yandex`;
           window.location.href = authUrl;
         }}
-        className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+        className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 mb-2"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M12.8 1.6H8.6C5.2 1.6 3 3.8 3 7.5C3 10.6 4.8 12.6 7.8 13.4L2.6 22.4H6.6L12.4 11.9H13.6V22.4H17V1.6H12.8ZM13.6 8.9H12.2C10 8.9 8.8 8 8.8 6C8.8 4.1 9.9 3.2 12 3.2H13.6V8.9Z" />
         </svg>
         Войти через Яндекс
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          const clientId = '54837536';
+          const redirectUri = 'https://spyme.com.ru/auth/callback';
+          const authUrl = `https://id.vk.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk`;
+          window.location.href = authUrl;
+        }}
+        className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.625-3.504-1.686-1.565-1.765-1.602-.313-3.486 1.801-2.339 4.157-5.336 2.073-5.336h-3.981c-.772 0-.828.435-1.103 1.083-.995 2.347-2.886 5.387-3.604 4.922-.751-.485-.407-2.406-.35-5.261.015-.754.011-1.271-1.141-1.539-.814-.18-1.549-.26-2.21-.26-1.72 0-3.105.539-2.887 2.016.158 1.077.734 2.866 1.431 4.251-1.022 1.266-2.835 4.097-1.725 4.097h3.417c.5 0 .915-.256 1.126-.788.823-2.08 2.137-4.734 3.007-5.621.506-.515.858-.15.858.515v4.109c0 1.054.545 1.785 1.703 1.785z" />
+        </svg>
+        Войти через VK
       </button>
 
 <p className="text-center">

@@ -16,12 +16,15 @@ function CallbackHandler() {
         const code = searchParams.get('code');
         const token_hash = searchParams.get('token_hash');
         const type = searchParams.get('type');
+        const state = searchParams.get('state');
 
         let user = null;
 
-        // 1. OAuth (Яндекс) — отправляем код в нашу Edge-функцию
+        // 1. OAuth (Яндекс или VK) — отправляем код в соответствующую Edge-функцию
         if (code) {
-          const response = await fetch('https://tdxaglatoopqqxkblano.supabase.co/functions/v1/yandex-callback', {
+          const functionName = state === 'vk' ? 'vk-callback' : 'yandex-callback';
+          
+          const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/${functionName}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code }),
@@ -30,7 +33,7 @@ function CallbackHandler() {
           const data = await response.json();
 
           if (!response.ok || data.error) {
-            setError('Ошибка входа через Яндекс: ' + (data.error || 'неизвестная ошибка'));
+            setError(`Ошибка входа через ${state === 'vk' ? 'VK' : 'Яндекс'}: ` + (data.error || 'неизвестная ошибка'));
             setStatus('');
             return;
           }
