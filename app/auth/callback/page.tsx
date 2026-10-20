@@ -27,7 +27,10 @@ function CallbackHandler() {
           const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/${functionName}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
+            body: JSON.stringify({ 
+              code, 
+              code_verifier: sessionStorage.getItem('vk_code_verifier') 
+            }),
           });
 
           const data = await response.json();

@@ -152,20 +152,40 @@ export function LoginForm() {
       </button>
 
       <button
-        type="button"
-        onClick={() => {
-          const clientId = '54837536';
-          const redirectUri = 'https://spyme.com.ru/auth/callback';
-          const authUrl = `https://id.vk.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk`;
-          window.location.href = authUrl;
-        }}
-        className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.625-3.504-1.686-1.565-1.765-1.602-.313-3.486 1.801-2.339 4.157-5.336 2.073-5.336h-3.981c-.772 0-.828.435-1.103 1.083-.995 2.347-2.886 5.387-3.604 4.922-.751-.485-.407-2.406-.35-5.261.015-.754.011-1.271-1.141-1.539-.814-.18-1.549-.26-2.21-.26-1.72 0-3.105.539-2.887 2.016.158 1.077.734 2.866 1.431 4.251-1.022 1.266-2.835 4.097-1.725 4.097h3.417c.5 0 .915-.256 1.126-.788.823-2.08 2.137-4.734 3.007-5.621.506-.515.858-.15.858.515v4.109c0 1.054.545 1.785 1.703 1.785z" />
-        </svg>
-        Войти через VK
-      </button>
+  type="button"
+  onClick={async () => {
+    // 1. Генерируем code_verifier (случайная строка)
+    const array = new Uint32Array(56 / 2);
+    window.crypto.getRandomValues(array);
+    const codeVerifier = Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
+
+    // 2. Генерируем code_challenge с помощью SHA-256
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    
+    // Преобразуем в base64url формат (требование VK)
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    const codeChallenge = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    // 3. Сохраняем code_verifier, он понадобится на бэкенде при обмене кода на токен
+    sessionStorage.setItem('vk_code_verifier', codeVerifier);
+
+    // 4. Формируем URL для авторизации (используем новый домен id.vk.ru)
+    const clientId = '54837536';
+    const redirectUri = 'https://spyme.com.ru/auth/callback';
+    const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+    
+    window.location.href = authUrl;
+  }}
+  className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+>
+  {/* SVG иконка VK остается без изменений */}
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.625-3.504-1.686-1.565-1.765-1.602-.313-3.486 1.801-2.339 4.157-5.336 2.073-5.336h-3.981c-.772 0-.828.435-1.103 1.083-.995 2.347-2.886 5.387-3.604 4.922-.751-.485-.407-2.406-.35-5.261.015-.754.011-1.271-1.141-1.539-.814-.18-1.549-.26-2.21-.26-1.72 0-3.105.539-2.887 2.016.158 1.077.734 2.866 1.431 4.251-1.022 1.266-2.835 4.097-1.725 4.097h3.417c.5 0 .915-.256 1.126-.788.823-2.08 2.137-4.734 3.007-5.621.506-.515.858-.15.858.515v4.109c0 1.054.545 1.785 1.703 1.785z" />
+  </svg>
+  Войти через VK
+</button>
 
 <p className="text-center">
         <Link href="/forgot-password" className="text-gray-400 hover:text-green-400 text-sm">
