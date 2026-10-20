@@ -165,7 +165,12 @@ export function LoginForm() {
     const digest = await window.crypto.subtle.digest('SHA-256', data);
     
     // Преобразуем в base64url формат (требование VK)
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    const bytes = new Uint8Array(digest);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
     const codeChallenge = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
     // 3. Сохраняем code_verifier, он понадобится на бэкенде при обмене кода на токен
