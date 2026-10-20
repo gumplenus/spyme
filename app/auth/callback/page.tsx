@@ -17,10 +17,11 @@ function CallbackHandler() {
         const token_hash = searchParams.get('token_hash');
         const type = searchParams.get('type');
         const state = searchParams.get('state');
+        const device_id = searchParams.get('device_id'); // Забираем device_id от VK
 
         let user = null;
 
-        // 1. OAuth (Яндекс или VK) — отправляем код в соответствующую Edge-функцию
+        // 1. OAuth (Яндекс или VK)
         if (code) {
           const functionName = state === 'vk' ? 'vk-callback' : 'yandex-callback';
           
@@ -29,7 +30,8 @@ function CallbackHandler() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               code, 
-              code_verifier: sessionStorage.getItem('vk_code_verifier') 
+              code_verifier: sessionStorage.getItem('vk_code_verifier'),
+              device_id: device_id // Передаем device_id
             }),
           });
 
@@ -42,7 +44,6 @@ function CallbackHandler() {
           }
 
           if (data.action_link) {
-            // Перенаправляем по магической ссылке для создания сессии
             window.location.replace(data.action_link);
             return;
           } else {
@@ -51,7 +52,7 @@ function CallbackHandler() {
             return;
           }
         }
-        // 2. Email (подтверждение почты) — обмениваем token_hash
+        // 2. Email
         else if (token_hash && type) {
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash,
@@ -75,7 +76,6 @@ function CallbackHandler() {
           return;
         }
 
-        // Проверяем, есть ли уже профиль в базе
         const { data: existingProfile } = await supabase
           .from('User')
           .select('id')
@@ -87,12 +87,10 @@ function CallbackHandler() {
           return;
         }
 
-        // Если профиля нет — проверяем, откуда пришел игрок
         const pendingUsername = localStorage.getItem('pendingUsername');
         const pendingCountry = localStorage.getItem('pendingCountry');
         const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
 
-        // Если есть данные в localStorage — это регистрация через email
         if (pendingUsername && pendingCountry) {
           setStatus('Создаём профиль...');
           const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
@@ -124,17 +122,13 @@ function CallbackHandler() {
 
           router.push('/game');
           router.refresh();
-        } 
-        // Если данных нет — это первый вход через OAuth (Яндекс)
-        else {
-          // Генерируем временное имя из email (например, vova из vova@yandex.ru)
+        } else {
           const defaultUsername = user.email?.split('@')[0] || `agent_${user.id.slice(0, 6)}`;
           
           localStorage.setItem('pendingUsername', defaultUsername);
           localStorage.setItem('pendingEmail', user.email || '');
           localStorage.setItem('pendingUserId', user.id);
 
-          // Отправляем на выбор страны
           router.push('/choose-country');
         }
       } catch (err: any) {
