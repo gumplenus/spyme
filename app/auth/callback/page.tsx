@@ -19,15 +19,31 @@ function CallbackHandler() {
 
         let user = null;
 
-        // 1. OAuth (Яндекс) — обмениваем code на сессию
+        // 1. OAuth (Яндекс) — отправляем код в нашу Edge-функцию
         if (code) {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError || !data.user) {
-            setError('Ошибка входа через Яндекс: ' + (exchangeError?.message || 'неизвестная ошибка'));
+          const response = await fetch('https://tdxaglatoopqqxkblano.supabase.co/functions/v1/yandex-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || data.error) {
+            setError('Ошибка входа через Яндекс: ' + (data.error || 'неизвестная ошибка'));
             setStatus('');
             return;
           }
-          user = data.user;
+
+          if (data.action_link) {
+            // Перенаправляем по магической ссылке для создания сессии
+            window.location.replace(data.action_link);
+            return;
+          } else {
+            setError('Не получена ссылка для входа');
+            setStatus('');
+            return;
+          }
         }
         // 2. Email (подтверждение почты) — обмениваем token_hash
         else if (token_hash && type) {

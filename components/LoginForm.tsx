@@ -137,13 +137,11 @@ export function LoginForm() {
 
       <button
         type="button"
-        onClick={async () => {
-          await supabase.auth.signInWithOAuth({
-            provider: 'custom:yandex',
-            options: {
-              redirectTo: `${window.location.origin}/auth/callback`,
-            },
-          });
+        onClick={() => {
+          const clientId = '2ba54608b95e4966a1e9ac1eb7524058';
+          const redirectUri = 'https://spyme.com.ru/auth/callback';
+          const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+          window.location.href = authUrl;
         }}
         className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
       >
