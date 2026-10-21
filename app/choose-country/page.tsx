@@ -12,10 +12,9 @@ export default function ChooseCountryPage() {
   useEffect(() => {
     // Проверяем, что игрок начал регистрацию (есть данные в localStorage)
     const pendingEmail = localStorage.getItem('pendingEmail');
-    const pendingPassword = localStorage.getItem('pendingPassword');
     const pendingUsername = localStorage.getItem('pendingUsername');
 
-    if (!pendingEmail || !pendingPassword || !pendingUsername) {
+    if (!pendingEmail || !pendingUsername) {
       // Регистрация не начата — отправляем на регистрацию
       router.push('/register');
       return;
