@@ -27,7 +27,8 @@ export default function ChooseRolePage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Используем getSession вместо getUser для надежности
+      const { data: { session } } = await supabase.auth.getSession();
       
       const pendingUsername = localStorage.getItem('pendingUsername');
       const pendingCountry = localStorage.getItem('pendingCountry');
@@ -40,10 +41,10 @@ export default function ChooseRolePage() {
       setUsername(pendingUsername);
       setCountry(pendingCountry);
 
-      if (user) {
-        // Игрок пришёл через OAuth (Яндекс) — он уже авторизован
+      if (session?.user) {
+        // Игрок пришёл через OAuth (Яндекс или VK)
         setIsOAuth(true);
-        setEmail(user.email || '');
+        setEmail(session.user.email || '');
       } else {
         // Обычная регистрация через email
         const pendingEmail = localStorage.getItem('pendingEmail');
@@ -65,16 +66,19 @@ export default function ChooseRolePage() {
     if (saving) return;
     setSaving(true);
 
-    // ВЕТКА 1: OAuth (Яндекс)
+    // ВЕТКА 1: OAuth (Яндекс или VK)
     if (isOAuth) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Берем сессию из локального хранилища
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
         alert('Сессия истекла. Войдите заново.');
         setSaving(false);
         router.push('/login');
         return;
       }
 
+      const user = session.user;
       const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
       const { error: insertError } = await supabase
@@ -91,7 +95,11 @@ export default function ChooseRolePage() {
         }]);
 
       if (insertError) {
-        alert('Не удалось создать профиль: ' + insertError.message);
+        if (insertError.message.includes('User_username_key')) {
+          alert('Этот позывной уже занят. Придумайте другой.');
+        } else {
+          alert('Не удалось создать профиль: ' + insertError.message);
+        }
         setSaving(false);
         return;
       }
@@ -135,7 +143,6 @@ export default function ChooseRolePage() {
       return;
     }
 
-    // Если сессия есть сразу (email уже подтверждён)
     const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
 
     const { error: insertError } = await supabase
@@ -205,7 +212,6 @@ export default function ChooseRolePage() {
         ))}
       </div>
 
-      {/* Капчу показываем только для email-регистрации */}
       {!isOAuth && (
         <div className="mt-8">
           <Turnstile

@@ -26,13 +26,58 @@ function CallbackHandler() {
         const state = searchParams.get('state');
         const device_id = searchParams.get('device_id');
 
-        let user = null;
-
-        // 1. OAuth (Яндекс или VK)
-        if (code) {
-          const functionName = state === 'vk' ? 'vk-callback' : 'yandex-callback';
+        // 1. Возврат с магической ссылки VK (после ввода email)
+        if (state === 'magiclink') {
+          setStatus('Проверяем сессию...');
           
-          const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/${functionName}`, {
+          // Даем Supabase JS время обработать токены из URL
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session?.user) {
+            setError('Не удалось получить сессию. Попробуйте войти заново.');
+            setStatus('');
+            return;
+          }
+
+          // Проверяем, есть ли уже профиль в базе
+          const { data: existingProfile } = await supabase
+            .from('User').select('id').eq('id', session.user.id).single();
+
+          if (existingProfile) {
+            router.push('/game');
+          } else {
+            // Профиля нет — отправляем на выбор страны (данные в localStorage уже есть)
+            router.push('/choose-country');
+          }
+          return;
+        }
+
+        // 2. OAuth (Яндекс) — отправляем код в Edge-функцию
+        if (code && state !== 'vk') {
+          const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/yandex-callback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || data.error) {
+            setError(`Ошибка входа через Яндекс: ` + (data.error || 'неизвестная ошибка'));
+            setStatus('');
+            return;
+          }
+
+          if (data.action_link) {
+            window.location.replace(data.action_link);
+            return;
+          }
+        }
+        // 3. OAuth (VK) — первый заход, получаем код от VK
+        else if (code && state === 'vk') {
+          const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/vk-callback`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -45,12 +90,11 @@ function CallbackHandler() {
           const data = await response.json();
 
           if (!response.ok || (data.error && !data.needs_email)) {
-            setError(`Ошибка входа через ${state === 'vk' ? 'VK' : 'Яндекс'}: ` + (data.error || 'неизвестная ошибка'));
+            setError(`Ошибка входа через VK: ` + (data.error || 'неизвестная ошибка'));
             setStatus('');
             return;
           }
 
-          // Если VK требует ввод email
           if (data.needs_email) {
             setNeedsEmail(true);
             setTempToken(data.temp_token);
@@ -62,13 +106,9 @@ function CallbackHandler() {
           if (data.action_link) {
             window.location.replace(data.action_link);
             return;
-          } else {
-            setError('Не получена ссылка для входа');
-            setStatus('');
-            return;
           }
         }
-        // 2. Email (подтверждение почты)
+        // 4. Email (подтверждение почты)
         else if (token_hash && type) {
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash,
@@ -79,63 +119,48 @@ function CallbackHandler() {
             setStatus('');
             return;
           }
-          user = data.user;
+          
+          const { data: existingProfile } = await supabase
+            .from('User').select('id').eq('id', data.user.id).single();
+
+          if (existingProfile) {
+            router.push('/game');
+            return;
+          }
+
+          const pendingUsername = localStorage.getItem('pendingUsername');
+          const pendingCountry = localStorage.getItem('pendingCountry');
+          const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
+
+          if (pendingUsername && pendingCountry) {
+            setStatus('Создаём профиль...');
+            const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
+
+            const { error: insertError } = await supabase
+              .from('User')
+              .insert([{
+                id: data.user.id, email: data.user.email, username: pendingUsername,
+                country: pendingCountry, publicRole: pendingRole,
+                balance: balance, createdAt: new Date().toISOString(), isBanned: false,
+              }]);
+
+            if (insertError) {
+              setError('Не удалось создать профиль: ' + insertError.message);
+              setStatus('');
+              return;
+            }
+
+            localStorage.clear();
+            router.push('/game');
+            router.refresh();
+          } else {
+            router.push('/choose-country');
+          }
+          return;
         } else {
           setError('Неверная ссылка. Попробуйте войти заново.');
           setStatus('');
           return;
-        }
-
-        if (!user) {
-          setError('Не удалось получить данные пользователя.');
-          setStatus('');
-          return;
-        }
-
-        const { data: existingProfile } = await supabase
-          .from('User').select('id').eq('id', user.id).single();
-
-        if (existingProfile) {
-          router.push('/game');
-          return;
-        }
-
-        const pendingUsername = localStorage.getItem('pendingUsername');
-        const pendingCountry = localStorage.getItem('pendingCountry');
-        const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
-
-        if (pendingUsername && pendingCountry) {
-          setStatus('Создаём профиль...');
-          const balance = pendingRole === 'BUSINESSMAN' ? 1000 : 500;
-
-          const { error: insertError } = await supabase
-            .from('User')
-            .insert([{
-              id: user.id, email: user.email, username: pendingUsername,
-              country: pendingCountry, publicRole: pendingRole,
-              balance: balance, createdAt: new Date().toISOString(), isBanned: false,
-            }]);
-
-          if (insertError) {
-            setError('Не удалось создать профиль: ' + insertError.message);
-            setStatus('');
-            return;
-          }
-
-          localStorage.removeItem('pendingUsername');
-          localStorage.removeItem('pendingEmail');
-          localStorage.removeItem('pendingPassword');
-          localStorage.removeItem('pendingCountry');
-          localStorage.removeItem('pendingRole');
-
-          router.push('/game');
-          router.refresh();
-        } else {
-          const defaultUsername = user.email?.split('@')[0] || `agent_${user.id.slice(0, 6)}`;
-          localStorage.setItem('pendingUsername', defaultUsername);
-          localStorage.setItem('pendingEmail', user.email || '');
-          localStorage.setItem('pendingUserId', user.id);
-          router.push('/choose-country');
         }
       } catch (err: any) {
         setError('Ошибка: ' + (err.message || 'Неизвестная ошибка'));
@@ -153,7 +178,6 @@ function CallbackHandler() {
     
     setIsSubmittingEmail(true);
 
-    // Сохраняем данные для следующего шага (выбор страны)
     localStorage.setItem('pendingEmail', manualEmail.trim());
     localStorage.setItem('pendingUsername', vkName);
     
