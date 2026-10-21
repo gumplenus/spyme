@@ -104,7 +104,11 @@ export default function ChooseRolePage() {
         return;
       }
 
-      localStorage.clear();
+      localStorage.removeItem('pendingUsername');
+      localStorage.removeItem('pendingEmail');
+      localStorage.removeItem('pendingPassword');
+      localStorage.removeItem('pendingCountry');
+      localStorage.removeItem('pendingRole');
       router.push('/game');
       router.refresh();
       return;
@@ -164,7 +168,11 @@ export default function ChooseRolePage() {
       return;
     }
 
-    localStorage.clear();
+    localStorage.removeItem('pendingUsername');
+    localStorage.removeItem('pendingEmail');
+    localStorage.removeItem('pendingPassword');
+    localStorage.removeItem('pendingCountry');
+    localStorage.removeItem('pendingRole');
     router.push('/game');
     router.refresh();
   };
