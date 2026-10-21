@@ -152,6 +152,10 @@ function CallbackHandler() {
     if (!manualEmail.trim() || !tempToken) return;
     
     setIsSubmittingEmail(true);
+
+    // Сохраняем данные для следующего шага (выбор страны)
+    localStorage.setItem('pendingEmail', manualEmail.trim());
+    localStorage.setItem('pendingUsername', vkName);
     
     try {
       const response = await fetch(`https://tdxaglatoopqqxkblano.supabase.co/functions/v1/vk-callback`, {
