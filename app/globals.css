@@ -8,11 +8,15 @@
 
 html, body {
   height: 100%;
+  width: 100%;
   overflow: hidden;
-  overscroll-behavior-y: none; /* Отключает эффект "отскока" страницы */
+  position: fixed; /* Жестко фиксируем body, чтобы Safari не мог его прокрутить */
+  top: 0;
+  left: 0;
   margin: 0;
   padding: 0;
   background: #050807;
+  overscroll-behavior: none;
 }
 
 ::selection {

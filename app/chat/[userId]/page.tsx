@@ -136,7 +136,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   return (
     <div 
-      className="fixed top-0 left-0 w-full bg-gray-900 text-white flex flex-col overflow-hidden z-40"
+      className="absolute inset-0 bg-gray-900 text-white flex flex-col overflow-hidden"
       style={{ height: 'var(--app-height, 100dvh)' }}
     >
       {/* ХЭДЕР */}
