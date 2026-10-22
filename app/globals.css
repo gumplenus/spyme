@@ -6,8 +6,11 @@
   color-scheme: dark;
 }
 
-body {
-  min-height: 100vh;
+html, body {
+  height: 100%;
+  overflow: hidden; /* Запрещает скролл всей страницы */
+  margin: 0;
+  padding: 0;
   background: #050807;
 }
 

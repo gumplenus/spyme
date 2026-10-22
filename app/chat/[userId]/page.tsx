@@ -23,22 +23,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
     scrollToBottom();
   }, [messages]);
 
-  // Блокируем прокрутку body на iOS, чтобы шапка не уезжала
-  useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    const originalPosition = document.body.style.position;
-    
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.position = originalPosition;
-      document.body.style.width = '';
-    };
-  }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -144,14 +128,14 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
+      <div className="h-[100dvh] bg-gray-900 flex items-center justify-center">
         <div className="text-green-400 text-xl">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="fixed top-0 left-0 w-full h-[var(--app-height,100dvh)] bg-gray-900 text-white flex flex-col overflow-hidden z-40">
+    <div className="h-[100dvh] w-full bg-gray-900 text-white flex flex-col overflow-hidden relative">
       {/* ХЭДЕР */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
