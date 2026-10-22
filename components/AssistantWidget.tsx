@@ -136,7 +136,10 @@ export function AssistantWidget() {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 h-[100dvh] sm:h-[500px] bg-gray-900 sm:border border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div 
+          className="fixed top-0 left-0 w-full z-50 bg-gray-900 sm:bottom-4 sm:top-auto sm:left-auto sm:right-4 sm:w-96 sm:border border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          style={{ height: 'var(--app-height, 100dvh)' }}
+        >
           <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-green-400 text-xl">🤖</span>
