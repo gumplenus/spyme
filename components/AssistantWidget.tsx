@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { usePathname } from 'next/navigation';
-import { findAnswer, getAssistantName, getAssistantGreeting } from '@/lib/assistantKnowledge';
+import { getAssistantName, getAssistantGreeting } from '@/lib/assistantKnowledge';
 
 interface Message {
   id: string;
@@ -18,6 +18,7 @@ export function AssistantWidget() {
   const [role, setRole] = useState<string>('REPORTER');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -26,7 +27,7 @@ export function AssistantWidget() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isTyping]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -60,8 +61,8 @@ export function AssistantWidget() {
     }
   }, [isOpen, role, isSpy, messages.length]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -72,21 +73,46 @@ export function AssistantWidget() {
     setMessages((prev) => [...prev, userMessage]);
     const question = input.trim();
     setInput('');
+    setIsTyping(true);
 
-    setTimeout(() => {
-      const answer = findAnswer(question, role, isSpy);
+    try {
+      const response = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: question,
+          role: role,
+          isSpy: isSpy
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Ошибка сервера');
+      }
+
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
-        text:
-          answer ||
-          'Я не могу ответить на этот вопрос. Попробуйте переформулировать или спросить о ролях, механиках или интерфейсе игры.\n\n🤖 Скоро здесь будет ИИ-агент. Он будет лучше понимать и отвечать на ваши вопросы.',
+        text: data.reply,
         isUser: false,
       };
       setMessages((prev) => [...prev, assistantMessage]);
-    }, 300);
+
+    } catch (err: any) {
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        text: 'Извините, произошла ошибка связи с ИИ. Попробуйте ещё раз.',
+        isUser: false,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      console.error(err);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
-    if (
+  if (
     pathname?.startsWith('/login') ||
     pathname?.startsWith('/register') ||
     pathname?.startsWith('/chat') ||
@@ -142,6 +168,15 @@ export function AssistantWidget() {
                 </div>
               </div>
             ))}
+            
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%] p-3 rounded-lg text-sm bg-gray-700 text-gray-400 italic">
+                  Печатает...
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
 
@@ -154,10 +189,11 @@ export function AssistantWidget() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Задайте вопрос..."
                 className="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:border-green-400"
+                disabled={isTyping}
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim()}
+                disabled={!input.trim() || isTyping}
                 className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-semibold disabled:opacity-50"
               >
                 →
