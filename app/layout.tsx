@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Viewport } from 'next';
 import './globals.css';
 import { AssistantWidget } from '@/components/AssistantWidget';
+import { ViewportResizeObserver } from '@/components/ViewportResizeObserver';
 
 export const metadata = {
   title: 'SpyMe',
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="bg-ink text-neon antialiased">
+        <ViewportResizeObserver />
         {children}
         <AssistantWidget />
       </body>

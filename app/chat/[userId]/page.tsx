@@ -137,7 +137,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
   }
 
   return (
-    <div className="h-[100dvh] bg-gray-900 text-white flex flex-col overflow-hidden">
+    <div className="h-[var(--app-height,100dvh)] bg-gray-900 text-white flex flex-col overflow-hidden">
       {/* ХЭДЕР */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
@@ -167,7 +167,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
       </div>
 
       {/* СООБЩЕНИЯ */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
         {messages.length === 0 ? (
           <p className="text-gray-500 text-center mt-8">
             Начните диалог с {contact?.username || 'Неизвестный'}
