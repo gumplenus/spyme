@@ -128,18 +128,15 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
+      <div className="h-[100dvh] bg-gray-900 flex items-center justify-center">
         <div className="text-green-400 text-xl">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div 
-      className="absolute inset-0 bg-gray-900 text-white flex flex-col overflow-hidden"
-      style={{ height: 'var(--app-height, 100dvh)' }}
-    >
-      {/* ХЭДЕР */}
+    <div className="h-[100dvh] w-full bg-gray-900 text-white flex flex-col overflow-hidden">
+      {/* ХЭДЕР (фиксируется за счет flex shrink-0) */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
           ←
@@ -167,7 +164,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         </div>
       </div>
 
-      {/* СООБЩЕНИЯ */}
+      {/* СООБЩЕНИЯ (скроллятся, min-h-0 обязателен) */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
         {messages.length === 0 ? (
           <p className="text-gray-500 text-center mt-8">
@@ -198,8 +195,8 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ФУТЕР */}
-      <div className="px-4 py-3 bg-gray-800 border-t border-gray-700 shrink-0">
+      {/* ФУТЕР (фиксируется за счет flex shrink-0) */}
+      <div className="px-4 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-safe">
         <div className="flex gap-2">
           <input
             type="text"

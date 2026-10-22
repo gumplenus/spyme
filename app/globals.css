@@ -10,9 +10,6 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  position: fixed; /* Жестко фиксируем body, чтобы Safari не мог его прокрутить */
-  top: 0;
-  left: 0;
   margin: 0;
   padding: 0;
   background: #050807;
