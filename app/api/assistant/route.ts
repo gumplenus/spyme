@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ключи API не настроены' }, { status: 500 });
     }
 
-    // Формируем системный промпт (личность ИИ)
     const systemPrompt = `Ты — ИИ-помощник в социальной детективной игре SpyMe. 
 Игра бесконечная, игроки общаются в чате, расследуют и ликвидируют. В игре есть скрытые шпионы.
 Роли в игре: Репортер (расследует), Военный (ликвидирует), Бизнесмен (экономика, ВЛИ), Политик (меняет страны).
@@ -23,12 +22,13 @@ export async function POST(req: NextRequest) {
 Твоя задача — давать полезные, но не слишком прямые советы по игре, объяснять правила, подсказывать тактики. 
 Отвечай в стиле шпионского триллера, кратко и по делу. Не раскрывай роли других игроков (ты их не знаешь).`;
 
-    // Запрос к YandexGPT (используем lite версию для экономии)
+    // Добавили заголовок x-folder-id, он обязателен при авторизации по Api-Key
     const response = await fetch('https://llm.api.cloud.yandex.net/foundationModels/v1/completion', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Api-Key ${apiKey}`,
+        'x-folder-id': folderId, // <-- ЭТОТ ЗАГОЛОВОК БЫЛ ПРОПУЩЕН
       },
       body: JSON.stringify({
         modelUri: `gpt://${folderId}/yandexgpt-lite/latest`,
@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('YandexGPT error:', errorText);
-      return NextResponse.json({ error: 'Ошибка ИИ-сервиса' }, { status: 500 });
+      // Возвращаем точную ошибку, чтобы было видно на фронтенде
+      return NextResponse.json({ error: `YandexGPT: ${errorText}` }, { status: 500 });
     }
 
     const data = await response.json();
@@ -57,6 +58,6 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('Assistant API Error:', err);
-    return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+    return NextResponse.json({ error: `Ошибка сервера: ${err.message}` }, { status: 500 });
   }
 }

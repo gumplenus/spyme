@@ -102,7 +102,7 @@ export function AssistantWidget() {
     } catch (err: any) {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
-        text: 'Извините, произошла ошибка связи с ИИ. Попробуйте ещё раз.',
+        text: `Ошибка: ${err.message}`,
         isUser: false,
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -136,7 +136,7 @@ export function AssistantWidget() {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 h-[500px] bg-gray-900 border border-green-500 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 h-[100dvh] sm:h-[500px] bg-gray-900 sm:border border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-green-400 text-xl">🤖</span>
@@ -144,21 +144,21 @@ export function AssistantWidget() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white text-xl leading-none"
+              className="text-gray-400 hover:text-white text-2xl leading-none p-2"
               title="Закрыть"
             >
               ✕
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg text-sm whitespace-pre-line ${
+                  className={`max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-line ${
                     msg.isUser
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-700 text-gray-100'
@@ -180,7 +180,7 @@ export function AssistantWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-3 py-2 bg-gray-800 border-t border-gray-700 shrink-0">
+          <div className="px-3 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-safe">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -188,7 +188,7 @@ export function AssistantWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Задайте вопрос..."
-                className="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:border-green-400"
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white text-base border border-gray-600 focus:outline-none focus:border-green-400"
                 disabled={isTyping}
               />
               <button
