@@ -1,10 +1,20 @@
 import type { ReactNode } from 'react';
+import type { Viewport } from 'next';
 import './globals.css';
 import { AssistantWidget } from '@/components/AssistantWidget';
 
 export const metadata = {
   title: 'SpyMe',
   description: 'Шпионский триллер. Допуск только по легенде.',
+};
+
+// Этот блок исправляет вёрстку чата на мобильных при клавиатуре
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  interactiveWidget: 'resizes-content', 
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
