@@ -8,7 +8,8 @@
 
 html, body {
   height: 100%;
-  overflow: hidden; /* Запрещает скролл всей страницы */
+  overflow: hidden;
+  overscroll-behavior-y: none; /* Отключает эффект "отскока" страницы */
   margin: 0;
   padding: 0;
   background: #050807;

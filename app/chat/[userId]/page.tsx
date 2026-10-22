@@ -128,14 +128,17 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   if (loading) {
     return (
-      <div className="h-[100dvh] bg-gray-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
         <div className="text-green-400 text-xl">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-[100dvh] w-full bg-gray-900 text-white flex flex-col overflow-hidden relative">
+    <div 
+      className="fixed top-0 left-0 w-full bg-gray-900 text-white flex flex-col overflow-hidden z-40"
+      style={{ height: 'var(--app-height, 100dvh)' }}
+    >
       {/* ХЭДЕР */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
@@ -204,7 +207,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Введите сообщение..."
-            className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+            className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
             disabled={sending}
           />
           <button
