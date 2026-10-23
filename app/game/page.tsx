@@ -428,7 +428,7 @@ export default function GamePage() {
               )}
             </div>
 
-            {/* Строка 2: Расследования / Улики */}
+            {/* Строка 2: Расследования / Улики и Перевод ВЛИ / Смена страны */}
             <div className="flex gap-2 w-full">
               {profile?.publicRole === 'REPORTER' && (
                 <Link href="/investigate" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-medium">
@@ -450,10 +450,7 @@ export default function GamePage() {
                   <span>Улики (блок)</span>
                 </span>
               )}
-            </div>
 
-            {/* Строка 3: Перевод ВЛИ, Смена страны */}
-            <div className="flex gap-2 w-full">
               {militaryBlockHours === 0 ? (
                 <button onClick={openTransferModal} className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold">
                   <span>💰</span>

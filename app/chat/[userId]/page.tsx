@@ -19,25 +19,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Блокируем скролл body ТОЛЬКО на этой странице, чтобы iOS не сдвигал экран
-  useEffect(() => {
-    const originalPosition = document.body.style.position;
-    const originalTop = document.body.style.top;
-    const originalWidth = document.body.style.width;
-    const scrollY = window.scrollY;
-
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
-    return () => {
-      document.body.style.position = originalPosition;
-      document.body.style.top = originalTop;
-      document.body.style.width = originalWidth;
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
-
+  // Авто-скролл вниз при загрузке и новых сообщениях
   useEffect(() => {
     setTimeout(() => {
       scrollToBottom();
@@ -156,10 +138,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
   }
 
   return (
-    <div 
-      className="bg-gray-900 text-white flex flex-col overflow-hidden fixed top-0 left-0 w-full z-50"
-      style={{ height: 'var(--app-height, 100dvh)' }}
-    >
+    <div className="fixed inset-0 h-[100dvh] w-full bg-gray-900 text-white flex flex-col overflow-hidden z-50">
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
           ←
