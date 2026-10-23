@@ -53,7 +53,6 @@ export default function GamePage() {
       .single();
 
     if (!profileData) {
-      // Профиль не создан — регистрация не завершена, разлогиниваем
       await supabase.auth.signOut();
       router.push('/register');
       return null;
@@ -69,38 +68,38 @@ export default function GamePage() {
   };
 
   useEffect(() => {
-  if (!profile?.id) return;
+    if (!profile?.id) return;
 
-  const timer = setTimeout(async () => {
-    let query = supabase
-      .from('Post')
-      .select(`*, author:authorId (username, country, avatarUrl)`)
-      .order('createdAt', { ascending: false });
+    const timer = setTimeout(async () => {
+      let query = supabase
+        .from('Post')
+        .select(`*, author:authorId (username, country, avatarUrl)`)
+        .order('createdAt', { ascending: false });
 
-    if (postCountryFilter) {
-      query = query.eq('country', postCountryFilter);
-    }
-
-    if (postSearch.trim()) {
-      const { data: matchingUsers } = await supabase
-        .from('User')
-        .select('id')
-        .ilike('username', `%${postSearch.trim()}%`);
-
-      if (matchingUsers && matchingUsers.length > 0) {
-        query = query.in('authorId', matchingUsers.map((u: any) => u.id));
-      } else {
-        setPosts([]);
-        return;
+      if (postCountryFilter) {
+        query = query.eq('country', postCountryFilter);
       }
-    }
 
-    const { data } = await query;
-    setPosts(data || []);
-  }, 300);
+      if (postSearch.trim()) {
+        const { data: matchingUsers } = await supabase
+          .from('User')
+          .select('id')
+          .ilike('username', `%${postSearch.trim()}%`);
 
-  return () => clearTimeout(timer);
-}, [profile?.id, postSearch, postCountryFilter]);
+        if (matchingUsers && matchingUsers.length > 0) {
+          query = query.in('authorId', matchingUsers.map((u: any) => u.id));
+        } else {
+          setPosts([]);
+          return;
+        }
+      }
+
+      const { data } = await query;
+      setPosts(data || []);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [profile?.id, postSearch, postCountryFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -150,14 +149,8 @@ export default function GamePage() {
 
   const markNotificationsAsRead = async () => {
     if (!user || notifications.length === 0) return;
-
     const ids = notifications.map((n) => n.id);
-
-    await supabase
-      .from('Notification')
-      .update({ isRead: true })
-      .in('id', ids);
-
+    await supabase.from('Notification').update({ isRead: true }).in('id', ids);
     setIsNotificationsOpen(false);
     setNotifications([]);
   };
@@ -169,35 +162,28 @@ export default function GamePage() {
     try {
       const { data, error } = await supabase
         .from('Post')
-        .insert([
-          {
-            authorId: user.id,
-            content: newPostContent,
-            country: profile?.country || 'US',
-          },
-        ])
+        .insert([{ authorId: user.id, content: newPostContent, country: profile?.country || 'US' }])
         .select();
 
       if (error) {
-        console.error('Ошибка Supabase при создании поста:', error);
         alert('Ошибка: ' + error.message);
         return;
       }
 
       if (data && data.length > 0) {
-  const newPost = {
-    ...data[0],
-    author: {
-      username: profile?.username || 'Неизвестный',
-      country: profile?.country || null,
-    },
-  };
-  setPosts([newPost, ...posts]);
-  setNewPostContent('');
-  setIsModalOpen(false);
-}
+        const newPost = {
+          ...data[0],
+          author: {
+            username: profile?.username || 'Неизвестный',
+            country: profile?.country || null,
+          },
+        };
+        setPosts([newPost, ...posts]);
+        setNewPostContent('');
+        setIsModalOpen(false);
+      }
     } catch (err) {
-      console.error('Неизвестная ошибка:', err);
+      console.error(err);
     } finally {
       setPosting(false);
     }
@@ -205,7 +191,6 @@ export default function GamePage() {
 
   const openTransferModal = async () => {
     if (!user) return;
-
     const { data: users } = await supabase
       .from('User')
       .select('id, username, country, publicRole, avatarUrl')
@@ -362,17 +347,14 @@ export default function GamePage() {
   const immunityHours = isPolitician ? getImmunityHours() : 0;
   const militaryBlockHours = isMilitary ? getMilitaryBlockHours() : 0;
 
-      return (
-    <div className="min-h-screen bg-gray-900 text-white">
+  return (
+    <div className="min-h-screen bg-gray-900 text-white pb-10">
       <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
         <Link href="/game" className="text-lg font-bold text-green-400">
           🕵️ SpyMe
         </Link>
         <div className="flex items-center gap-2">
-          <Link
-            href="/settings"
-            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm"
-          >
+          <Link href="/settings" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm">
             ⚙️ Настройки
           </Link>
           <button
@@ -387,276 +369,190 @@ export default function GamePage() {
         </div>
       </header>
 
-      <div className="pt-20 px-4 pb-4">
+      <div className="pt-20 px-4 pb-4 max-w-5xl mx-auto">
         {passiveIncomeMessage && (
           <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
             {passiveIncomeMessage}
           </div>
         )}
 
-      <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
-        <div>
-          <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
-          <p className="text-gray-400">Страна: {profile?.country}</p>
-          <p className="text-gray-400">Роль: {profile?.publicRole}</p>
-          <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
-          {isPolitician && immunityHours > 0 && (
-            <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
-          )}
-        </div>
-
-        {militaryBlockHours > 0 && (
-          <div className="mt-4 p-3 bg-red-900/40 border border-red-500 rounded-lg">
-            <p className="text-red-300 font-semibold">🚫 Вы заблокированы</p>
-            <p className="text-red-200 text-sm mt-1">
-              Вы ошиблись при ликвидации. Блокировка снимется через {militaryBlockHours} ч.
-            </p>
-          </div>
-        )}
-
-        {isSpy && (
-          <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-            <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
-            <p className="text-gray-300 text-sm mt-2">
-              Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
-            </p>
-            <p className="text-gray-400 text-xs mt-3">
-              Другие игроки не знают, что вы шпион. Действуйте осторожно.
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mt-3 w-full">
-          {/* ЛЕВАЯ ГРУППА (действия) */}
-          <div className="flex flex-wrap gap-2 flex-1">
-            {militaryBlockHours === 0 ? (
-              <Link
-                href="/chat"
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
-              >
-                💬 Чаты
-              </Link>
-            ) : (
-              <span
-                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-                title="Вы заблокированы"
-              >
-                💬 Чаты (заблокировано)
-              </span>
-            )}
-
-            {profile?.publicRole === 'REPORTER' && (
-              <>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
-                >
-                  ➕ Создать пост
-                </button>
-                <Link
-                  href="/investigate"
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
-                >
-                  🔍 Расследования
-                </Link>
-              </>
-            )}
-
-            {isMilitary && militaryBlockHours === 0 && (
-              <Link
-                href="/evidence"
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
-              >
-                📂 Улики
-              </Link>
-            )}
-
-            {isMilitary && militaryBlockHours > 0 && (
-              <span
-                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-                title="Вы заблокированы"
-              >
-                📂 Улики (заблокировано)
-              </span>
-            )}
-
-            {militaryBlockHours === 0 ? (
-              <button
-                onClick={openTransferModal}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
-              >
-                💰 Перевести ВЛИ
-              </button>
-            ) : (
-              <span
-                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-                title="Вы заблокированы"
-              >
-                💰 Перевести ВЛИ (заблокировано)
-              </span>
-            )}
-
-            {isPolitician && (
-              <button
-                onClick={openCountryModal}
-                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold"
-              >
-                🌍 Сменить страну
-              </button>
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
+          <div>
+            <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
+            <p className="text-gray-400">Страна: {profile?.country}</p>
+            <p className="text-gray-400">Роль: {profile?.publicRole}</p>
+            <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
+            {isPolitician && immunityHours > 0 && (
+              <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
             )}
           </div>
 
-          {/* ПРАВАЯ ГРУППА (навигация) */}
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <Link
-              href="/stats"
-              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
-            >
-              📊 Статистика
-            </Link>
-
-            <Link
-              href="/leaderboard"
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm"
-            >
-              🏆 Рейтинг
-            </Link>
-
-            <Link
-              href="/rules"
-              className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm"
-            >
-              📖 Правила
-            </Link>
-          </div>
-        </div>
-      </div>
-
-            <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col max-h-[600px] overflow-hidden">
-        <h2 className="text-xl font-semibold text-green-400 px-4 pt-4 pb-3 shrink-0">📰 Лента новостей</h2>
-
-        <div className="space-y-2 px-4 pb-3 shrink-0">
-          <input
-            type="text"
-            value={postSearch}
-            onChange={(e) => setPostSearch(e.target.value)}
-            placeholder="Поиск по имени репортёра..."
-            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
-          />
-          <div className="flex gap-2">
-            <select
-              value={postCountryFilter}
-              onChange={(e) => setPostCountryFilter(e.target.value)}
-              className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
-            >
-              <option value="">Все страны</option>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            {(postSearch || postCountryFilter) && (
-              <button
-                onClick={() => {
-                  setPostSearch('');
-                  setPostCountryFilter('');
-                }}
-                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm"
-              >
-                Сбросить
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="overflow-y-auto flex-1 px-4 pb-4">
-        {posts.length === 0 ? (
-          <p className="text-gray-400">Нет постов по заданным фильтрам</p>
-        ) : (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
-                    {post.author?.avatarUrl ? (
-                      <img
-                        src={post.author.avatarUrl}
-                        alt={post.author?.username || ''}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-base">👤</span>
-                    )}
-                  </div>
-                  <p className="text-gray-400 text-sm">
-                    <span className="text-gray-300 font-medium">
-                      {post.author?.username || 'Неизвестный'}
-                    </span>
-                    {post.author?.country ? ` · ${post.author.country}` : ''}
-                    {' · '}{new Date(post.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <p className="text-white">{post.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-        </div>
-      </div>
-
-      {isNotificationsOpen && notifications.length > 0 && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-green-500 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold text-green-400 mb-4 text-center">
-              🔔 Уведомления
-            </h3>
-            <div className="space-y-3 mb-6">
-              {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className="p-4 bg-gray-700 rounded-lg border border-gray-600"
-                >
-                  <p className="text-white font-semibold">{n.title}</p>
-                  <p className="text-gray-300 text-sm mt-1">{n.message}</p>
-                  <p className="text-gray-500 text-xs mt-2">
-                    {new Date(n.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+          {militaryBlockHours > 0 && (
+            <div className="mt-4 p-3 bg-red-900/40 border border-red-500 rounded-lg">
+              <p className="text-red-300 font-semibold">🚫 Вы заблокированы</p>
+              <p className="text-red-200 text-sm mt-1">
+                Вы ошиблись при ликвидации. Блокировка снимется через {militaryBlockHours} ч.
+              </p>
             </div>
-            <button
-              onClick={markNotificationsAsRead}
-              className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold"
-            >
-              Понятно
-            </button>
+          )}
+
+          {isSpy && (
+            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+              <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
+              <p className="text-gray-300 text-sm mt-2">
+                Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
+              </p>
+              <p className="text-gray-400 text-xs mt-3">
+                Другие игроки не знают, что вы шпион. Действуйте осторожно.
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 mt-4 w-full">
+            {/* ЛЕВАЯ ГРУППА (действия) */}
+            <div className="flex flex-wrap gap-2 flex-1">
+              {militaryBlockHours === 0 ? (
+                <Link href="/chat" className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm">
+                  💬 Чаты
+                </Link>
+              ) : (
+                <span className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                  💬 Чаты (заблокировано)
+                </span>
+              )}
+
+              {profile?.publicRole === 'REPORTER' && (
+                <>
+                  <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm">
+                    ➕ Создать пост
+                  </button>
+                  <Link href="/investigate" className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm">
+                    🔍 Расследования
+                  </Link>
+                </>
+              )}
+
+              {isMilitary && militaryBlockHours === 0 && (
+                <Link href="/evidence" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm">
+                  📂 Улики
+                </Link>
+              )}
+
+              {militaryBlockHours === 0 ? (
+                <button onClick={openTransferModal} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold">
+                  💰 Перевести ВЛИ
+                </button>
+              ) : (
+                <span className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                  💰 Перевести ВЛИ (заблокировано)
+                </span>
+              )}
+
+              {isPolitician && (
+                <button onClick={openCountryModal} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold">
+                  🌍 Сменить страну
+                </button>
+              )}
+            </div>
+
+            {/* ПРАВАЯ ГРУППА (навигация) */}
+            <div className="flex flex-wrap gap-2 md:justify-end">
+              <Link href="/stats" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm">
+                📊 Статистика
+              </Link>
+              <Link href="/leaderboard" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm">
+                🏆 Рейтинг
+              </Link>
+              <Link href="/rules" className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm">
+                📖 Правила
+              </Link>
+            </div>
           </div>
         </div>
-      )}
 
+        <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col h-[500px] md:h-[600px] overflow-hidden">
+          <h2 className="text-xl font-semibold text-green-400 px-4 pt-4 pb-3 shrink-0">📰 Лента новостей</h2>
+
+          <div className="space-y-2 px-4 pb-3 shrink-0">
+            <input
+              type="text"
+              value={postSearch}
+              onChange={(e) => setPostSearch(e.target.value)}
+              placeholder="Поиск по имени репортёра..."
+              className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+            />
+            <div className="flex gap-2">
+              <select
+                value={postCountryFilter}
+                onChange={(e) => setPostCountryFilter(e.target.value)}
+                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+              >
+                <option value="">Все страны</option>
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+              {(postSearch || postCountryFilter) && (
+                <button
+                  onClick={() => { setPostSearch(''); setPostCountryFilter(''); }}
+                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm"
+                >
+                  Сбросить
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-y-auto flex-1 min-h-0 px-4 pb-4">
+            {posts.length === 0 ? (
+              <p className="text-gray-400">Нет постов по заданным фильтрам</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-9 h-9 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                        {post.author?.avatarUrl ? (
+                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-base">👤</span>
+                        )}
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        <span className="text-gray-300 font-medium">{post.author?.username || 'Неизвестный'}</span>
+                        {post.author?.country ? ` · ${post.author.country}` : ''}
+                        {' · '}{new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <p className="text-white">{post.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* МОДАЛКА СОЗДАНИЯ ПОСТА */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
-            <h3 className="text-xl font-semibold text-white mb-4">Создать пост</h3>
-            <textarea
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 h-32"
-              placeholder="О чём хотите сообщить?"
-            />
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-              >
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 flex flex-col max-h-[90dvh]">
+            <div className="p-6 pb-2 shrink-0">
+              <h3 className="text-xl font-semibold text-white">Создать пост</h3>
+            </div>
+            <div className="px-6 overflow-y-auto flex-1 min-h-0 py-2">
+               <textarea
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 h-32 text-base"
+                placeholder="О чём хотите сообщить?"
+              />
+            </div>
+            <div className="flex justify-end space-x-3 p-6 pt-2 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">
                 Отмена
               </button>
-              <button
-                onClick={handleCreatePost}
-                disabled={posting}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50"
-              >
+              <button onClick={handleCreatePost} disabled={posting} className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50">
                 {posting ? 'Публикация...' : 'Опубликовать'}
               </button>
             </div>
@@ -664,189 +560,127 @@ export default function GamePage() {
         </div>
       )}
 
+      {/* МОДАЛКА ПЕРЕВОДА ВЛИ */}
       {isTransferOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[85vh] flex flex-col overflow-hidden">
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[90dvh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
               <h3 className="text-xl font-semibold text-white">💰 Перевести ВЛИ</h3>
-              <button
-                onClick={() => setIsTransferOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
-                aria-label="Закрыть"
-              >
-                ✕
-              </button>
+              <button onClick={() => setIsTransferOpen(false)} className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none">✕</button>
             </div>
-            <div className="px-6 overflow-y-auto flex-1">
-            <p className="text-gray-400 text-sm mb-4">
-              Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
-            </p>
+            <div className="px-6 overflow-y-auto flex-1 min-h-0">
+              <p className="text-gray-400 text-sm mb-4">
+                Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
+              </p>
 
-            {!transferRecipient ? (
-              <PlayerSelector
-                title="Выберите получателя"
-                players={allUsers}
-                onSelect={(p) => setTransferRecipient(p.id)}
-                emptyText="Нет игроков по заданным фильтрам"
-              />
-            ) : (
-              <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
-                    {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
-                      <img
-                        src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">👤</span>
-                    )}
+              {!transferRecipient ? (
+                <PlayerSelector players={allUsers} onSelect={(p) => setTransferRecipient(p.id)} emptyText="Нет игроков по заданным фильтрам" />
+              ) : (
+                <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                      {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
+                        <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg">👤</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-medium truncate">{allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}</p>
+                      <p className="text-gray-400 text-sm truncate">
+                        {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
+                        {allUsers.find((u) => u.id === transferRecipient)?.country ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}` : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-white font-medium truncate">
-                      {allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}
-                    </p>
-                    <p className="text-gray-400 text-sm truncate">
-                      {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
-                      {allUsers.find((u) => u.id === transferRecipient)?.country
-                        ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}`
-                        : ''}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setTransferRecipient('')}
-                  className="text-gray-400 hover:text-red-400 text-sm underline shrink-0"
-                >
-                  Изменить
-                </button>
-              </div>
-            )}
-
-            <div className="space-y-4 mt-4">
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Сумма (ВЛИ)</label>
-                <input
-                  type="number"
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(e.target.value)}
-                  min="1"
-                  placeholder="100"
-                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">Комментарий (опционально)</label>
-                <input
-                  type="text"
-                  value={transferComment}
-                  onChange={(e) => setTransferComment(e.target.value)}
-                  placeholder="За расследование"
-                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
-                />
-              </div>
-
-              {transferError && (
-                <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">
-                  {transferError}
+                  <button onClick={() => setTransferRecipient('')} className="text-gray-400 hover:text-red-400 text-sm underline shrink-0">Изменить</button>
                 </div>
               )}
 
-              {transferSuccess && (
-                <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">
-                  {transferSuccess}
+              <div className="space-y-4 mt-4">
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Сумма (ВЛИ)</label>
+                  <input type="number" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} min="1" placeholder="100" className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base" />
                 </div>
-              )}
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Комментарий (опционально)</label>
+                  <input type="text" value={transferComment} onChange={(e) => setTransferComment(e.target.value)} placeholder="За расследование" className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base" />
+                </div>
+                {transferError && <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">{transferError}</div>}
+                {transferSuccess && <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">{transferSuccess}</div>}
+              </div>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6 pb-6">
-              <button
-                onClick={() => setIsTransferOpen(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleTransfer}
-                disabled={transferring || !transferRecipient || !transferAmount}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold disabled:opacity-50"
-              >
+            <div className="flex justify-end space-x-3 p-6 pt-4 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsTransferOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Отмена</button>
+              <button onClick={handleTransfer} disabled={transferring || !transferRecipient || !transferAmount} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold disabled:opacity-50">
                 {transferring ? 'Перевод...' : 'Перевести'}
               </button>
-            </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* МОДАЛКА СМЕНЫ СТРАНЫ */}
       {isCountryOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
-            <h3 className="text-xl font-semibold text-white mb-2">🌍 Сменить страну</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              Текущая страна: <span className="text-white font-semibold">{profile?.country}</span>
-            </p>
-            {immunityHours > 0 && (
-              <p className="text-blue-400 text-sm mb-4">
-                🛡️ Иммунитет: {immunityHours} ч.
-              </p>
-            )}
-            <p className="text-yellow-400 text-xs mb-4">
-              ⚠️ Смена страны доступна раз в 48 часов. После смены вы получаете иммунитет на 48 часов.
-            </p>
-
-            <div className="space-y-3 mb-4">
+          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[90dvh] flex flex-col overflow-hidden">
+            <div className="px-6 pt-6 pb-3 shrink-0">
+              <h3 className="text-xl font-semibold text-white mb-2">🌍 Сменить страну</h3>
+              <p className="text-gray-400 text-sm mb-1">Текущая страна: <span className="text-white font-semibold">{profile?.country}</span></p>
+              {immunityHours > 0 && <p className="text-blue-400 text-sm mb-1">🛡️ Иммунитет: {immunityHours} ч.</p>}
+              <p className="text-yellow-400 text-xs mb-2">⚠️ Смена страны доступна раз в 48 часов. После смены вы получаете иммунитет на 48 часов.</p>
+            </div>
+            
+            <div className="px-6 overflow-y-auto flex-1 min-h-0 space-y-3">
               {COUNTRIES.map((c) => (
                 <button
                   key={c.code}
                   onClick={() => setSelectedCountry(c.code)}
                   disabled={c.code === profile?.country}
                   className={`w-full p-3 rounded-lg border text-left transition-colors ${
-                    selectedCountry === c.code
-                      ? 'bg-cyan-500 text-black border-cyan-400 font-semibold'
-                      : c.code === profile?.country
-                      ? 'bg-gray-700/50 text-gray-500 border-gray-700 cursor-not-allowed'
-                      : 'bg-gray-700 text-white border-gray-600 hover:border-cyan-400'
+                    selectedCountry === c.code ? 'bg-cyan-500 text-black border-cyan-400 font-semibold' :
+                    c.code === profile?.country ? 'bg-gray-700/50 text-gray-500 border-gray-700 cursor-not-allowed' :
+                    'bg-gray-700 text-white border-gray-600 hover:border-cyan-400'
                   }`}
                 >
                   {c.name} {c.code === profile?.country && '(текущая)'}
                 </button>
               ))}
+              {countryError && <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">{countryError}</div>}
+              {countrySuccess && <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">{countrySuccess}</div>}
             </div>
 
-            {countryError && (
-              <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded mb-4">
-                {countryError}
-              </div>
-            )}
-
-            {countrySuccess && (
-              <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded mb-4">
-                {countrySuccess}
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsCountryOpen(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleChangeCountry}
-                disabled={changingCountry || !selectedCountry || selectedCountry === profile?.country}
-                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black font-semibold disabled:opacity-50"
-              >
+            <div className="flex justify-end space-x-3 p-6 pt-4 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsCountryOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Отмена</button>
+              <button onClick={handleChangeCountry} disabled={changingCountry || !selectedCountry || selectedCountry === profile?.country} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black font-semibold disabled:opacity-50">
                 {changingCountry ? 'Переезд...' : 'Переехать'}
               </button>
             </div>
           </div>
         </div>
       )}
-      </div>
+
+      {/* УВЕДОМЛЕНИЯ */}
+      {isNotificationsOpen && notifications.length > 0 && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-green-500 max-h-[80vh] flex flex-col overflow-hidden">
+            <h3 className="text-2xl font-bold text-green-400 mb-4 text-center shrink-0">🔔 Уведомления</h3>
+            <div className="space-y-3 mb-6 overflow-y-auto flex-1">
+              {notifications.map((n) => (
+                <div key={n.id} className="p-4 bg-gray-700 rounded-lg border border-gray-600">
+                  <p className="text-white font-semibold">{n.title}</p>
+                  <p className="text-gray-300 text-sm mt-1">{n.message}</p>
+                  <p className="text-gray-500 text-xs mt-2">{new Date(n.createdAt).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={markNotificationsAsRead} className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold shrink-0">
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

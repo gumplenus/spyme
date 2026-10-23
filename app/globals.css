@@ -12,7 +12,8 @@ html, body {
   margin: 0;
   padding: 0;
   background: #050807;
-  overscroll-behavior: none; /* Отключает отскок страницы на iOS, но не скролл */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 ::selection {

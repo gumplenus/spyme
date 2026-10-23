@@ -19,8 +19,11 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Авто-скролл вниз при загрузке и новых сообщениях
   useEffect(() => {
-    scrollToBottom();
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   }, [messages]);
 
   useEffect(() => {
@@ -128,7 +131,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   if (loading) {
     return (
-      <div className="h-[100dvh] bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-green-400 text-xl">Загрузка...</div>
       </div>
     );
@@ -139,57 +142,36 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
       className="bg-gray-900 text-white flex flex-col overflow-hidden"
       style={{ height: 'var(--app-height, 100dvh)', position: 'fixed', top: 0, left: 0, right: 0 }}
     >
-      {/* ХЭДЕР (фиксируется за счет flex shrink-0) */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
         <Link href="/chat" className="text-green-400 hover:underline text-xl">
           ←
         </Link>
         <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
           {contact?.avatarUrl ? (
-            <img
-              src={contact.avatarUrl}
-              alt={contact.username}
-              className="w-full h-full object-cover"
-            />
+            <img src={contact.avatarUrl} alt={contact.username} className="w-full h-full object-cover" />
           ) : (
             <span className="text-lg">👤</span>
           )}
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-green-400 truncate">
-            {contact?.username || 'Неизвестный'}
-          </h1>
+          <h1 className="text-lg font-bold text-green-400 truncate">{contact?.username || 'Неизвестный'}</h1>
           <p className="text-gray-400 text-xs truncate">
-            {contact?.publicRole && contact?.country
-              ? `${contact.publicRole} · ${contact.country}`
-              : contact?.country || contact?.publicRole || ''}
+            {contact?.publicRole && contact?.country ? `${contact.publicRole} · ${contact.country}` : contact?.country || contact?.publicRole || ''}
           </p>
         </div>
       </div>
 
-      {/* СООБЩЕНИЯ (скроллятся, min-h-0 обязателен) */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
         {messages.length === 0 ? (
-          <p className="text-gray-500 text-center mt-8">
-            Начните диалог с {contact?.username || 'Неизвестный'}
-          </p>
+          <p className="text-gray-500 text-center mt-8">Начните диалог с {contact?.username || 'Неизвестный'}</p>
         ) : (
           messages.map((msg) => {
             const isMine = msg.senderId === currentUserId;
             return (
-              <div
-                key={msg.id}
-                className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] p-3 rounded-lg ${
-                    isMine ? 'bg-green-500 text-white' : 'bg-gray-700 text-white'
-                  }`}
-                >
+              <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] p-3 rounded-lg ${isMine ? 'bg-green-500 text-white' : 'bg-gray-700 text-white'}`}>
                   <p>{msg.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(msg.createdAt).toLocaleTimeString()}
-                  </p>
+                  <p className="text-xs opacity-70 mt-1">{new Date(msg.createdAt).toLocaleTimeString()}</p>
                 </div>
               </div>
             );
@@ -198,8 +180,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ФУТЕР (фиксируется за счет flex shrink-0) */}
-      <div className="px-4 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-safe">
+      <div className="px-4 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
         <div className="flex gap-2">
           <input
             type="text"
@@ -210,11 +191,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
             className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
             disabled={sending}
           />
-          <button
-            onClick={sendMessage}
-            disabled={sending || !newMessage.trim()}
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold disabled:opacity-50"
-          >
+          <button onClick={sendMessage} disabled={sending || !newMessage.trim()} className="px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold disabled:opacity-50">
             {sending ? '...' : 'Отправить'}
           </button>
         </div>
