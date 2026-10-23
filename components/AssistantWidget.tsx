@@ -25,29 +25,27 @@ export function AssistantWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Блокируем скролл body ТОЛЬКО когда виджет открыт (спасает от съезжания на iOS)
+  // Блокируем скролл body ТОЛЬКО когда виджет открыт
   useEffect(() => {
     if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
       const originalPosition = document.body.style.position;
-      const originalWidth = document.body.style.width;
       const originalTop = document.body.style.top;
+      const originalWidth = document.body.style.width;
+      const scrollY = window.scrollY;
 
-      document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
-      document.body.style.top = '0';
 
       return () => {
-        document.body.style.overflow = originalOverflow;
         document.body.style.position = originalPosition;
-        document.body.style.width = originalWidth;
         document.body.style.top = originalTop;
+        document.body.style.width = originalWidth;
+        window.scrollTo(0, scrollY);
       };
     }
   }, [isOpen]);
 
-  // Авто-скролл при новых сообщениях
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollToBottom();
@@ -163,7 +161,7 @@ export function AssistantWidget() {
 
       {isOpen && (
         <div 
-          className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 bg-gray-900 sm:border sm:border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed top-0 left-0 w-full sm:top-auto sm:left-auto sm:bottom-4 sm:right-4 z-50 sm:w-96 bg-gray-900 sm:border sm:border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden"
           style={{ height: 'var(--app-height, 100dvh)' }}
         >
           <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">

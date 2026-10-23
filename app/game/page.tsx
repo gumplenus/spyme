@@ -409,72 +409,84 @@ export default function GamePage() {
           )}
 
           <div className="flex flex-col gap-2 mt-4 w-full">
-            {/* Строка 1: Чат, Пост, Улики */}
+            {/* Строка 1: Чат, Пост */}
             <div className="flex gap-2 w-full">
               {militaryBlockHours === 0 ? (
-                <Link href="/chat" className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm text-center font-medium">
+                <Link href="/chat" className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium">
                   💬 Чат
                 </Link>
               ) : (
-                <span className="flex-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm text-center cursor-not-allowed font-medium">
+                <span className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-medium">
                   💬 Чат (блок)
                 </span>
               )}
 
               {profile?.publicRole === 'REPORTER' && (
-                <button onClick={() => setIsModalOpen(true)} className="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm text-center font-medium">
+                <button onClick={() => setIsModalOpen(true)} className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-medium">
                   ➕ Пост
                 </button>
               )}
+            </div>
+
+            {/* Строка 2: Расследования / Улики */}
+            <div className="flex gap-2 w-full">
+              {profile?.publicRole === 'REPORTER' && (
+                <Link href="/investigate" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-medium">
+                  <span>🔍</span>
+                  <span>Расследования</span>
+                </Link>
+              )}
 
               {isMilitary && militaryBlockHours === 0 && (
-                <Link href="/evidence" className="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm text-center font-medium">
-                  📂 Улики
+                <Link href="/evidence" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm font-medium">
+                  <span>📂</span>
+                  <span>Улики</span>
                 </Link>
               )}
 
               {isMilitary && militaryBlockHours > 0 && (
-                <span className="flex-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm text-center cursor-not-allowed font-medium">
-                  📂 Улики (блок)
+                <span className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-medium">
+                  <span>📂</span>
+                  <span>Улики (блок)</span>
                 </span>
               )}
             </div>
 
-            {/* Строка 2: Расследования, Перевод ВЛИ, Смена страны */}
+            {/* Строка 3: Перевод ВЛИ, Смена страны */}
             <div className="flex gap-2 w-full">
-              {profile?.publicRole === 'REPORTER' && (
-                <Link href="/investigate" className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm text-center font-medium">
-                  🔍 Расследования
-                </Link>
-              )}
-
               {militaryBlockHours === 0 ? (
-                <button onClick={openTransferModal} className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold text-center">
-                  💰 Перевод ВЛИ
+                <button onClick={openTransferModal} className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold">
+                  <span>💰</span>
+                  <span>Перевод ВЛИ</span>
                 </button>
               ) : (
-                <span className="flex-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm text-center cursor-not-allowed font-semibold">
-                  💰 Перевод ВЛИ (блок)
+                <span className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-semibold">
+                  <span>💰</span>
+                  <span>Перевод ВЛИ (блок)</span>
                 </span>
               )}
 
               {isPolitician && (
-                <button onClick={openCountryModal} className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold text-center">
-                  🌍 Сменить страну
+                <button onClick={openCountryModal} className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold">
+                  <span>🌍</span>
+                  <span>Сменить страну</span>
                 </button>
               )}
             </div>
 
-            {/* Строка 3: Stats, Рейтинг, Правила */}
+            {/* Строка 4: Stats, Рейтинг, Правила */}
             <div className="flex gap-2 w-full">
-              <Link href="/stats" className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm text-center font-medium">
-                📊 Stats
+              <Link href="/stats" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm font-medium">
+                <span>📊</span>
+                <span>Stats</span>
               </Link>
-              <Link href="/leaderboard" className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm text-center font-medium">
-                🏆 Рейтинг
+              <Link href="/leaderboard" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm font-medium">
+                <span>🏆</span>
+                <span>Рейтинг</span>
               </Link>
-              <Link href="/rules" className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm text-center font-medium">
-                📖 Правила
+              <Link href="/rules" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm font-medium">
+                <span>📖</span>
+                <span>Правила</span>
               </Link>
             </div>
           </div>
