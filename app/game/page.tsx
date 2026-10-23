@@ -414,115 +414,121 @@ export default function GamePage() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 mt-3">
-          {militaryBlockHours === 0 ? (
-            <Link
-              href="/chat"
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
-            >
-              💬 Чаты
-            </Link>
-          ) : (
-            <span
-              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-              title="Вы заблокированы"
-            >
-              💬 Чаты (заблокировано)
-            </span>
-          )}
+        {isSpy && (
+          <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
+            <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
+            <p className="text-gray-300 text-sm mt-2">
+              Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
+            </p>
+            <p className="text-gray-400 text-xs mt-3">
+              Другие игроки не знают, что вы шпион. Действуйте осторожно.
+            </p>
+          </div>
+        )}
 
-          {isSpy && (
-  <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-    <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
-    <p className="text-gray-300 text-sm mt-2">
-      Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
-    </p>
-    <p className="text-gray-400 text-xs mt-3">
-      Другие игроки не знают, что вы шпион. Действуйте осторожно.
-    </p>
-  </div>
-)}
-
-          {profile?.publicRole === 'REPORTER' && (
-            <>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
-              >
-                ➕ Создать пост
-              </button>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mt-3 w-full">
+          {/* ЛЕВАЯ ГРУППА (действия) */}
+          <div className="flex flex-wrap gap-2 flex-1">
+            {militaryBlockHours === 0 ? (
               <Link
-                href="/investigate"
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
+                href="/chat"
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm"
               >
-                🔍 Расследования
+                💬 Чаты
               </Link>
-            </>
-          )}
+            ) : (
+              <span
+                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+                title="Вы заблокированы"
+              >
+                💬 Чаты (заблокировано)
+              </span>
+            )}
 
-          {isMilitary && militaryBlockHours === 0 && (
+            {profile?.publicRole === 'REPORTER' && (
+              <>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm"
+                >
+                  ➕ Создать пост
+                </button>
+                <Link
+                  href="/investigate"
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm"
+                >
+                  🔍 Расследования
+                </Link>
+              </>
+            )}
+
+            {isMilitary && militaryBlockHours === 0 && (
+              <Link
+                href="/evidence"
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
+              >
+                📂 Улики
+              </Link>
+            )}
+
+            {isMilitary && militaryBlockHours > 0 && (
+              <span
+                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+                title="Вы заблокированы"
+              >
+                📂 Улики (заблокировано)
+              </span>
+            )}
+
+            {militaryBlockHours === 0 ? (
+              <button
+                onClick={openTransferModal}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
+              >
+                💰 Перевести ВЛИ
+              </button>
+            ) : (
+              <span
+                className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
+                title="Вы заблокированы"
+              >
+                💰 Перевести ВЛИ (заблокировано)
+              </span>
+            )}
+
+            {isPolitician && (
+              <button
+                onClick={openCountryModal}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold"
+              >
+                🌍 Сменить страну
+              </button>
+            )}
+          </div>
+
+          {/* ПРАВАЯ ГРУППА (навигация) */}
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             <Link
-              href="/evidence"
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm"
+              href="/stats"
+              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
             >
-              📂 Улики
+              📊 Статистика
             </Link>
-          )}
 
-          {isMilitary && militaryBlockHours > 0 && (
-            <span
-              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-              title="Вы заблокированы"
+            <Link
+              href="/leaderboard"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm"
             >
-              📂 Улики (заблокировано)
-            </span>
-          )}
+              🏆 Рейтинг
+            </Link>
 
-          {militaryBlockHours === 0 ? (
-            <button
-              onClick={openTransferModal}
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold"
+            <Link
+              href="/rules"
+              className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm"
             >
-              💰 Перевести ВЛИ
-            </button>
-          ) : (
-            <span
-              className="px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-              title="Вы заблокированы"
-            >
-              💰 Перевести ВЛИ (заблокировано)
-            </span>
-          )}
-
-          {isPolitician && (
-            <button
-              onClick={openCountryModal}
-              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold"
-            >
-              🌍 Сменить страну
-            </button>
-          )}
-
-          <Link
-            href="/stats"
-            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm"
-          >
-            📊 Статистика
-          </Link>
-
-          <Link
-            href="/leaderboard"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm"
-          >
-            🏆 Рейтинг
-          </Link>
-
-          <Link
-            href="/rules"
-            className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm"
-          >
-            📖 Правила
-          </Link>
+              📖 Правила
+            </Link>
+          </div>
         </div>
       </div>
 

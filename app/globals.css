@@ -9,14 +9,10 @@
 html, body {
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  position: fixed; /* Блокируем нативный скролл */
-  top: 0;
-  left: 0;
   margin: 0;
   padding: 0;
   background: #050807;
-  overscroll-behavior: none;
+  overscroll-behavior: none; /* Отключает отскок страницы на iOS, но не скролл */
 }
 
 ::selection {

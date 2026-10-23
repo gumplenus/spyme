@@ -137,7 +137,7 @@ export function AssistantWidget() {
 
       {isOpen && (
         <div 
-          className="fixed top-0 left-0 w-full z-50 bg-gray-900 sm:bottom-4 sm:top-auto sm:left-auto sm:right-4 sm:w-96 sm:border border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 bg-gray-900 sm:border sm:border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden"
           style={{ height: 'var(--app-height, 100dvh)' }}
         >
           <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
@@ -183,7 +183,7 @@ export function AssistantWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-3 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-safe">
+          <div className="px-3 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
             <div className="flex gap-2">
               <input
                 type="text"
