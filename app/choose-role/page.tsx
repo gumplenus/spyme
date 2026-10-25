@@ -87,7 +87,7 @@ export default function ChooseRolePage() {
         .insert([{
           id: user.id,
           email: user.email,
-          username: username.trim(), // Берем то, что ввел/изменил игрок
+          username: username.trim(),
           country: country,
           publicRole: roleId,
           balance: balance,
@@ -204,58 +204,64 @@ export default function ChooseRolePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <Link href="/choose-country" className="absolute top-4 left-4 text-green-400 hover:underline text-sm">
-        ← Назад к выбору страны
-      </Link>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* ФИКСИРОВАННЫЙ ХЭДЕР */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
+        <Link href="/choose-country" className="text-green-400 hover:underline text-xl shrink-0">
+          ←
+        </Link>
+        <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">Выберите роль</h1>
+      </header>
 
-      <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
-      <p className="text-gray-400 mb-6">Выберите свою роль в игре</p>
-      
-      {/* НОВОЕ ПОЛЕ ДЛЯ РЕДАКТИРОВАНИЯ ИМЕНИ */}
-      <div className="w-full max-w-2xl mb-8">
-        <label className="block text-sm font-medium text-gray-300 mb-1">Ваш позывной</label>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
-          placeholder="Агент Смит"
-          required
-        />
-        <p className="text-gray-500 text-xs mt-1">Если это имя занято, придумайте другое.</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
-        {ROLES.map((role) => (
-          <button
-            key={role.id}
-            onClick={() => selectRole(role.id)}
-            disabled={saving || (!isOAuth && !captchaToken)}
-            className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center disabled:opacity-50"
-          >
-            <span className="text-4xl mb-2">{role.icon}</span>
-            <span className="text-lg font-semibold text-white">{role.name}</span>
-            <span className="text-sm text-gray-400">{role.desc}</span>
-          </button>
-        ))}
-      </div>
-
-      {!isOAuth && (
-        <div className="mt-8">
-          <Turnstile
-            siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
-            onSuccess={(token) => setCaptchaToken(token)}
-            onError={() => setCaptchaToken(null)}
-            onExpire={() => setCaptchaToken(null)}
-            options={{ refreshExpired: 'auto' }}
+      <div className="pt-20 px-4 pb-4 flex flex-col items-center min-h-screen">
+        <h1 className="text-4xl font-bold text-green-400 mb-2 mt-4 text-center">SpyMe</h1>
+        <p className="text-gray-400 mb-6 text-center">Выберите свою роль в игре</p>
+        
+        {/* ПОЛЕ ДЛЯ РЕДАКТИРОВАНИЯ ПОЗЫВНОГО */}
+        <div className="w-full max-w-2xl mb-8">
+          <label className="block text-sm font-medium text-gray-300 mb-1">Ваш позывной</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
+            placeholder="Агент Смит"
+            required
           />
+          <p className="text-gray-500 text-xs mt-1">Если это имя занято, придумайте другое.</p>
         </div>
-      )}
 
-      {saving && <p className="text-green-400 mt-6">Создаём аккаунт...</p>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
+          {ROLES.map((role) => (
+            <button
+              key={role.id}
+              onClick={() => selectRole(role.id)}
+              disabled={saving || (!isOAuth && !captchaToken)}
+              className="w-full bg-gray-800 hover:bg-gray-700 transition-colors p-6 rounded-xl border border-gray-700 hover:border-green-400 text-left flex flex-col items-center disabled:opacity-50"
+            >
+              <span className="text-4xl mb-2">{role.icon}</span>
+              <span className="text-lg font-semibold text-white">{role.name}</span>
+              <span className="text-sm text-gray-400">{role.desc}</span>
+            </button>
+          ))}
+        </div>
 
-            {errorMessage && (
+        {!isOAuth && (
+          <div className="mt-8">
+            <Turnstile
+              siteKey="0x4AAAAAAFXnlmg0qcI0xiLb"
+              onSuccess={(token) => setCaptchaToken(token)}
+              onError={() => setCaptchaToken(null)}
+              onExpire={() => setCaptchaToken(null)}
+              options={{ refreshExpired: 'auto' }}
+            />
+          </div>
+        )}
+
+        {saving && <p className="text-green-400 mt-6">Создаём аккаунт...</p>}
+      </div>
+
+      {errorMessage && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-500 text-center shadow-2xl">
             <div className="text-5xl mb-3">❌</div>
