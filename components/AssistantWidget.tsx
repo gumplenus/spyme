@@ -85,7 +85,8 @@ export function AssistantWidget() {
         body: JSON.stringify({ 
           message: question,
           role: role,
-          isSpy: isSpy
+          isSpy: isSpy,
+          history: messages
         }),
       });
 
