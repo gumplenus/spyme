@@ -249,7 +249,7 @@ export default function SettingsPage() {
         <div className="bg-gray-800 p-5 rounded-xl border border-red-800">
           <p className="text-red-400 font-semibold">⚠️ Удалить аккаунт</p>
           <p className="text-gray-400 text-sm mt-1 mb-4">
-            Ваш профиль станет анонимным. Вы больше не сможете войти под этим аккаунтом.
+            Данные профиля будут полностью удалены. Вы больше не сможете войти под этим аккаунтом.
           </p>
           <button
             onClick={() => setIsDeleteOpen(true)}
