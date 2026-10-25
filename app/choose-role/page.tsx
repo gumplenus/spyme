@@ -27,7 +27,6 @@ export default function ChooseRolePage() {
 
   useEffect(() => {
     const init = async () => {
-      // Используем getSession вместо getUser для надежности
       const { data: { session } } = await supabase.auth.getSession();
       
       const pendingUsername = localStorage.getItem('pendingUsername');
@@ -42,11 +41,9 @@ export default function ChooseRolePage() {
       setCountry(pendingCountry);
 
       if (session?.user) {
-        // Игрок пришёл через OAuth (Яндекс или VK)
         setIsOAuth(true);
         setEmail(session.user.email || '');
       } else {
-        // Обычная регистрация через email
         const pendingEmail = localStorage.getItem('pendingEmail');
         const pendingPassword = localStorage.getItem('pendingPassword');
         if (!pendingEmail || !pendingPassword) {
@@ -64,11 +61,14 @@ export default function ChooseRolePage() {
 
   const selectRole = async (roleId: string) => {
     if (saving) return;
+    if (!username.trim()) {
+      alert('Введите ваш позывной');
+      return;
+    }
     setSaving(true);
 
     // ВЕТКА 1: OAuth (Яндекс или VK)
     if (isOAuth) {
-      // Берем сессию из локального хранилища
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
@@ -86,7 +86,7 @@ export default function ChooseRolePage() {
         .insert([{
           id: user.id,
           email: user.email,
-          username: username,
+          username: username.trim(), // Берем то, что ввел/изменил игрок
           country: country,
           publicRole: roleId,
           balance: balance,
@@ -96,7 +96,7 @@ export default function ChooseRolePage() {
 
       if (insertError) {
         if (insertError.message.includes('User_username_key')) {
-          alert('Этот позывной уже занят. Придумайте другой.');
+          alert('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
         } else {
           alert('Не удалось создать профиль: ' + insertError.message);
         }
@@ -109,6 +109,7 @@ export default function ChooseRolePage() {
       localStorage.removeItem('pendingPassword');
       localStorage.removeItem('pendingCountry');
       localStorage.removeItem('pendingRole');
+      
       router.push('/game');
       router.refresh();
       return;
@@ -154,7 +155,7 @@ export default function ChooseRolePage() {
       .insert([{
         id: signUpData.user.id,
         email: signUpData.user.email,
-        username: username,
+        username: username.trim(),
         country: country,
         publicRole: roleId,
         balance: balance,
@@ -163,7 +164,11 @@ export default function ChooseRolePage() {
       }]);
 
     if (insertError) {
-      alert('Не удалось создать профиль: ' + insertError.message);
+      if (insertError.message.includes('User_username_key')) {
+        alert('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
+      } else {
+        alert('Не удалось создать профиль: ' + insertError.message);
+      }
       setSaving(false);
       return;
     }
@@ -173,6 +178,7 @@ export default function ChooseRolePage() {
     localStorage.removeItem('pendingPassword');
     localStorage.removeItem('pendingCountry');
     localStorage.removeItem('pendingRole');
+
     router.push('/game');
     router.refresh();
   };
@@ -203,8 +209,22 @@ export default function ChooseRolePage() {
       </Link>
 
       <h1 className="text-4xl font-bold text-green-400 mb-2">SpyMe</h1>
-      <p className="text-gray-400 mb-8">Выберите свою роль в игре</p>
+      <p className="text-gray-400 mb-6">Выберите свою роль в игре</p>
       
+      {/* НОВОЕ ПОЛЕ ДЛЯ РЕДАКТИРОВАНИЯ ИМЕНИ */}
+      <div className="w-full max-w-2xl mb-8">
+        <label className="block text-sm font-medium text-gray-300 mb-1">Ваш позывной</label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
+          placeholder="Агент Смит"
+          required
+        />
+        <p className="text-gray-500 text-xs mt-1">Если это имя занято, придумайте другое.</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full">
         {ROLES.map((role) => (
           <button
