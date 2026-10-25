@@ -24,6 +24,7 @@ export default function ChooseRolePage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showConfirmScreen, setShowConfirmScreen] = useState(false);
   const [isOAuth, setIsOAuth] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -62,7 +63,7 @@ export default function ChooseRolePage() {
   const selectRole = async (roleId: string) => {
     if (saving) return;
     if (!username.trim()) {
-      alert('Введите ваш позывной');
+      setErrorMessage('Введите ваш позывной');
       return;
     }
     setSaving(true);
@@ -72,7 +73,7 @@ export default function ChooseRolePage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        alert('Сессия истекла. Войдите заново.');
+        setErrorMessage('Сессия истекла. Войдите заново.');
         setSaving(false);
         router.push('/login');
         return;
@@ -96,9 +97,9 @@ export default function ChooseRolePage() {
 
       if (insertError) {
         if (insertError.message.includes('User_username_key')) {
-          alert('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
+          setErrorMessage('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
         } else {
-          alert('Не удалось создать профиль: ' + insertError.message);
+          setErrorMessage('Не удалось создать профиль: ' + insertError.message);
         }
         setSaving(false);
         return;
@@ -117,7 +118,7 @@ export default function ChooseRolePage() {
 
     // ВЕТКА 2: Email
     if (!captchaToken) {
-      alert('Пожалуйста, дождитесь проверки капчи');
+      setErrorMessage('Пожалуйста, дождитесь проверки капчи');
       setSaving(false);
       return;
     }
@@ -129,13 +130,13 @@ export default function ChooseRolePage() {
     });
 
     if (signUpError) {
-      alert('Ошибка регистрации: ' + signUpError.message);
+      setErrorMessage('Ошибка регистрации: ' + signUpError.message);
       setSaving(false);
       return;
     }
 
     if (!signUpData.user) {
-      alert('Не удалось создать аккаунт');
+      setErrorMessage('Не удалось создать аккаунт');
       setSaving(false);
       return;
     }
@@ -165,9 +166,9 @@ export default function ChooseRolePage() {
 
     if (insertError) {
       if (insertError.message.includes('User_username_key')) {
-        alert('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
+        setErrorMessage('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
       } else {
-        alert('Не удалось создать профиль: ' + insertError.message);
+        setErrorMessage('Не удалось создать профиль: ' + insertError.message);
       }
       setSaving(false);
       return;
@@ -253,6 +254,21 @@ export default function ChooseRolePage() {
       )}
 
       {saving && <p className="text-green-400 mt-6">Создаём аккаунт...</p>}
+
+            {errorMessage && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-500 text-center shadow-2xl">
+            <div className="text-5xl mb-3">❌</div>
+            <p className="text-white text-lg font-semibold mb-6">{errorMessage}</p>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+            >
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
