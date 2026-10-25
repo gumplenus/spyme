@@ -26,7 +26,7 @@ function CallbackHandler() {
         const state = searchParams.get('state');
         const device_id = searchParams.get('device_id');
 
-        // 1. Возврат с магической ссылки VK (после ввода email)
+        // 1. Возврат с магической ссылки (VK или Яндекс)
         if (state === 'magiclink') {
           setStatus('Проверяем сессию...');
           
@@ -48,7 +48,14 @@ function CallbackHandler() {
           if (existingProfile) {
             router.push('/game');
           } else {
-            // Профиля нет — отправляем на выбор страны (данные в localStorage уже есть)
+            // Если это Яндекс, он передал имя и email в URL. Сохраняем их.
+            const nameParam = searchParams.get('name');
+            const emailParam = searchParams.get('email');
+
+            if (nameParam) localStorage.setItem('pendingUsername', nameParam);
+            if (emailParam) localStorage.setItem('pendingEmail', emailParam);
+
+            // Отправляем на выбор страны
             router.push('/choose-country');
           }
           return;
