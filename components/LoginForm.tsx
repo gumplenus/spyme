@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 export function LoginForm() {
   const router = useRouter();
@@ -137,11 +139,24 @@ export function LoginForm() {
 
       <button
         type="button"
-        onClick={() => {
+        onClick={async () => {
           const clientId = '2ba54608b95e4966a1e9ac1eb7524058';
-          const redirectUri = 'https://spyme.com.ru/auth/callback';
+          
+          // Проверяем, запущено ли приложение нативно
+          const isNative = Capacitor.isNativePlatform();
+          
+          // Меняем ссылку возврата в зависимости от платформы
+          const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
+          
           const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=yandex`;
-          window.location.href = authUrl;
+          
+          if (isNative) {
+            // Открываем нативный браузер
+            await Browser.open({ url: authUrl });
+          } else {
+            // В вебе ведем себя как раньше
+            window.location.href = authUrl;
+          }
         }}
         className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 mb-2"
       >
@@ -176,12 +191,24 @@ export function LoginForm() {
     // 3. Сохраняем code_verifier, он понадобится на бэкенде при обмене кода на токен
     sessionStorage.setItem('vk_code_verifier', codeVerifier);
 
-    // 4. Формируем URL для авторизации (используем новый домен id.vk.ru)
+    // 4. Формируем URL для авторизации
     const clientId = '54837536';
-    const redirectUri = 'https://spyme.com.ru/auth/callback';
+    
+    // Проверяем, запущено ли приложение нативно
+    const isNative = Capacitor.isNativePlatform();
+    
+    // Меняем ссылку возврата в зависимости от платформы
+    const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
+    
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
-    window.location.href = authUrl;
+    if (isNative) {
+      // Открываем нативный браузер поверх приложения
+      await Browser.open({ url: authUrl });
+    } else {
+      // В вебе ведем себя как раньше
+      window.location.href = authUrl;
+    }
   }}
   className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
 >
