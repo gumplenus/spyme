@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -188,11 +190,17 @@ export function RegisterForm() {
 
       <button
         type="button"
-        onClick={() => {
+        onClick={async () => {
           const clientId = '2ba54608b95e4966a1e9ac1eb7524058';
-          const redirectUri = 'https://spyme.com.ru/auth/callback';
+          const isNative = Capacitor.isNativePlatform();
+          const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
           const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=yandex`;
-          window.location.href = authUrl;
+          
+          if (isNative) {
+            await Browser.open({ url: authUrl });
+          } else {
+            window.location.href = authUrl;
+          }
         }}
         className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 mb-2"
       >
@@ -205,7 +213,7 @@ export function RegisterForm() {
       <button
         type="button"
         onClick={async () => {
-          // Сохраняем имя и почту из формы, если пользователь их ввел
+          // Сохраняем имя и почту из формы
           if (username) localStorage.setItem("pendingUsername", username.trim());
           if (email) localStorage.setItem("pendingEmail", email.trim());
 
@@ -224,13 +232,22 @@ export function RegisterForm() {
           const base64 = btoa(binary);
           const codeChallenge = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           
-          sessionStorage.setItem('vk_code_verifier', codeVerifier);
+          // ВАЖНО: используем localStorage вместо sessionStorage
+          localStorage.setItem('vk_code_verifier', codeVerifier);
 
           const clientId = '54837536';
-          const redirectUri = 'https://spyme.com.ru/auth/callback';
+          
+          // Проверка на нативный запуск и смена ссылки
+          const isNative = Capacitor.isNativePlatform();
+          const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
+          
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
           
-          window.location.href = authUrl;
+          if (isNative) {
+            await Browser.open({ url: authUrl });
+          } else {
+            window.location.href = authUrl;
+          }
         }}
         className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
       >
