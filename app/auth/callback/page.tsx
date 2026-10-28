@@ -89,7 +89,7 @@ function CallbackHandler() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               code, 
-              code_verifier: sessionStorage.getItem('vk_code_verifier'),
+              code_verifier: localStorage.getItem('vk_code_verifier'),
               device_id: device_id 
             }),
           });

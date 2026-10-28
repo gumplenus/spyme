@@ -189,7 +189,7 @@ export function LoginForm() {
     const codeChallenge = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
     // 3. Сохраняем code_verifier, он понадобится на бэкенде при обмене кода на токен
-    sessionStorage.setItem('vk_code_verifier', codeVerifier);
+    localStorage.setItem('vk_code_verifier', codeVerifier);
 
     // 4. Формируем URL для авторизации
     const clientId = '54837536';
