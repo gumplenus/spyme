@@ -3,6 +3,7 @@ import type { Viewport } from 'next';
 import './globals.css';
 import { AssistantWidget } from '@/components/AssistantWidget';
 import { DeepLinkHandler } from '@/components/DeepLinkHandler'; // <-- НОВЫЙ ИМПОРТ
+import { SplashScreenController } from '@/components/SplashScreenController';
 
 export const metadata = {
   title: 'SpyMe',
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="bg-ink text-neon antialiased">
+        <SplashScreenController /> {/* <-- НОВЫЙ КОМПОНЕНТ */}
         <DeepLinkHandler /> {/* <-- НОВЫЙ КОМПОНЕНТ */}
         {children}
         <AssistantWidget />

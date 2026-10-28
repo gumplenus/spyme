@@ -7,6 +7,17 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://spyme.com.ru',
     cleartext: true
+  },
+    plugins: {
+    SplashScreen: {
+      launchShowDuration: 0, // Отключаем автоскрытие по таймеру
+      launchAutoHide: false, // Заставка будет висеть, пока мы не скроем ее вручную
+      backgroundColor: "#050807",
+      showSpinner: false,
+      androidScaleType: "CENTER_CROP",
+      splashFullScreen: true,
+      splashImmersive: true
+    }
   }
 };
 
