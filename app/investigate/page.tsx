@@ -271,7 +271,7 @@ export default function InvestigatePage() {
                       ЦЕЛЬ: @{inv.target?.username || 'Неизвестный'}
                     </p>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider truncate mt-1">
-                      СТРАНА: {inv.target?.country} // РОЛЬ: {inv.target?.publicRole}
+                      СТРАНА: {inv.target?.country} {'//'} РОЛЬ: {inv.target?.publicRole}
                     </p>
                   </div>
                 </div>
