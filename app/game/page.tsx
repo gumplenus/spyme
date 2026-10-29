@@ -535,7 +535,7 @@ export default function GamePage() {
                     <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-2">
                       <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                         {post.author?.avatarUrl ? (
-                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover grayscale opacity-80" />
+                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xs text-gray-500">USR</span>
                         )}
@@ -602,7 +602,7 @@ export default function GamePage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                       {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
-                        <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover grayscale" />
+                        <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xs text-gray-500">USR</span>
                       )}
