@@ -533,7 +533,7 @@ export default function GamePage() {
                 {posts.map((post) => (
                   <div key={post.id} className="border border-gray-800 p-3 bg-[#0a0f0d]">
                     <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-2">
-                      <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 border border-[#39ff14]/30 rounded-full overflow-hidden flex items-center justify-center shrink-0">
                         {post.author?.avatarUrl ? (
                           <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -600,7 +600,7 @@ export default function GamePage() {
               ) : (
                 <div className="mb-4 p-3 border border-gray-700 flex items-center justify-between gap-3 bg-[#0a0f0d]">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 border border-yellow-500/30 rounded-full overflow-hidden flex items-center justify-center shrink-0">
                       {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
                         <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover" />
                       ) : (
