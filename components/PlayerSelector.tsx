@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import TerminalSelect from './TerminalSelect';
 
 const ROLE_LABELS: Record<string, string> = {
   REPORTER: 'Репортёр',
@@ -96,31 +97,27 @@ export default function PlayerSelector({
         />
 
         <div className="flex gap-2">
-          <select
+          <TerminalSelect
             value={countryFilter}
-            onChange={(e) => setCountryFilter(e.target.value)}
-            className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
-          >
-            <option value="">ВСЕ СТРАНЫ</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={setCountryFilter}
+            placeholder="ВСЕ СТРАНЫ"
+            options={[
+              { value: '', label: 'ВСЕ СТРАНЫ' },
+              ...countries.map((c) => ({ value: c, label: c })),
+            ]}
+            className="flex-1"
+          />
 
-          <select
+          <TerminalSelect
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
-          >
-            <option value="">ВСЕ РОЛИ</option>
-            {roles.map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABELS[r.toUpperCase()] || r}
-              </option>
-            ))}
-          </select>
+            onChange={setRoleFilter}
+            placeholder="ВСЕ РОЛИ"
+            options={[
+              { value: '', label: 'ВСЕ РОЛИ' },
+              ...roles.map((r) => ({ value: r, label: ROLE_LABELS[r.toUpperCase()] || r })),
+            ]}
+            className="flex-1"
+          />
         </div>
 
         {(search || countryFilter || roleFilter) && (

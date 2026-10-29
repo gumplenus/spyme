@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PlayerSelector, { Player } from '@/components/PlayerSelector';
 import { COUNTRIES } from '@/lib/countries';
+import TerminalSelect from '@/components/TerminalSelect';
 
 export default function GamePage() {
   const router = useRouter();
@@ -504,16 +505,16 @@ export default function GamePage() {
               className="w-full px-3 py-2 bg-transparent text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm placeholder-gray-600 rounded-none"
             />
             <div className="flex gap-2">
-              <select
+              <TerminalSelect
                 value={postCountryFilter}
-                onChange={(e) => setPostCountryFilter(e.target.value)}
-                className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
-              >
-                <option value="">ВСЕ СТРАНЫ</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
+                onChange={setPostCountryFilter}
+                placeholder="ВСЕ СТРАНЫ"
+                options={[
+                  { value: '', label: 'ВСЕ СТРАНЫ' },
+                  ...COUNTRIES.map((c) => ({ value: c.code, label: c.name })),
+                ]}
+                className="flex-1"
+              />
               {(postSearch || postCountryFilter) && (
                 <button
                   onClick={() => { setPostSearch(''); setPostCountryFilter(''); }}
