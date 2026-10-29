@@ -19,7 +19,6 @@ export default function LeaderboardPage() {
         return;
       }
 
-      // Загружаем свой профиль
       const { data: profileData } = await supabase
         .from('User')
         .select('username, country, balance, eliminationsCount, investigationsCount, spySurvivalDays, countryChanges, totalTransferred')
@@ -28,7 +27,6 @@ export default function LeaderboardPage() {
 
       setCurrentUser(profileData);
 
-      // Загружаем рейтинг
       const { data: leaderboardData, error } = await supabase.rpc('get_leaderboard');
 
       if (error) {
@@ -45,25 +43,23 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ЗАГРУЗКА_РЕЙТИНГА...</div>
       </div>
     );
   }
 
   if (!leaderboard) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-4">
-        <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-          ← Назад в игру
+      <div className="min-h-screen bg-[#050807] text-gray-300 p-4 font-mono">
+        <Link href="/game" className="text-[#39ff14] hover:text-white mb-4 inline-block transition-colors">
+          ← НАЗАД_В_ИГРУ
         </Link>
-        <p className="text-gray-400">Не удалось загрузить рейтинг.</p>
+        <p className="text-red-500 text-sm border border-red-500/50 p-3 bg-red-900/10">[ ОШИБКА: НЕ УДАЛОСЬ ЗАГРУЗИТЬ ДАННЫЕ ]</p>
       </div>
     );
   }
 
-  // Функция для отображения блока рейтинга
-  // Функция склонения русских слов: 1 ликвидация / 2 ликвидации / 5 ликвидаций
   const pluralize = (n: number, one: string, few: string, many: string) => {
     const mod10 = n % 10;
     const mod100 = n % 100;
@@ -77,54 +73,56 @@ export default function LeaderboardPage() {
     icon: string,
     categoryKey: string,
     myValue: number,
-    color: string,
-    valueLabel: [string, string, string] // [один, два, много]
+    colorClass: string,
+    valueLabel: [string, string, string]
   ) => {
     const items = leaderboard[categoryKey] || [];
     const myIndex = items.findIndex((item: any) => item.username === currentUser?.username);
     const isInTop = myIndex !== -1;
 
     return (
-      <div className="bg-gray-800 p-4 sm:p-6 rounded-xl border border-gray-700 mb-6">
-        <h2 className={`text-xl sm:text-2xl font-bold ${color} mb-4`}>
-          {icon} {title}
+      <div className="border border-gray-800 bg-[#0a0f0d] p-4 mb-6">
+        <h2 className={`text-xs tracking-widest uppercase mb-4 border-b border-gray-800 pb-2 ${colorClass}`}>
+          &gt; {icon} {title}
         </h2>
 
         {items.length === 0 ? (
-          <p className="text-gray-400 text-sm">Пока нет данных</p>
+          <p className="text-gray-600 text-xs italic">[ ДАННЫЕ ОТСУТСТВУЮТ ]</p>
         ) : (
           <div className="space-y-2">
             {items.map((item: any, index: number) => {
               const isMe = item.username === currentUser?.username;
               const medal =
-                index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `[${index + 1}]`;
               const word = pluralize(item.value, valueLabel[0], valueLabel[1], valueLabel[2]);
 
               return (
                 <div
                   key={`${categoryKey}-${index}`}
-                  className={`flex items-center justify-between gap-2 p-3 rounded-lg ${
+                  className={`flex items-center justify-between gap-2 p-3 border transition-colors ${
                     isMe
-                      ? 'bg-green-900/40 border border-green-500'
-                      : 'bg-gray-700'
+                      ? 'bg-[#39ff14]/5 border-[#39ff14] text-[#39ff14]'
+                      : 'bg-transparent border-gray-800 text-gray-300 hover:border-gray-600'
                   }`}
                 >
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <span className="text-lg sm:text-xl w-7 sm:w-8 text-center shrink-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-sm w-8 text-center shrink-0">
                       {medal}
                     </span>
                     <div className="min-w-0">
                       <p
-                        className={`font-semibold truncate text-sm sm:text-base ${
-                          isMe ? 'text-green-300' : 'text-white'
+                        className={`text-sm font-medium truncate ${
+                          isMe ? 'text-[#39ff14] font-semibold' : 'text-white'
                         }`}
                       >
-                        {item.username} {isMe && '(вы)'}
+                        @{item.username} {isMe && '[ ВЫ ]'}
                       </p>
-                      <p className="text-gray-400 text-xs truncate">{item.country}</p>
+                      <p className="text-gray-500 text-[10px] uppercase tracking-wider truncate mt-0.5">
+                        {item.country}
+                      </p>
                     </div>
                   </div>
-                  <p className={`font-bold ${color} text-sm sm:text-base text-right shrink-0`}>
+                  <p className={`text-xs font-semibold text-right shrink-0 ${isMe ? 'text-[#39ff14]' : colorClass}`}>
                     {item.value} {word}
                   </p>
                 </div>
@@ -134,12 +132,9 @@ export default function LeaderboardPage() {
         )}
 
         {!isInTop && myValue > 0 && (
-          <div className="mt-4 p-3 rounded-lg bg-green-900/40 border border-green-500">
-            <p className="text-green-300 text-sm font-semibold">
-              Ваш результат:{' '}
-              <span className="font-bold">
-                {myValue} {pluralize(myValue, valueLabel[0], valueLabel[1], valueLabel[2])}
-              </span>
+          <div className="mt-4 p-3 border border-[#39ff14]/50 bg-[#39ff14]/5">
+            <p className="text-[#39ff14] text-xs">
+              &gt; ВАШ_РЕЗУЛЬТАТ: <span className="font-bold">{myValue} {pluralize(myValue, valueLabel[0], valueLabel[1], valueLabel[2])}</span>
             </p>
           </div>
         )}
@@ -148,79 +143,79 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
-        <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+    <div className="min-h-screen bg-[#050807] text-gray-300 font-mono pb-10">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center gap-3">
+        <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
-        <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">🏆 Рейтинг игроков</h1>
+        <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ РЕЙТИНГ_ИГРОКОВ ]</h1>
       </header>
 
       <div className="pt-20 px-4 pb-4">
-      <div className="max-w-3xl mx-auto">
-        {renderCategory(
-  'Самый богатый',
-  '💰',
-  'richest',
-  currentUser?.balance || 0,
-  'text-yellow-400',
-  ['ВЛИ', 'ВЛИ', 'ВЛИ']
-)}
+        <div className="max-w-3xl mx-auto">
+          {renderCategory(
+            'САМЫЙ_БОГАТЫЙ',
+            '💰',
+            'richest',
+            currentUser?.balance || 0,
+            'text-yellow-400',
+            ['ВЛИ', 'ВЛИ', 'ВЛИ']
+          )}
 
-        {renderCategory(
-  'Лучший Военный',
-  '⚔️',
-  'best_military',
-  currentUser?.eliminationsCount || 0,
-  'text-orange-400',
-  ['ликвидация', 'ликвидации', 'ликвидаций']
-)}
+          {renderCategory(
+            'ЛУЧШИЙ_ВОЕННЫЙ',
+            '⚔️',
+            'best_military',
+            currentUser?.eliminationsCount || 0,
+            'text-orange-400',
+            ['ликвидация', 'ликвидации', 'ликвидаций']
+          )}
 
-        {renderCategory(
-          'Лучший Репортер',
-          '📰',
-          'best_reporter',
-          currentUser?.investigationsCount || 0,
-          'text-green-400',
+          {renderCategory(
+            'ЛУЧШИЙ_РЕПОРТЕР',
+            '📰',
+            'best_reporter',
+            currentUser?.investigationsCount || 0,
+            'text-[#39ff14]',
             ['расследование', 'расследования', 'расследований']
-        )}
+          )}
 
-        {renderCategory(
-          'Лучший Шпион',
-          '🕵️',
-          'best_spy',
-          currentUser?.spySurvivalDays || 0,
-          'text-purple-400',
-          ['день', 'дня', 'дней']
-        )}
+          {renderCategory(
+            'ЛУЧШИЙ_ШПИОН',
+            '🕵️',
+            'best_spy',
+            currentUser?.spySurvivalDays || 0,
+            'text-purple-400',
+            ['день', 'дня', 'дней']
+          )}
 
-        {renderCategory(
-          'Самый мобильный',
-          '🌍',
-          'most_mobile',
-          currentUser?.countryChanges || 0,
-          'text-cyan-400',
-          ['смена', 'смены', 'смен']
-        )}
+          {renderCategory(
+            'САМЫЙ_МОБИЛЬНЫЙ',
+            '🌍',
+            'most_mobile',
+            currentUser?.countryChanges || 0,
+            'text-cyan-400',
+            ['смена', 'смены', 'смен']
+          )}
 
-        {renderCategory(
-          'Самый щедрый',
-          '💸',
-          'most_generous',
-          currentUser?.totalTransferred || 0,
-          'text-pink-400',
-          ['ВЛИ', 'ВЛИ', 'ВЛИ']
-        )}
-      </div>
+          {renderCategory(
+            'САМЫЙ_ЩЕДРЫЙ',
+            '💸',
+            'most_generous',
+            currentUser?.totalTransferred || 0,
+            'text-pink-400',
+            ['ВЛИ', 'ВЛИ', 'ВЛИ']
+          )}
+        </div>
 
-      <div className="max-w-3xl mx-auto mt-8 mb-4 flex justify-center">
-        <Link
-          href="/game"
-          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold"
-        >
-          ← Назад в игру
-        </Link>
-      </div>
+        <div className="max-w-3xl mx-auto mt-8 mb-4 flex justify-center">
+          <Link
+            href="/game"
+            className="px-6 py-3 border border-gray-600 text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14] rounded-none text-xs font-semibold tracking-wider transition-colors"
+          >
+            &lt; НАЗАД_В_ИГРУ
+          </Link>
+        </div>
       </div>
     </div>
   );
