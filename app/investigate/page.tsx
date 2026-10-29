@@ -125,43 +125,43 @@ export default function InvestigatePage() {
     setEvidenceToTransfer(inv);
   };
 
-      const openCancelModal = (inv: any) => {
-  setCancelTarget(inv);
-};
+  const openCancelModal = (inv: any) => {
+    setCancelTarget(inv);
+  };
 
-const confirmCancelInvestigation = async () => {
-  if (!currentUserId || !cancelTarget) return;
+  const confirmCancelInvestigation = async () => {
+    if (!currentUserId || !cancelTarget) return;
 
-  const inv = cancelTarget;
-  setCancelTarget(null);
+    const inv = cancelTarget;
+    setCancelTarget(null);
 
-  const { error } = await supabase
-    .from('Investigation')
-    .delete()
-    .eq('id', inv.id);
+    const { error } = await supabase
+      .from('Investigation')
+      .delete()
+      .eq('id', inv.id);
 
-  if (error) {
-    alert('Ошибка отмены: ' + error.message);
-    return;
-  }
+    if (error) {
+      alert('Ошибка отмены: ' + error.message);
+      return;
+    }
 
-  const { data: currentProfile } = await supabase
-    .from('User')
-    .select('investigationsCount')
-    .eq('id', currentUserId)
-    .single();
-
-  if (currentProfile && (currentProfile.investigationsCount || 0) > 0) {
-    await supabase
+    const { data: currentProfile } = await supabase
       .from('User')
-      .update({ investigationsCount: currentProfile.investigationsCount - 1 })
-      .eq('id', currentUserId);
-  }
+      .select('investigationsCount')
+      .eq('id', currentUserId)
+      .single();
 
-  setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
-};
+    if (currentProfile && (currentProfile.investigationsCount || 0) > 0) {
+      await supabase
+        .from('User')
+        .update({ investigationsCount: currentProfile.investigationsCount - 1 })
+        .eq('id', currentUserId);
+    }
 
-    const transferEvidence = async (recipientId: string) => {
+    setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
+  };
+
+  const transferEvidence = async (recipientId: string) => {
     if (!currentUserId || !evidenceToTransfer) return;
     setTransferring(evidenceToTransfer.id);
 
@@ -190,13 +190,11 @@ const confirmCancelInvestigation = async () => {
       return;
     }
 
-    // Удаляем расследование — улика передана, история не нужна
     await supabase
       .from('Investigation')
       .delete()
       .eq('id', inv.id);
 
-    // Счётчик переданных улик
     const { data: currentProfile } = await supabase
       .from('User')
       .select('evidencesTransferred')
@@ -210,7 +208,6 @@ const confirmCancelInvestigation = async () => {
         .eq('id', currentUserId);
     }
 
-    // Убираем расследование из UI
     setInvestigations((prev) => prev.filter((i) => i.id !== inv.id));
 
     setSuccessMessage('Улика передана Военному вашей страны');
@@ -222,191 +219,169 @@ const confirmCancelInvestigation = async () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ДОСТУП_К_БАЗЕ_ДАННЫХ...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between gap-2">
+    <div className="min-h-screen bg-[#050807] text-gray-300 font-mono">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+          <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
             ←
           </Link>
-          <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">🔍 Расследования</h1>
+          <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ РАССЛЕДОВАНИЯ ]</h1>
         </div>
         <button
           onClick={openNewInvestigationModal}
-          className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold shrink-0"
+          className="px-3 py-1.5 border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 hover:border-yellow-500 rounded-none text-xs shrink-0 transition-colors uppercase tracking-wider"
         >
-          <span className="hidden sm:inline">➕ Новое расследование</span>
-          <span className="sm:hidden">➕</span>
+          + НОВОЕ_ДЕЛО
         </button>
       </header>
 
       <div className="pt-20 px-4 pb-4">
-      {successMessage && (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 pointer-events-none">
-    <div className="bg-gray-800 border border-green-500 rounded-xl p-6 max-w-sm w-full text-center shadow-2xl">
-      <div className="text-4xl mb-2">✅</div>
-      <p className="text-green-300 font-semibold">{successMessage}</p>
-    </div>
-  </div>
-)}
+        {successMessage && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 pointer-events-none">
+            <div className="border border-[#39ff14] p-6 max-w-sm w-full text-center bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.3)]">
+              <div className="text-3xl mb-3 text-[#39ff14]">[ OK ]</div>
+              <p className="text-[#39ff14] font-semibold text-sm">{successMessage}</p>
+            </div>
+          </div>
+        )}
 
-      {investigations.length === 0 ? (
-        <p className="text-gray-400 mt-8">У вас ещё нет расследований.</p>
-      ) : (
-        <div className="space-y-3 mt-4">
-          {investigations.map((inv) => (
-            <div key={inv.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
-                  {inv.target?.avatarUrl ? (
-                    <img
-                      src={inv.target.avatarUrl}
-                      alt={inv.target?.username || ''}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg">👤</span>
-                  )}
+        {investigations.length === 0 ? (
+          <p className="text-gray-600 text-sm italic mt-8">[ ДАННЫЕ НЕ НАЙДЕНЫ. ДЕЛА ОТСУТСТВУЮТ. ]</p>
+        ) : (
+          <div className="space-y-4 mt-4">
+            {investigations.map((inv) => (
+              <div key={inv.id} className="border border-gray-800 bg-[#0a0f0d] p-4 relative">
+                <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-3">
+                  <div className="w-10 h-10 rounded-full border border-[#39ff14]/30 overflow-hidden flex items-center justify-center shrink-0">
+                    {inv.target?.avatarUrl ? (
+                      <img src={inv.target.avatarUrl} alt={inv.target?.username || ''} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-gray-500">USR</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[#39ff14] text-sm font-semibold truncate">
+                      ЦЕЛЬ: @{inv.target?.username || 'Неизвестный'}
+                    </p>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider truncate mt-1">
+                      СТРАНА: {inv.target?.country} // РОЛЬ: {inv.target?.publicRole}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-white font-semibold truncate">
-                    🎯 {inv.target?.username || 'Неизвестный'}
+                
+                <div className="flex flex-col gap-1 mb-3">
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wider">
+                    НАЧАТО: <span className="text-gray-400">{new Date(inv.startedAt + 'Z').toLocaleString()}</span>
                   </p>
-                  <p className="text-gray-400 text-sm truncate">
-                    Страна: {inv.target?.country} · Роль: {inv.target?.publicRole}
+                  <p className={`text-xs font-semibold tracking-wider ${inv.status === 'COMPLETED' ? 'text-[#39ff14]' : 'text-yellow-500'}`}>
+                    СТАТУС: {inv.status === 'COMPLETED' ? '[ ЗАВЕРШЕНО ]' : (
+                      (() => {
+                        const started = new Date(inv.startedAt + 'Z').getTime();
+                        const endsAt = started + 24 * 60 * 60 * 1000;
+                        const remainingMs = endsAt - Date.now();
+                        if (remainingMs <= 0) return '[ ЗАВЕРШАЕТСЯ... ]';
+                        const hours = Math.floor(remainingMs / (60 * 60 * 1000));
+                        const minutes = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+                        if (hours > 0) return `[ ОСТАЛОСЬ: ${hours} Ч ${minutes} МИН ]`;
+                        return `[ ОСТАЛОСЬ: ${minutes} МИН ]`;
+                      })()
+                    )}
                   </p>
                 </div>
-              </div>
-              <p className="text-gray-500 text-xs mt-2">
-                Начато: {new Date(inv.startedAt + 'Z').toLocaleString()}
-              </p>
-              <p className={`text-xs mt-1 ${inv.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-400'}`}>
-                Статус: {inv.status === 'COMPLETED' ? 'Завершено' : (
-                  (() => {
-                    const started = new Date(inv.startedAt + 'Z').getTime();
-                    const endsAt = started + 24 * 60 * 60 * 1000;
-                    const remainingMs = endsAt - Date.now();
-                    if (remainingMs <= 0) return 'Завершается...';
-                    const hours = Math.floor(remainingMs / (60 * 60 * 1000));
-                    const minutes = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
-                    if (hours > 0) return `Осталось: ${hours} ч ${minutes} мин`;
-                    return `Осталось: ${minutes} мин`;
-                  })()
+
+                {inv.status !== 'COMPLETED' && (
+                  <button
+                    onClick={() => openCancelModal(inv)}
+                    className="mt-2 px-3 py-1.5 border border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500 text-xs rounded-none transition-colors"
+                  >
+                    [x] ОТМЕНИТЬ_ДЕЛО
+                  </button>
                 )}
+
+                {inv.result && (
+                  <div className="text-gray-300 text-sm mt-3 p-3 bg-black border border-gray-800">
+                    &gt; {inv.result}
+                  </div>
+                )}
+
+                {inv.status === 'COMPLETED' && (
+                  <button
+                    onClick={() => openTransferModal(inv)}
+                    disabled={transferring === inv.id}
+                    className="mt-3 px-4 py-2 border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 hover:border-yellow-500 text-xs font-semibold rounded-none transition-colors disabled:opacity-50"
+                  >
+                    {transferring === inv.id ? 'ПЕРЕДАЧА...' : '> ПЕРЕДАТЬ_УЛИКУ_ВОЕННОМУ'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* МОДАЛКА НОВОГО РАССЛЕДОВАНИЯ */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="border border-yellow-500 w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(234,179,8,0.2)]">
+              <div className="flex items-center justify-between p-4 border-b border-yellow-500/30 shrink-0">
+                <h3 className="text-sm text-yellow-500 tracking-widest">&gt; ВЫБОР_ЦЕЛИ</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
+              </div>
+              <div className="p-4 overflow-y-auto">
+                <PlayerSelector
+                  players={allUsers}
+                  onSelect={(p) => startInvestigation(p.id)}
+                  emptyText="Нет игроков по заданным фильтрам"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* МОДАЛКА ПЕРЕДАЧИ УЛИК */}
+        {evidenceToTransfer && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="border border-[#39ff14] w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.2)]">
+              <div className="flex items-center justify-between p-4 border-b border-[#39ff14]/30 shrink-0">
+                <h3 className="text-sm text-[#39ff14] tracking-widest">&gt; ПЕРЕДАЧА_УЛИКИ</h3>
+                <button onClick={() => setEvidenceToTransfer(null)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
+              </div>
+              <div className="p-4 overflow-y-auto">
+                <PlayerSelector
+                  players={militaryList}
+                  onSelect={(p) => transferEvidence(p.id)}
+                  emptyText="Нет Военных в вашей стране"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* МОДАЛКА ОТМЕНЫ */}
+        {cancelTarget && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="border border-red-500 p-6 w-full max-w-md bg-[#050807] shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+              <h3 className="text-sm text-red-500 tracking-widest mb-3">&gt; ОТМЕНИТЬ_РАССЛЕДОВАНИЕ?</h3>
+              <p className="text-gray-400 text-xs mb-6 leading-relaxed">
+                Расследование цели <span className="text-white font-semibold">@{cancelTarget.target?.username || 'Неизвестный'}</span> будет удалено. Прогресс не сохранится.
               </p>
-
-              {inv.status !== 'COMPLETED' && (
-  <button
-    onClick={() => openCancelModal(inv)}
-    className="mt-3 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm"
-  >
-    ✕ Отменить расследование
-  </button>
-)}
-
-              {inv.result && (
-                <p className="text-gray-300 text-sm mt-2 bg-gray-900 p-2 rounded">
-                  {inv.result}
-                </p>
-              )}
-              {inv.status === 'COMPLETED' && (
-                <button
-                  onClick={() => openTransferModal(inv)}
-                  disabled={transferring === inv.id}
-                  className="mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm disabled:opacity-50"
-                >
-                  {transferring === inv.id ? 'Передача...' : '📤 Передать улику Военному'}
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setCancelTarget(null)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none transition-colors">
+                  ОТМЕНА
                 </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
-              <h3 className="text-xl font-semibold text-white">Кого расследовать?</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
-                aria-label="Закрыть"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="px-6 pb-6 overflow-y-auto">
-              <PlayerSelector
-                players={allUsers}
-                onSelect={(p) => startInvestigation(p.id)}
-                emptyText="Нет игроков по заданным фильтрам"
-              />
+                <button onClick={confirmCancelInvestigation} className="px-4 py-2 border border-red-500 text-red-500 hover:bg-red-500/10 text-xs rounded-none transition-colors">
+                  УДАЛИТЬ
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {evidenceToTransfer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
-              <h3 className="text-xl font-semibold text-white">Выберите Военного</h3>
-              <button
-                onClick={() => setEvidenceToTransfer(null)}
-                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
-                aria-label="Закрыть"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="px-6 pb-6 overflow-y-auto">
-              <PlayerSelector
-                players={militaryList}
-                onSelect={(p) => transferEvidence(p.id)}
-                emptyText="Нет Военных в вашей стране"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-          {cancelTarget && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-700">
-            <h3 className="text-xl font-semibold text-white mb-3">
-              ✕ Отменить расследование?
-            </h3>
-            <p className="text-gray-400 text-sm mb-6">
-              Расследование цели{' '}
-              <span className="text-white font-semibold">
-                {cancelTarget.target?.username || 'Неизвестный'}
-              </span>{' '}
-              будет удалено. Прогресс не сохранится.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setCancelTarget(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={confirmCancelInvestigation}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
-              >
-                Отменить расследование
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );
