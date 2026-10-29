@@ -121,7 +121,7 @@ export default function GamePage() {
         });
 
         if (!incomeError && incomeData && incomeData.success && incomeData.income > 0) {
-          setPassiveIncomeMessage(`💰 Пассивный доход: +${incomeData.income} ВЛИ (за ${incomeData.days} дн.)`);
+          setPassiveIncomeMessage(`[SYS] Пассивный доход: +${incomeData.income} ВЛИ (за ${incomeData.days} дн.)`);
           setTimeout(() => setPassiveIncomeMessage(null), 8000);
 
           profileData.balance = profileData.balance + incomeData.income;
@@ -247,7 +247,7 @@ export default function GamePage() {
       return;
     }
 
-    setTransferSuccess(`✅ Переведено ${amount} ВЛИ игроку ${getRecipientName()}`);
+    setTransferSuccess(`[OK] Переведено ${amount} ВЛИ игроку ${getRecipientName()}`);
     setProfile({ ...profile, balance: profile.balance - amount });
 
     setTimeout(() => {
@@ -303,7 +303,7 @@ export default function GamePage() {
     }
 
     const countryName = COUNTRIES.find((c) => c.code === selectedCountry)?.name || selectedCountry;
-    setCountrySuccess(`✅ Вы переехали в ${countryName}! Иммунитет на 48 часов.`);
+    setCountrySuccess(`[OK] Вы переехали в ${countryName}! Иммунитет на 48 часов.`);
 
     await fetchProfile();
 
@@ -334,8 +334,8 @@ export default function GamePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ СИСТЕМА ЗАГРУЖАЕТСЯ...</div>
       </div>
     );
   }
@@ -347,83 +347,93 @@ export default function GamePage() {
   const immunityHours = isPolitician ? getImmunityHours() : 0;
   const militaryBlockHours = isMilitary ? getMilitaryBlockHours() : 0;
 
+  // Общие стили для кнопок терминала
+  const btnBase = "flex-1 flex flex-col items-center justify-center gap-1 px-4 py-3 border text-sm font-mono transition-all duration-200 rounded-none uppercase tracking-wider";
+  const btnGreen = "border-[#39ff14]/50 text-[#39ff14] hover:bg-[#39ff14]/10 hover:border-[#39ff14] hover:shadow-[0_0_10px_rgba(57,255,20,0.2)]";
+  const btnDisabled = "border-gray-700 text-gray-600 cursor-not-allowed";
+  const btnDanger = "border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500";
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white pb-10">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
-        <Link href="/game" className="text-lg font-bold text-green-400">
-          🕵️ SpyMe
+    <div className="min-h-screen bg-[#050807] text-gray-300 pb-10 font-mono">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center justify-between">
+        <Link href="/game" className="text-lg font-bold text-[#39ff14] tracking-widest">
+          [ SPY_ME ]
         </Link>
         <div className="flex items-center gap-2">
-          <Link href="/settings" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm">
-            ⚙️ Настройки
+          <Link href="/settings" className="px-3 py-1.5 border border-gray-600 text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14] rounded-none text-xs transition-colors">
+            НАСТРОЙКИ
           </Link>
           <button
             onClick={async () => {
               await supabase.auth.signOut();
               router.push('/login');
             }}
-            className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm"
+            className="px-3 py-1.5 border border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500 rounded-none text-xs transition-colors"
           >
-            Выйти
+            ВЫЙТИ
           </button>
         </div>
       </header>
 
       <div className="pt-20 px-4 pb-4 max-w-5xl mx-auto">
         {passiveIncomeMessage && (
-          <div className="mb-6 p-4 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-center font-semibold">
+          <div className="mb-6 p-4 border border-[#39ff14] text-[#39ff14] text-center font-semibold shadow-[0_0_15px_rgba(57,255,20,0.3)] bg-[#39ff14]/5">
             {passiveIncomeMessage}
           </div>
         )}
 
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
-          <div>
-            <p className="text-gray-400">Пользователь: {profile?.username || user?.email}</p>
-            <p className="text-gray-400">Страна: {profile?.country}</p>
-            <p className="text-gray-400">Роль: {profile?.publicRole}</p>
-            <p className="text-yellow-400 font-semibold">💰 Баланс: {profile?.balance} ВЛИ</p>
+        <div className="border border-[#39ff14]/30 p-4 mb-6 relative">
+          {/* Декоративные уголки карточки */}
+          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#39ff14]"></div>
+          <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#39ff14]"></div>
+          <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#39ff14]"></div>
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#39ff14]"></div>
+
+          <div className="space-y-1 mb-4">
+            <p className="text-gray-500 text-xs">ПОЛЬЗОВАТЕЛЬ: <span className="text-white">{profile?.username || user?.email}</span></p>
+            <p className="text-gray-500 text-xs">ЛОКАЦИЯ: <span className="text-white">{profile?.country}</span></p>
+            <p className="text-gray-500 text-xs">ДОПУСК: <span className="text-white">{profile?.publicRole}</span></p>
+            <p className="text-yellow-400 font-semibold text-sm mt-2">БАЛАНС: {profile?.balance} ВЛИ</p>
             {isPolitician && immunityHours > 0 && (
-              <p className="text-blue-400 font-semibold">🛡️ Иммунитет: {immunityHours} ч.</p>
+              <p className="text-blue-400 font-semibold text-xs">ИММУНИТЕТ: {immunityHours} ч.</p>
             )}
           </div>
 
           {militaryBlockHours > 0 && (
-            <div className="mt-4 p-3 bg-red-900/40 border border-red-500 rounded-lg">
-              <p className="text-red-300 font-semibold">🚫 Вы заблокированы</p>
-              <p className="text-red-200 text-sm mt-1">
+            <div className="mt-4 p-3 border border-red-500/50 bg-red-500/5">
+              <p className="text-red-400 font-semibold text-sm">[ ОШИБКА: ДОСТУП ЗАБЛОКИРОВАН ]</p>
+              <p className="text-red-300/70 text-xs mt-1">
                 Вы ошиблись при ликвидации. Блокировка снимется через {militaryBlockHours} ч.
               </p>
             </div>
           )}
 
           {isSpy && (
-            <div className="mt-3 p-4 bg-purple-900/30 border border-purple-500 rounded-lg w-full">
-              <p className="text-purple-300 font-bold text-lg">🕵️ Вы — Шпион!</p>
-              <p className="text-gray-300 text-sm mt-2">
+            <div className="mt-4 p-4 border border-purple-500/50 bg-purple-900/10">
+              <p className="text-purple-400 font-bold text-sm tracking-widest mb-2">[ ВНИМАНИЕ: ВЫ ШПИОН ]</p>
+              <p className="text-gray-400 text-xs leading-relaxed">
                 Вас выбрала система. Ваша задача — не попадаться и играть свою роль.
-              </p>
-              <p className="text-gray-400 text-xs mt-3">
                 Другие игроки не знают, что вы шпион. Действуйте осторожно.
               </p>
             </div>
           )}
 
-          <div className="flex flex-col gap-2 mt-4 w-full">
+          <div className="flex flex-col gap-2 mt-6 w-full">
             {/* Строка 1: Чат, Пост */}
             <div className="flex gap-2 w-full">
               {militaryBlockHours === 0 ? (
-                <Link href="/chat" className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium">
-                  💬 Чат
+                <Link href="/chat" className={`${btnBase} ${btnGreen}`}>
+                  <span>ЧАТ</span>
                 </Link>
               ) : (
-                <span className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-medium">
-                  💬 Чат (блок)
+                <span className={`${btnBase} ${btnDisabled}`}>
+                  <span>ЧАТ (БЛОК)</span>
                 </span>
               )}
 
               {profile?.publicRole === 'REPORTER' && (
-                <button onClick={() => setIsModalOpen(true)} className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-medium">
-                  ➕ Пост
+                <button onClick={() => setIsModalOpen(true)} className={`${btnBase} ${btnGreen}`}>
+                  <span>ПОСТ</span>
                 </button>
               )}
             </div>
@@ -431,82 +441,75 @@ export default function GamePage() {
             {/* Строка 2: Расследования / Улики и Перевод ВЛИ / Смена страны */}
             <div className="flex gap-2 w-full">
               {profile?.publicRole === 'REPORTER' && (
-                <Link href="/investigate" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-medium">
-                  <span>🔍</span>
-                  <span>Расследования</span>
+                <Link href="/investigate" className={`${btnBase} ${btnGreen}`}>
+                  <span>РАССЛЕДОВАНИЯ</span>
                 </Link>
               )}
 
               {isMilitary && militaryBlockHours === 0 && (
-                <Link href="/evidence" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-white text-sm font-medium">
-                  <span>📂</span>
-                  <span>Улики</span>
+                <Link href="/evidence" className={`${btnBase} ${btnGreen}`}>
+                  <span>УЛИКИ</span>
                 </Link>
               )}
 
               {isMilitary && militaryBlockHours > 0 && (
-                <span className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-medium">
-                  <span>📂</span>
-                  <span>Улики (блок)</span>
+                <span className={`${btnBase} ${btnDisabled}`}>
+                  <span>УЛИКИ (БЛОК)</span>
                 </span>
               )}
 
               {militaryBlockHours === 0 ? (
-                <button onClick={openTransferModal} className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black text-sm font-semibold">
-                  <span>💰</span>
-                  <span>Перевод ВЛИ</span>
+                <button onClick={openTransferModal} className={`${btnBase} border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 hover:border-yellow-500 hover:shadow-[0_0_10px_rgba(234,179,8,0.2)]`}>
+                  <span>ПЕРЕВОД ВЛИ</span>
                 </button>
               ) : (
-                <span className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg text-sm cursor-not-allowed font-semibold">
-                  <span>💰</span>
-                  <span>Перевод ВЛИ (блок)</span>
+                <span className={`${btnBase} ${btnDisabled}`}>
+                  <span>ПЕРЕВОД (БЛОК)</span>
                 </span>
               )}
 
               {isPolitician && (
-                <button onClick={openCountryModal} className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black text-sm font-semibold">
-                  <span>🌍</span>
-                  <span>Сменить страну</span>
+                <button onClick={openCountryModal} className={`${btnBase} border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500`}>
+                  <span>СМЕНА СТРАНЫ</span>
                 </button>
               )}
             </div>
 
             {/* Строка 4: Stats, Рейтинг, Правила */}
             <div className="flex gap-2 w-full">
-              <Link href="/stats" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white text-sm font-medium">
-                <span>📊</span>
-                <span>Stats</span>
+              <Link href="/stats" className={`${btnBase} ${btnGreen}`}>
+                <span>STATS</span>
               </Link>
-              <Link href="/leaderboard" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm font-medium">
-                <span>🏆</span>
-                <span>Рейтинг</span>
+              <Link href="/leaderboard" className={`${btnBase} ${btnGreen}`}>
+                <span>РЕЙТИНГ</span>
               </Link>
-              <Link href="/rules" className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm font-medium">
-                <span>📖</span>
-                <span>Правила</span>
+              <Link href="/rules" className={`${btnBase} ${btnGreen}`}>
+                <span>ПРАВИЛА</span>
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col h-[500px] md:h-[600px] overflow-hidden">
-          <h2 className="text-xl font-semibold text-green-400 px-4 pt-4 pb-3 shrink-0">📰 Лента новостей</h2>
+        <div className="border border-[#39ff14]/30 flex flex-col h-[500px] md:h-[600px] overflow-hidden">
+          <h2 className="text-sm tracking-widest text-[#39ff14] px-4 py-3 border-b border-[#39ff14]/30 shrink-0 bg-[#39ff14]/5">
+            &gt; ЛЕНТА_НОВОСТЕЙ
+          </h2>
 
-          <div className="space-y-2 px-4 pb-3 shrink-0">
+          <div className="space-y-2 px-4 py-3 shrink-0">
             <input
               type="text"
               value={postSearch}
               onChange={(e) => setPostSearch(e.target.value)}
-              placeholder="Поиск по имени репортёра..."
-              className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+              placeholder="> ПОИСК ПО ИМЕНИ..."
+              className="w-full px-3 py-2 bg-transparent text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm placeholder-gray-600 rounded-none"
             />
             <div className="flex gap-2">
               <select
                 value={postCountryFilter}
                 onChange={(e) => setPostCountryFilter(e.target.value)}
-                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none text-sm"
+                className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
               >
-                <option value="">Все страны</option>
+                <option value="">ВСЕ СТРАНЫ</option>
                 {COUNTRIES.map((c) => (
                   <option key={c.code} value={c.code}>{c.name}</option>
                 ))}
@@ -514,9 +517,9 @@ export default function GamePage() {
               {(postSearch || postCountryFilter) && (
                 <button
                   onClick={() => { setPostSearch(''); setPostCountryFilter(''); }}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm"
+                  className="px-3 py-2 border border-gray-700 text-gray-400 hover:text-red-400 hover:border-red-400 text-xs rounded-none"
                 >
-                  Сбросить
+                  СБРОС
                 </button>
               )}
             </div>
@@ -524,26 +527,26 @@ export default function GamePage() {
 
           <div className="overflow-y-auto flex-1 min-h-0 px-4 pb-4">
             {posts.length === 0 ? (
-              <p className="text-gray-400">Нет постов по заданным фильтрам</p>
+              <p className="text-gray-600 text-sm italic">[ Данные не найдены ]</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {posts.map((post) => (
-                  <div key={post.id} className="bg-gray-700 p-3 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-9 h-9 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                  <div key={post.id} className="border border-gray-800 p-3 bg-[#0a0f0d]">
+                    <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-2">
+                      <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                         {post.author?.avatarUrl ? (
-                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover grayscale opacity-80" />
                         ) : (
-                          <span className="text-base">👤</span>
+                          <span className="text-xs text-gray-500">USR</span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-sm">
-                        <span className="text-gray-300 font-medium">{post.author?.username || 'Неизвестный'}</span>
-                        {post.author?.country ? ` · ${post.author.country}` : ''}
-                        {' · '}{new Date(post.createdAt).toLocaleDateString()}
+                      <p className="text-gray-500 text-xs">
+                        <span className="text-[#39ff14] font-medium">@{post.author?.username || 'unknown'}</span>
+                        {post.author?.country ? ` [${post.author.country}]` : ''}
+                        {' // '}{new Date(post.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <p className="text-white">{post.content}</p>
+                    <p className="text-gray-300 text-sm whitespace-pre-wrap">{post.content}</p>
                   </div>
                 ))}
               </div>
@@ -554,25 +557,25 @@ export default function GamePage() {
 
       {/* МОДАЛКА СОЗДАНИЯ ПОСТА */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 flex flex-col max-h-[90dvh]">
-            <div className="p-6 pb-2 shrink-0">
-              <h3 className="text-xl font-semibold text-white">Создать пост</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="border border-[#39ff14] w-full max-w-md flex flex-col max-h-[90dvh] bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.2)]">
+            <div className="p-4 border-b border-[#39ff14]/30 shrink-0">
+              <h3 className="text-sm text-[#39ff14] tracking-widest">&gt; СОЗДАТЬ_ПОСТ</h3>
             </div>
-            <div className="px-6 overflow-y-auto flex-1 min-h-0 py-2">
+            <div className="p-4 overflow-y-auto flex-1 min-h-0">
                <textarea
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 h-32 text-base"
-                placeholder="О чём хотите сообщить?"
+                className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-[#39ff14] h-32 text-sm rounded-none placeholder-gray-600"
+                placeholder="Введите текст донесения..."
               />
             </div>
-            <div className="flex justify-end space-x-3 p-6 pt-2 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">
-                Отмена
+            <div className="flex justify-end space-x-3 p-4 border-t border-[#39ff14]/30 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 text-xs rounded-none">
+                ОТМЕНА
               </button>
-              <button onClick={handleCreatePost} disabled={posting} className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50">
-                {posting ? 'Публикация...' : 'Опубликовать'}
+              <button onClick={handleCreatePost} disabled={posting} className="px-4 py-2 border border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14]/10 text-xs rounded-none disabled:opacity-50">
+                {posting ? 'ОТПРАВКА...' : 'ОТПРАВИТЬ'}
               </button>
             </div>
           </div>
@@ -581,59 +584,59 @@ export default function GamePage() {
 
       {/* МОДАЛКА ПЕРЕВОДА ВЛИ */}
       {isTransferOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[90dvh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
-              <h3 className="text-xl font-semibold text-white">💰 Перевести ВЛИ</h3>
-              <button onClick={() => setIsTransferOpen(false)} className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none">✕</button>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="border border-yellow-500 w-full max-w-md max-h-[90dvh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(234,179,8,0.2)]">
+            <div className="flex items-center justify-between p-4 border-b border-yellow-500/30 shrink-0">
+              <h3 className="text-sm text-yellow-500 tracking-widest">&gt; ПЕРЕВОД_ВЛИ</h3>
+              <button onClick={() => setIsTransferOpen(false)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
             </div>
-            <div className="px-6 overflow-y-auto flex-1 min-h-0">
-              <p className="text-gray-400 text-sm mb-4">
-                Ваш баланс: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
+            <div className="p-4 overflow-y-auto flex-1 min-h-0">
+              <p className="text-gray-500 text-xs mb-4">
+                ВАШ_БАЛАНС: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
               </p>
 
               {!transferRecipient ? (
                 <PlayerSelector players={allUsers} onSelect={(p) => setTransferRecipient(p.id)} emptyText="Нет игроков по заданным фильтрам" />
               ) : (
-                <div className="mb-4 p-3 bg-gray-700 rounded-lg flex items-center justify-between gap-3">
+                <div className="mb-4 p-3 border border-gray-700 flex items-center justify-between gap-3 bg-[#0a0f0d]">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                       {allUsers.find((u) => u.id === transferRecipient)?.avatarUrl ? (
-                        <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover" />
+                        <img src={allUsers.find((u) => u.id === transferRecipient)?.avatarUrl || ''} alt="" className="w-full h-full object-cover grayscale" />
                       ) : (
-                        <span className="text-lg">👤</span>
+                        <span className="text-xs text-gray-500">USR</span>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium truncate">{allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}</p>
-                      <p className="text-gray-400 text-sm truncate">
+                      <p className="text-white text-sm truncate">{allUsers.find((u) => u.id === transferRecipient)?.username || 'Неизвестный'}</p>
+                      <p className="text-gray-500 text-xs truncate">
                         {allUsers.find((u) => u.id === transferRecipient)?.publicRole || ''}
-                        {allUsers.find((u) => u.id === transferRecipient)?.country ? ` · ${allUsers.find((u) => u.id === transferRecipient)?.country}` : ''}
+                        {allUsers.find((u) => u.id === transferRecipient)?.country ? ` [${allUsers.find((u) => u.id === transferRecipient)?.country}]` : ''}
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => setTransferRecipient('')} className="text-gray-400 hover:text-red-400 text-sm underline shrink-0">Изменить</button>
+                  <button onClick={() => setTransferRecipient('')} className="text-gray-500 hover:text-red-400 text-xs underline shrink-0">ИЗМЕНИТЬ</button>
                 </div>
               )}
 
               <div className="space-y-4 mt-4">
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1">Сумма (ВЛИ)</label>
-                  <input type="number" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} min="1" placeholder="100" className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base" />
+                  <label className="block text-xs text-gray-500 mb-1 tracking-wider">СУММА (ВЛИ)</label>
+                  <input type="number" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} min="1" placeholder="100" className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-yellow-500 text-sm rounded-none" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1">Комментарий (опционально)</label>
-                  <input type="text" value={transferComment} onChange={(e) => setTransferComment(e.target.value)} placeholder="За расследование" className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base" />
+                  <label className="block text-xs text-gray-500 mb-1 tracking-wider">КОММЕНТАРИЙ</label>
+                  <input type="text" value={transferComment} onChange={(e) => setTransferComment(e.target.value)} placeholder="Опционально" className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-yellow-500 text-sm rounded-none placeholder-gray-700" />
                 </div>
-                {transferError && <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">{transferError}</div>}
-                {transferSuccess && <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">{transferSuccess}</div>}
+                {transferError && <div className="text-red-400 text-xs border border-red-500/50 p-2 bg-red-900/10">{transferError}</div>}
+                {transferSuccess && <div className="text-[#39ff14] text-xs border border-[#39ff14]/50 p-2 bg-[#39ff14]/10">{transferSuccess}</div>}
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 p-6 pt-4 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
-              <button onClick={() => setIsTransferOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Отмена</button>
-              <button onClick={handleTransfer} disabled={transferring || !transferRecipient || !transferAmount} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold disabled:opacity-50">
-                {transferring ? 'Перевод...' : 'Перевести'}
+            <div className="flex justify-end space-x-3 p-4 border-t border-yellow-500/30 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsTransferOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none">ОТМЕНА</button>
+              <button onClick={handleTransfer} disabled={transferring || !transferRecipient || !transferAmount} className="px-4 py-2 border border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 text-xs rounded-none disabled:opacity-50">
+                {transferring ? 'ОТПРАВКА...' : 'ПЕРЕВЕСТИ'}
               </button>
             </div>
           </div>
@@ -642,38 +645,38 @@ export default function GamePage() {
 
       {/* МОДАЛКА СМЕНЫ СТРАНЫ */}
       {isCountryOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[90dvh] flex flex-col overflow-hidden">
-            <div className="px-6 pt-6 pb-3 shrink-0">
-              <h3 className="text-xl font-semibold text-white mb-2">🌍 Сменить страну</h3>
-              <p className="text-gray-400 text-sm mb-1">Текущая страна: <span className="text-white font-semibold">{profile?.country}</span></p>
-              {immunityHours > 0 && <p className="text-blue-400 text-sm mb-1">🛡️ Иммунитет: {immunityHours} ч.</p>}
-              <p className="text-yellow-400 text-xs mb-2">⚠️ Смена страны доступна раз в 48 часов. После смены вы получаете иммунитет на 48 часов.</p>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="border border-cyan-500 w-full max-w-md max-h-[90dvh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+            <div className="p-4 border-b border-cyan-500/30 shrink-0">
+              <h3 className="text-sm text-cyan-400 tracking-widest mb-2">&gt; СМЕНА_ЛОКАЦИИ</h3>
+              <p className="text-gray-500 text-xs mb-1">ТЕКУЩАЯ_ЛОКАЦИЯ: <span className="text-white">{profile?.country}</span></p>
+              {immunityHours > 0 && <p className="text-blue-400 text-xs mb-1">ИММУНИТЕТ: {immunityHours} ч.</p>}
+              <p className="text-yellow-500/70 text-[10px]">⚠️ Смена страны доступна раз в 48 часов. После смены вы получаете иммунитет на 48 часов.</p>
             </div>
             
-            <div className="px-6 overflow-y-auto flex-1 min-h-0 space-y-3">
+            <div className="p-4 overflow-y-auto flex-1 min-h-0 space-y-2">
               {COUNTRIES.map((c) => (
                 <button
                   key={c.code}
                   onClick={() => setSelectedCountry(c.code)}
                   disabled={c.code === profile?.country}
-                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
-                    selectedCountry === c.code ? 'bg-cyan-500 text-black border-cyan-400 font-semibold' :
-                    c.code === profile?.country ? 'bg-gray-700/50 text-gray-500 border-gray-700 cursor-not-allowed' :
-                    'bg-gray-700 text-white border-gray-600 hover:border-cyan-400'
+                  className={`w-full p-2 border text-left text-sm transition-colors rounded-none ${
+                    selectedCountry === c.code ? 'bg-cyan-900/30 text-cyan-400 border-cyan-400 font-semibold' :
+                    c.code === profile?.country ? 'bg-[#050807] text-gray-600 border-gray-800 cursor-not-allowed' :
+                    'bg-transparent text-gray-300 border-gray-700 hover:border-cyan-500 hover:text-cyan-400'
                   }`}
                 >
-                  {c.name} {c.code === profile?.country && '(текущая)'}
+                  {c.name} {c.code === profile?.country && '(ТЕКУЩАЯ)'}
                 </button>
               ))}
-              {countryError && <div className="text-red-400 text-sm bg-red-900/20 p-2 rounded">{countryError}</div>}
-              {countrySuccess && <div className="text-green-400 text-sm bg-green-900/20 p-2 rounded">{countrySuccess}</div>}
+              {countryError && <div className="text-red-400 text-xs border border-red-500/50 p-2 bg-red-900/10">{countryError}</div>}
+              {countrySuccess && <div className="text-[#39ff14] text-xs border border-[#39ff14]/50 p-2 bg-[#39ff14]/10">{countrySuccess}</div>}
             </div>
 
-            <div className="flex justify-end space-x-3 p-6 pt-4 shrink-0 pb-[calc(24px+env(safe-area-inset-bottom))]">
-              <button onClick={() => setIsCountryOpen(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Отмена</button>
-              <button onClick={handleChangeCountry} disabled={changingCountry || !selectedCountry || selectedCountry === profile?.country} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-black font-semibold disabled:opacity-50">
-                {changingCountry ? 'Переезд...' : 'Переехать'}
+            <div className="flex justify-end space-x-3 p-4 border-t border-cyan-500/30 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <button onClick={() => setIsCountryOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none">ОТМЕНА</button>
+              <button onClick={handleChangeCountry} disabled={changingCountry || !selectedCountry || selectedCountry === profile?.country} className="px-4 py-2 border border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 text-xs rounded-none disabled:opacity-50">
+                {changingCountry ? 'ПЕРЕЕЗД...' : 'ПЕРЕЕХАТЬ'}
               </button>
             </div>
           </div>
@@ -682,20 +685,20 @@ export default function GamePage() {
 
       {/* УВЕДОМЛЕНИЯ */}
       {isNotificationsOpen && notifications.length > 0 && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-green-500 max-h-[80vh] flex flex-col overflow-hidden">
-            <h3 className="text-2xl font-bold text-green-400 mb-4 text-center shrink-0">🔔 Уведомления</h3>
-            <div className="space-y-3 mb-6 overflow-y-auto flex-1">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
+          <div className="border border-[#39ff14] p-4 w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_30px_rgba(57,255,20,0.3)]">
+            <h3 className="text-sm text-[#39ff14] tracking-widest mb-4 text-center shrink-0">[ ВХОДЯЩИЕ_СИГНАЛЫ ]</h3>
+            <div className="space-y-3 mb-4 overflow-y-auto flex-1">
               {notifications.map((n) => (
-                <div key={n.id} className="p-4 bg-gray-700 rounded-lg border border-gray-600">
-                  <p className="text-white font-semibold">{n.title}</p>
+                <div key={n.id} className="p-3 border border-gray-700 bg-[#0a0f0d]">
+                  <p className="text-[#39ff14] text-xs font-semibold">&gt; {n.title}</p>
                   <p className="text-gray-300 text-sm mt-1">{n.message}</p>
-                  <p className="text-gray-500 text-xs mt-2">{new Date(n.createdAt).toLocaleString()}</p>
+                  <p className="text-gray-600 text-[10px] mt-2">{new Date(n.createdAt).toLocaleString()}</p>
                 </div>
               ))}
             </div>
-            <button onClick={markNotificationsAsRead} className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold shrink-0">
-              Понятно
+            <button onClick={markNotificationsAsRead} className="w-full px-4 py-3 border border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14]/10 text-xs font-semibold shrink-0 rounded-none">
+              ПОДТВЕРДИТЬ_ПОЛУЧЕНИЕ
             </button>
           </div>
         </div>

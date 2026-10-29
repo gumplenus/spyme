@@ -4,14 +4,15 @@ const config: CapacitorConfig = {
   appId: 'ru.spyme.app',
   appName: 'SpyMe',
   webDir: 'public',
+  backgroundColor: '#050807', // <--- ВОТ ЭТА СТРОЧКА БЫЛА ПРОПУЩЕНА
   server: {
     url: 'https://spyme.com.ru',
     cleartext: true
   },
-    plugins: {
+  plugins: {
     SplashScreen: {
-      launchShowDuration: 0, // Отключаем автоскрытие по таймеру
-      launchAutoHide: false, // Заставка будет висеть, пока мы не скроем ее вручную
+      launchShowDuration: 2000,
+      launchAutoHide: true,
       backgroundColor: "#050807",
       showSpinner: false,
       androidScaleType: "CENTER_CROP",
