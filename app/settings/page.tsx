@@ -70,7 +70,6 @@ export default function SettingsPage() {
     const anonymizedEmail = `deleted-${userId}@spyme.deleted`;
     const anonymizedUsername = `Аккаунт удалён #${userId.slice(0, 6)}`;
 
-    // 1. Анонимизируем профиль в таблице User
     const { error } = await supabase
       .from('User')
       .update({
@@ -89,7 +88,6 @@ export default function SettingsPage() {
       return;
     }
 
-    // 2. Освобождаем email в auth.users (чтобы можно было зарегистрироваться заново)
     try {
       const res = await fetch('/api/release-email', {
         method: 'POST',
@@ -100,18 +98,16 @@ export default function SettingsPage() {
       if (!res.ok) {
         const data = await res.json();
         console.error('Не удалось освободить email:', data.error);
-        // Не блокируем удаление — просто логируем
       }
     } catch (err) {
       console.error('Ошибка вызова release-email:', err);
     }
 
-    // 3. Выход и редирект
     await supabase.auth.signOut();
     router.push('/');
   };
 
-    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
 
@@ -164,31 +160,33 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ЗАГРУЗКА_ПРОФИЛЯ...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
+    <div className="min-h-screen bg-[#050807] text-gray-300 p-4 font-mono">
       <div className="max-w-2xl mx-auto">
-        <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-          ← Назад в игру
+        <Link href="/game" className="text-[#39ff14] hover:text-white mb-6 inline-block transition-colors text-sm">
+          ← НАЗАД_В_ИГРУ
         </Link>
 
-        <h1 className="text-3xl font-bold text-green-400 mb-6">⚙️ Настройки аккаунта</h1>
+        <h1 className="text-sm tracking-widest text-[#39ff14] mb-6 border-b border-[#39ff14]/30 pb-2">
+          [ НАСТРОЙКИ_АККАУНТА ]
+        </h1>
 
         {message && (
-          <div className="mb-4 p-3 bg-green-900/40 border border-green-500 rounded-lg text-green-300 text-sm">
-            ✅ {message}
+          <div className="mb-4 p-3 border border-[#39ff14] text-[#39ff14] text-xs shadow-[0_0_10px_rgba(57,255,20,0.2)] bg-[#39ff14]/5">
+            [ OK ] {message}
           </div>
         )}
 
         {/* Профиль */}
-        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-4">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+        <div className="border border-gray-800 bg-[#0a0f0d] p-5 mb-4">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-20 h-20 rounded-full border border-[#39ff14]/50 overflow-hidden flex items-center justify-center shrink-0">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -196,12 +194,12 @@ export default function SettingsPage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-3xl">👤</span>
+                <span className="text-xs text-gray-500">NO_IMG</span>
               )}
             </div>
             <div>
-              <label className="cursor-pointer inline-block px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-semibold">
-                {uploadingAvatar ? 'Загрузка...' : '📷 Загрузить аватар'}
+              <label className="cursor-pointer inline-block px-4 py-2 border border-[#39ff14]/50 text-[#39ff14] hover:bg-[#39ff14]/10 hover:border-[#39ff14] text-xs font-semibold tracking-wider transition-colors">
+                {uploadingAvatar ? 'ЗАГРУЗКА...' : '> ЗАГРУЗИТЬ_АВАТАР'}
                 <input
                   type="file"
                   accept="image/*"
@@ -210,73 +208,85 @@ export default function SettingsPage() {
                   className="hidden"
                 />
               </label>
-              <p className="text-gray-500 text-xs mt-2">JPG, PNG, WebP. Максимум 2 МБ.</p>
+              <p className="text-gray-600 text-[10px] uppercase mt-2 tracking-wider">JPG, PNG, WebP. Максимум 2 МБ.</p>
             </div>
           </div>
 
-          <p className="text-gray-400 text-sm">Имя</p>
-          <p className="text-white font-semibold">{profile?.username}</p>
-          <p className="text-gray-400 text-sm mt-3">Email</p>
-          <p className="text-white text-sm">{profile?.email}</p>
+          <div className="space-y-3">
+            <div>
+              <p className="text-gray-500 text-[10px] uppercase tracking-wider">ИМЯ_ОПЕРАТИВНИКА</p>
+              <p className="text-white text-sm font-semibold mt-1">{profile?.username}</p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-[10px] uppercase tracking-wider">EMAIL_АДРЕС</p>
+              <p className="text-gray-300 text-sm mt-1">{profile?.email}</p>
+            </div>
+          </div>
         </div>
 
         {/* Уведомления */}
-        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-4">
+        <div className="border border-gray-800 bg-[#0a0f0d] p-5 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-white font-semibold">🔔 Уведомления</p>
-              <p className="text-gray-400 text-sm mt-1">
-                Получать уведомления о переводах, сообщениях и событиях
+              <p className="text-white text-sm font-semibold">[ СИСТЕМА_УВЕДОМЛЕНИЙ ]</p>
+              <p className="text-gray-500 text-xs mt-1">
+                Получать сигналы о переводах, сообщениях и событиях
               </p>
             </div>
             <button
               onClick={toggleNotifications}
               disabled={savingNotif}
-              className={`relative w-14 h-8 rounded-full transition-colors shrink-0 ml-4 ${
-                profile?.notificationsEnabled ? 'bg-green-500' : 'bg-gray-600'
+              className={`relative w-14 h-7 border transition-colors shrink-0 ml-4 rounded-none ${
+                profile?.notificationsEnabled 
+                  ? 'bg-[#39ff14]/20 border-[#39ff14]' 
+                  : 'bg-transparent border-gray-600'
               } disabled:opacity-50`}
             >
               <span
-                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                  profile?.notificationsEnabled ? 'translate-x-6' : 'translate-x-0'
+                className={`absolute top-1 left-1 w-5 h-5 flex items-center justify-center text-[9px] font-bold transition-transform rounded-none ${
+                  profile?.notificationsEnabled 
+                    ? 'translate-x-7 bg-[#39ff14] text-black' 
+                    : 'translate-x-0 bg-gray-600 text-gray-300'
                 }`}
-              />
+              >
+                {profile?.notificationsEnabled ? 'ON' : 'OFF'}
+              </span>
             </button>
           </div>
         </div>
 
         {/* Удаление аккаунта */}
-        <div className="bg-gray-800 p-5 rounded-xl border border-red-800">
-          <p className="text-red-400 font-semibold">⚠️ Удалить аккаунт</p>
-          <p className="text-gray-400 text-sm mt-1 mb-4">
+        <div className="border border-red-500/50 bg-red-900/5 p-5">
+          <p className="text-red-500 text-sm font-semibold">[ ОПАСНАЯ_ЗОНА ]</p>
+          <p className="text-gray-500 text-xs mt-1 mb-4">
             Данные профиля будут полностью удалены. Вы больше не сможете войти под этим аккаунтом.
           </p>
           <button
             onClick={() => setIsDeleteOpen(true)}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+            className="px-4 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500 text-xs font-semibold tracking-wider transition-colors rounded-none"
           >
-            Удалить аккаунт
+            УДАЛИТЬ_АККАУНТ
           </button>
         </div>
       </div>
 
       {isDeleteOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-700">
-            <h3 className="text-xl font-semibold text-white mb-3">
-              ⚠️ Удалить аккаунт?
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="border border-red-500 p-6 w-full max-w-md bg-[#050807] shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <h3 className="text-sm text-red-500 tracking-widest mb-3">
+              &gt; ПОДТВЕРДИТЬ_УДАЛЕНИЕ?
             </h3>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-gray-400 text-xs mb-4 leading-relaxed">
               Это действие <span className="text-white font-semibold">необратимо</span>. Ваш профиль станет анонимным, вы выйдете из игры.
             </p>
-            <p className="text-gray-400 text-sm mb-2">
-              Введите <span className="text-red-400 font-mono font-semibold">УДАЛИТЬ</span> для подтверждения:
+            <p className="text-gray-500 text-xs mb-2">
+              Введите <span className="text-red-500 font-bold">УДАЛИТЬ</span> для подтверждения:
             </p>
             <input
               type="text"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-red-500 mb-4"
+              className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-red-500 mb-6 text-sm rounded-none placeholder-gray-700"
               placeholder="УДАЛИТЬ"
             />
             <div className="flex justify-end gap-3">
@@ -285,16 +295,16 @@ export default function SettingsPage() {
                   setIsDeleteOpen(false);
                   setDeleteConfirm('');
                 }}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
+                className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none transition-colors"
               >
-                Отмена
+                ОТМЕНА
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirm !== 'УДАЛИТЬ' || deleting}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-red-500 text-red-500 hover:bg-red-500/10 text-xs font-semibold rounded-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {deleting ? 'Удаление...' : 'Удалить навсегда'}
+                {deleting ? 'УДАЛЕНИЕ...' : 'УДАЛИТЬ_НАВСЕГДА'}
               </button>
             </div>
           </div>
