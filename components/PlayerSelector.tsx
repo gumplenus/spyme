@@ -80,28 +80,28 @@ export default function PlayerSelector({
   };
 
   return (
-    <div>
+    <div className="font-mono">
       {title && (
-        <h3 className="text-xl font-semibold text-white mb-4">{title}</h3>
+        <h3 className="text-sm tracking-widest text-[#39ff14] mb-4">{title}</h3>
       )}
 
       {/* Фильтры */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-3 mb-4">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Поиск по имени..."
-          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none"
+          placeholder="> ПОИСК ПО ИМЕНИ..."
+          className="w-full px-3 py-2 bg-transparent text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none placeholder-gray-600"
         />
 
         <div className="flex gap-2">
           <select
             value={countryFilter}
             onChange={(e) => setCountryFilter(e.target.value)}
-            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none"
+            className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
           >
-            <option value="">Все страны</option>
+            <option value="">ВСЕ СТРАНЫ</option>
             {countries.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -112,9 +112,9 @@ export default function PlayerSelector({
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 outline-none"
+            className="flex-1 px-3 py-2 bg-[#050807] text-[#39ff14] border border-gray-700 focus:border-[#39ff14] outline-none text-sm rounded-none appearance-none"
           >
-            <option value="">Все роли</option>
+            <option value="">ВСЕ РОЛИ</option>
             {roles.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r.toUpperCase()] || r}
@@ -126,22 +126,22 @@ export default function PlayerSelector({
         {(search || countryFilter || roleFilter) && (
           <button
             onClick={resetFilters}
-            className="text-sm text-gray-400 hover:text-green-400 underline"
+            className="text-xs text-gray-500 hover:text-[#39ff14] underline mt-1 transition-colors"
           >
-            Сбросить фильтры
+            СБРОСИТЬ ФИЛЬТРЫ
           </button>
         )}
       </div>
 
       {/* Список */}
       {filtered.length === 0 ? (
-        <p className="text-gray-400 text-center py-6">{emptyText}</p>
+        <p className="text-gray-600 text-sm italic text-center py-6">[ {emptyText} ]</p>
       ) : (
         <div className="space-y-2">
           {filtered.map((p) => {
-                        const content = (
+            const content = (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                   {p.avatarUrl ? (
                     <img
                       src={p.avatarUrl}
@@ -149,17 +149,17 @@ export default function PlayerSelector({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-lg">👤</span>
+                    <span className="text-xs text-gray-500">USR</span>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-white font-medium truncate">
-                    {p.username || 'Неизвестный'}
+                  <p className="text-white text-sm font-medium truncate">
+                    @{p.username || 'Неизвестный'}
                   </p>
-                  <p className="text-gray-400 text-sm truncate">
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wider truncate mt-1">
                     {ROLE_ICONS[p.publicRole?.toUpperCase() || ''] || '👤'}{' '}
                     {ROLE_LABELS[p.publicRole?.toUpperCase() || ''] || p.publicRole || 'Без роли'}
-                    {p.country ? ` · ${p.country}` : ''}
+                    {p.country ? ` // ${p.country}` : ''}
                   </p>
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function PlayerSelector({
                   key={p.id}
                   href={getHref(p)}
                   onClick={() => onSelect?.(p)}
-                  className="block bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="block border border-gray-800 bg-[#0a0f0d] p-3 hover:border-[#39ff14]/50 transition-colors rounded-none"
                 >
                   {content}
                 </Link>
@@ -182,7 +182,7 @@ export default function PlayerSelector({
               <button
                 key={p.id}
                 onClick={() => onSelect?.(p)}
-                className="w-full text-left bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors"
+                className="w-full text-left border border-gray-800 bg-[#0a0f0d] p-3 hover:border-[#39ff14]/50 transition-colors rounded-none"
               >
                 {content}
               </button>
