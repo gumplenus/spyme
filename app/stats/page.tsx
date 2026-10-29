@@ -18,20 +18,17 @@ export default function StatsPage() {
         return;
       }
 
-      // Если шпион — обновляем счётчик дней
       const { data: profileData } = await supabase
         .from('User')
         .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
         .eq('id', user.id)
         .single();
 
-      // Обновляем счётчик выживания, если шпион
       if (profileData?.isSpy === true) {
         await supabase.rpc('update_spy_survival_days', {
           spy_id: profileData.id,
         });
 
-        // Перезагружаем профиль с обновлённым счётчиком
         const { data: updatedProfile } = await supabase
           .from('User')
           .select('id, username, country, publicRole, balance, createdAt, isSpy, spyActivated, spyActivatedAt, spySurvivalDays, investigationsCount, evidencesTransferred, eliminationsCount, eliminationsFailed, totalTransferred, countryChanges')
@@ -51,29 +48,27 @@ export default function StatsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ЗАГРУЗКА_ДОСЬЕ...</div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-4">
-        <Link href="/game" className="text-green-400 hover:underline mb-4 inline-block">
-          ← Назад в игру
+      <div className="min-h-screen bg-[#050807] text-gray-300 p-4 font-mono">
+        <Link href="/game" className="text-[#39ff14] hover:text-white mb-4 inline-block transition-colors">
+          ← НАЗАД_В_ИГРУ
         </Link>
-        <p className="text-gray-400">Не удалось загрузить статистику.</p>
+        <p className="text-red-500 text-sm border border-red-500/50 p-3 bg-red-900/10">[ ОШИБКА: НЕ УДАЛОСЬ ЗАГРУЗИТЬ СТАТИСТИКУ ]</p>
       </div>
     );
   }
 
-  // Считаем дней в игре
   const daysInGame = Math.floor(
     (new Date().getTime() - new Date(profile.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  // Процент успеха военного
   const totalEliminations = profile.eliminationsCount + profile.eliminationsFailed;
   const successRate = totalEliminations > 0
     ? Math.round((profile.eliminationsCount / totalEliminations) * 100)
@@ -86,117 +81,123 @@ export default function StatsPage() {
   const isSpy = profile.isSpy === true;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
-        <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+    <div className="min-h-screen bg-[#050807] text-gray-300 font-mono pb-10">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center gap-3">
+        <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
-        <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">📊 Моя статистика</h1>
+        <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ СТАТИСТИКА_ПРОФИЛЯ ]</h1>
       </header>
 
-      <div className="pt-20 px-4 pb-4">
-      <p className="text-center text-gray-400 mb-8">
-        {profile.username} · {profile.country} · {profile.publicRole}
-      </p>
-
-      {/* ОБЩАЯ СТАТИСТИКА */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-          <p className="text-3xl font-bold text-green-400">{daysInGame}</p>
-          <p className="text-gray-400 text-sm mt-1">Дней в игре</p>
+      <div className="pt-20 px-4 pb-4 max-w-4xl mx-auto">
+        <div className="mb-6 border-b border-gray-800 pb-3">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">
+            ПОЛЬЗОВАТЕЛЬ: <span className="text-white">{profile.username}</span> {'//'} 
+            ЛОКАЦИЯ: <span className="text-white">{profile.country}</span> {'//'} 
+            ДОПУСК: <span className="text-white">{profile.publicRole}</span>
+          </p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-          <p className="text-3xl font-bold text-yellow-400">{profile.balance}</p>
-          <p className="text-gray-400 text-sm mt-1">Баланс ВЛИ</p>
+
+        {/* ОБЩАЯ СТАТИСТИКА */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-6">
+          <div className="border border-gray-800 bg-[#0a0f0d] p-4 text-center">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">ДНЕЙ_В_СЕТИ</p>
+            <p className="text-2xl font-bold text-[#39ff14]">{daysInGame}</p>
+          </div>
+          <div className="border border-gray-800 bg-[#0a0f0d] p-4 text-center">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">БАЛАНС_ВЛИ</p>
+            <p className="text-2xl font-bold text-yellow-400">{profile.balance}</p>
+          </div>
+          <div className="border border-gray-800 bg-[#0a0f0d] p-4 text-center">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">ТЕКУЩИЙ_ДОПУСК</p>
+            <p className="text-xl font-bold text-purple-400 mt-1">{profile.publicRole}</p>
+          </div>
         </div>
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
-          <p className="text-3xl font-bold text-purple-400">{profile.publicRole}</p>
-          <p className="text-gray-400 text-sm mt-1">Роль</p>
+
+        {/* СТАТИСТИКА ПО РОЛЯМ */}
+        <div className="space-y-4">
+          
+          {/* РЕПОРТЕР */}
+          {isReporter && (
+            <div className="border border-[#39ff14]/30 bg-[#0a0f0d] p-4">
+              <h2 className="text-xs tracking-widest text-[#39ff14] mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_РЕПОРТЕР</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="border border-gray-700 p-3 text-center">
+                  <p className="text-[10px] text-gray-500 uppercase">РАССЛЕДОВАНИЙ</p>
+                  <p className="text-xl text-white mt-1">{profile.investigationsCount || 0}</p>
+                </div>
+                <div className="border border-gray-700 p-3 text-center">
+                  <p className="text-[10px] text-gray-500 uppercase">УЛИК_ПЕРЕДАНО</p>
+                  <p className="text-xl text-white mt-1">{profile.evidencesTransferred || 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ВОЕННЫЙ */}
+          {isMilitary && (
+            <div className="border border-orange-500/50 bg-[#0a0f0d] p-4">
+              <h2 className="text-xs tracking-widest text-orange-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ВОЕННЫЙ</h2>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="border border-gray-700 p-3 text-center">
+                  <p className="text-[10px] text-gray-500 uppercase">УСПЕШНЫХ</p>
+                  <p className="text-xl text-[#39ff14] mt-1">{profile.eliminationsCount || 0}</p>
+                </div>
+                <div className="border border-gray-700 p-3 text-center">
+                  <p className="text-[10px] text-gray-500 uppercase">ОШИБОЧНЫХ</p>
+                  <p className="text-xl text-red-500 mt-1">{profile.eliminationsFailed || 0}</p>
+                </div>
+                <div className="border border-gray-700 p-3 text-center">
+                  <p className="text-[10px] text-gray-500 uppercase">УСПЕХ_%</p>
+                  <p className="text-xl text-yellow-400 mt-1">{successRate}%</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* БИЗНЕСМЕН */}
+          {isBusinessman && (
+            <div className="border border-yellow-500/50 bg-[#0a0f0d] p-4">
+              <h2 className="text-xs tracking-widest text-yellow-500 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_БИЗНЕСМЕН</h2>
+              <div className="border border-gray-700 p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase">ПЕРЕВЕДЕНО_ВЛИ</p>
+                <p className="text-xl text-white mt-1">{profile.totalTransferred || 0}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ПОЛИТИК */}
+          {isPolitician && (
+            <div className="border border-cyan-500/50 bg-[#0a0f0d] p-4">
+              <h2 className="text-xs tracking-widest text-cyan-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ПОЛИТИК</h2>
+              <div className="border border-gray-700 p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase">СМЕН_ЛОКАЦИИ</p>
+                <p className="text-xl text-white mt-1">{profile.countryChanges || 0}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ШПИОН */}
+          {isSpy && (
+            <div className="border border-purple-500/50 bg-purple-900/10 p-4">
+              <h2 className="text-xs tracking-widest text-purple-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ШПИОН [ СКРЫТО ]</h2>
+              <div className="border border-gray-700 p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase">ДНЕЙ_В_РОЛИ</p>
+                <p className="text-xl text-purple-300 mt-1">{profile.spySurvivalDays || 0}</p>
+              </div>
+            </div>
+          )}
+
         </div>
-      </div>
 
-      {/* СТАТИСТИКА ПО РОЛЯМ */}
-      <div className="max-w-4xl mx-auto space-y-4">
-
-        {/* РЕПОРТЕР */}
-        {isReporter && (
-          <div className="bg-gray-800 p-6 rounded-xl border border-green-600">
-            <h2 className="text-2xl font-bold text-green-400 mb-4">📰 Как Репортер</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-700 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-white">{profile.investigationsCount || 0}</p>
-                <p className="text-gray-400 text-sm mt-1">Расследований проведено</p>
-              </div>
-              <div className="bg-gray-700 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-white">{profile.evidencesTransferred || 0}</p>
-                <p className="text-gray-400 text-sm mt-1">Улик передано Военным</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ВОЕННЫЙ */}
-        {isMilitary && (
-          <div className="bg-gray-800 p-6 rounded-xl border border-orange-600">
-            <h2 className="text-2xl font-bold text-orange-400 mb-4">⚔️ Как Военный</h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-700 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-green-400">{profile.eliminationsCount || 0}</p>
-                <p className="text-gray-400 text-sm mt-1">Успешных ликвидаций</p>
-              </div>
-              <div className="bg-gray-700 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-red-400">{profile.eliminationsFailed || 0}</p>
-                <p className="text-gray-400 text-sm mt-1">Ошибочных ликвидаций</p>
-              </div>
-              <div className="bg-gray-700 p-4 rounded-lg text-center">
-                <p className="text-3xl font-bold text-yellow-400">{successRate}%</p>
-                <p className="text-gray-400 text-sm mt-1">Процент успеха</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* БИЗНЕСМЕН */}
-        {isBusinessman && (
-          <div className="bg-gray-800 p-6 rounded-xl border border-yellow-600">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4">💰 Как Бизнесмен</h2>
-            <div className="bg-gray-700 p-4 rounded-lg text-center">
-              <p className="text-3xl font-bold text-white">{profile.totalTransferred || 0}</p>
-              <p className="text-gray-400 text-sm mt-1">ВЛИ переведено другим игрокам</p>
-            </div>
-          </div>
-        )}
-
-        {/* ПОЛИТИК */}
-        {isPolitician && (
-          <div className="bg-gray-800 p-6 rounded-xl border border-cyan-600">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-4">🌍 Как Политик</h2>
-            <div className="bg-gray-700 p-4 rounded-lg text-center">
-              <p className="text-3xl font-bold text-white">{profile.countryChanges || 0}</p>
-              <p className="text-gray-400 text-sm mt-1">Смен страны</p>
-            </div>
-          </div>
-        )}
-
-        {isSpy && (
-  <div className="bg-purple-900/30 p-6 rounded-xl border border-purple-500">
-    <h2 className="text-2xl font-bold text-purple-300 mb-4">🕵️ Как Шпион (скрыто)</h2>
-    <div className="bg-purple-900/50 p-4 rounded-lg text-center">
-      <p className="text-3xl font-bold text-purple-300">{profile.spySurvivalDays || 0}</p>
-      <p className="text-gray-400 text-sm mt-1">Дней в роли шпиона</p>
-    </div>
-  </div>
-)}
-      </div>
-
-      <div className="max-w-4xl mx-auto mt-8 mb-4 flex justify-center">
-        <Link
-          href="/game"
-          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold"
-        >
-          ← Назад в игру
-        </Link>
-      </div>
+        <div className="mt-8 mb-4 flex justify-center">
+          <Link
+            href="/game"
+            className="px-6 py-3 border border-gray-600 text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14] rounded-none text-xs font-semibold tracking-wider transition-colors"
+          >
+            &lt; НАЗАД_В_ИГРУ
+          </Link>
+        </div>
       </div>
     </div>
   );
