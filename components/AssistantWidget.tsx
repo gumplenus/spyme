@@ -132,42 +132,47 @@ export function AssistantWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white text-2xl shadow-lg flex items-center justify-center"
+          className="fixed bottom-6 right-4 z-50 w-14 h-14 border border-[#39ff14] bg-[#050807] text-[#39ff14] text-xl shadow-[0_0_15px_rgba(57,255,20,0.3)] flex items-center justify-center font-mono hover:bg-[#39ff14]/10 transition-colors rounded-none"
           title={`${assistantName} — помощник`}
         >
-          ❓
+          [?]
         </button>
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 h-[100dvh] sm:h-[500px] bg-gray-900 sm:border sm:border-green-500 sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 h-[100dvh] sm:h-[500px] bg-[#050807] sm:border border-[#39ff14]/50 shadow-[0_0_20px_rgba(57,255,20,0.2)] flex flex-col overflow-hidden font-mono rounded-none">
+          
+          <div className="flex items-center justify-between px-4 py-3 bg-[#0a0f0d] border-b border-[#39ff14]/30 shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-green-400 text-xl">🤖</span>
-              <span className="text-white font-semibold">{assistantName}</span>
+              <span className="text-[#39ff14] text-sm font-bold tracking-widest uppercase">
+                &gt; {assistantName}
+              </span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white text-2xl leading-none p-2"
+              className="text-gray-500 hover:text-white text-lg leading-none font-mono transition-colors"
               title="Закрыть"
             >
-              ✕
+              [x]
             </button>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 bg-[#050807]">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-line ${
+                  className={`max-w-[85%] p-3 border text-sm whitespace-pre-wrap rounded-none ${
                     msg.isUser
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-700 text-gray-100'
+                      ? 'border-[#39ff14]/50 bg-[#39ff14]/5 text-[#39ff14]'
+                      : 'border-gray-800 bg-[#0a0f0d] text-gray-300'
                   }`}
                 >
+                  <div className={`text-[9px] uppercase tracking-wider mb-2 border-b pb-1 ${msg.isUser ? 'border-[#39ff14]/30 text-[#39ff14]/70' : 'border-gray-800 text-gray-600'}`}>
+                    {msg.isUser ? '> ВЫ' : `> ${assistantName}`}
+                  </div>
                   {msg.text}
                 </div>
               </div>
@@ -175,8 +180,8 @@ export function AssistantWidget() {
             
             {isTyping && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] p-3 rounded-lg text-sm bg-gray-700 text-gray-400 italic">
-                  Печатает...
+                <div className="max-w-[80%] p-3 border border-gray-800 bg-[#0a0f0d] text-gray-500 text-xs italic animate-pulse">
+                  [ СИСТЕМА_АНАЛИЗИРУЕТ... ]
                 </div>
               </div>
             )}
@@ -184,23 +189,23 @@ export function AssistantWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-3 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
+          <div className="px-3 py-3 bg-[#0a0f0d] border-t border-[#39ff14]/30 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Задайте вопрос..."
-                className="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white text-base border border-gray-600 focus:outline-none focus:border-green-400"
+                placeholder="> ВВЕДИТЕ_ЗАПРОС..."
+                className="flex-1 px-3 py-2 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-600"
                 disabled={isTyping}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm font-semibold disabled:opacity-50"
+                className="px-4 py-2 border border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14]/10 text-xs font-semibold tracking-wider disabled:opacity-50 rounded-none transition-colors"
               >
-                →
+                ОТПРАВИТЬ
               </button>
             </div>
           </div>
