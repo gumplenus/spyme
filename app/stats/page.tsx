@@ -120,7 +120,7 @@ export default function StatsPage() {
           {/* РЕПОРТЕР */}
           {isReporter && (
             <div className="border border-[#39ff14]/30 bg-[#0a0f0d] p-4">
-              <h2 className="text-xs tracking-widest text-[#39ff14] mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_РЕПОРТЕР</h2>
+              <h2 className="text-xs tracking-widest text-[#39ff14] mb-4 border-b border-gray-800 pb-2">&gt; РАССЛЕДОВАНИЯ (РЕПОРТЕР)</h2>
               <div className="grid grid-cols-2 gap-2">
                 <div className="border border-gray-700 p-3 text-center">
                   <p className="text-[10px] text-gray-500 uppercase">РАССЛЕДОВАНИЙ</p>
@@ -137,7 +137,7 @@ export default function StatsPage() {
           {/* ВОЕННЫЙ */}
           {isMilitary && (
             <div className="border border-orange-500/50 bg-[#0a0f0d] p-4">
-              <h2 className="text-xs tracking-widest text-orange-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ВОЕННЫЙ</h2>
+              <h2 className="text-xs tracking-widest text-orange-400 mb-4 border-b border-gray-800 pb-2">&gt; ЛИКВИДАЦИИ (ВОЕННЫЙ)</h2>
               <div className="grid grid-cols-3 gap-2">
                 <div className="border border-gray-700 p-3 text-center">
                   <p className="text-[10px] text-gray-500 uppercase">УСПЕШНЫХ</p>
@@ -158,7 +158,7 @@ export default function StatsPage() {
           {/* БИЗНЕСМЕН */}
           {isBusinessman && (
             <div className="border border-yellow-500/50 bg-[#0a0f0d] p-4">
-              <h2 className="text-xs tracking-widest text-yellow-500 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_БИЗНЕСМЕН</h2>
+              <h2 className="text-xs tracking-widest text-yellow-500 mb-4 border-b border-gray-800 pb-2">&gt; ПЕРЕВОДЫ ВЛИ (БИЗНЕСМЕН)</h2>
               <div className="border border-gray-700 p-3 text-center">
                 <p className="text-[10px] text-gray-500 uppercase">ПЕРЕВЕДЕНО_ВЛИ</p>
                 <p className="text-xl text-white mt-1">{profile.totalTransferred || 0}</p>
@@ -169,7 +169,7 @@ export default function StatsPage() {
           {/* ПОЛИТИК */}
           {isPolitician && (
             <div className="border border-cyan-500/50 bg-[#0a0f0d] p-4">
-              <h2 className="text-xs tracking-widest text-cyan-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ПОЛИТИК</h2>
+              <h2 className="text-xs tracking-widest text-cyan-400 mb-4 border-b border-gray-800 pb-2">&gt; СМЕНА СТРАНЫ (ПОЛИТИК)</h2>
               <div className="border border-gray-700 p-3 text-center">
                 <p className="text-[10px] text-gray-500 uppercase">СМЕН_ЛОКАЦИИ</p>
                 <p className="text-xl text-white mt-1">{profile.countryChanges || 0}</p>
@@ -180,7 +180,7 @@ export default function StatsPage() {
           {/* ШПИОН */}
           {isSpy && (
             <div className="border border-purple-500/50 bg-purple-900/10 p-4">
-              <h2 className="text-xs tracking-widest text-purple-400 mb-4 border-b border-gray-800 pb-2">&gt; СЕКТОР_ШПИОН [ СКРЫТО ]</h2>
+              <h2 className="text-xs tracking-widest text-purple-400 mb-4 border-b border-gray-800 pb-2">&gt; ВЫЖИВАНИЕ (ШПИОН)</h2>
               <div className="border border-gray-700 p-3 text-center">
                 <p className="text-[10px] text-gray-500 uppercase">ДНЕЙ_В_РОЛИ</p>
                 <p className="text-xl text-purple-300 mt-1">{profile.spySurvivalDays || 0}</p>
