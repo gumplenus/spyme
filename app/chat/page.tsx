@@ -82,7 +82,7 @@ export default function ChatList() {
     fetchChats();
   }, [router]);
 
-    const openDeleteChatModal = (chat: any) => {
+  const openDeleteChatModal = (chat: any) => {
     setDeleteChatTarget(chat);
   };
 
@@ -123,141 +123,113 @@ export default function ChatList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ДЕШИФРОВКА_КАНАЛОВ...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-[#050807] text-gray-300 font-mono">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+          <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
             ←
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-green-400 truncate">💬 Чаты</h1>
+          <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ КАНАЛЫ_СВЯЗИ ]</h1>
         </div>
         <button
           onClick={openNewChatModal}
-          className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white text-sm shrink-0"
+          className="px-3 py-1.5 border border-[#39ff14]/50 text-[#39ff14] hover:bg-[#39ff14]/10 hover:border-[#39ff14] rounded-none text-xs shrink-0 transition-colors uppercase tracking-wider"
         >
-          <span className="hidden sm:inline">➕ Новое сообщение</span>
-          <span className="sm:hidden">➕</span>
+          + НОВЫЙ_КАНАЛ
         </button>
       </header>
 
       <div className="pt-20 px-4 pb-4">
-      {chats.length === 0 ? (
-        <p className="text-gray-400 mt-8">Нет сообщений. Нажмите «Новое сообщение», чтобы начать диалог.</p>
-      ) : (
-        <div className="space-y-3 mt-4">
-                    {chats.map((chat) => (
-            <div
-              key={chat.userId}
-              className="relative bg-gray-800 rounded-xl border border-gray-700 hover:border-green-400 transition-colors"
-            >
-              <Link
-                href={`/chat/${chat.userId}`}
-                className="block p-4 pr-12"
+        {chats.length === 0 ? (
+          <p className="text-gray-600 text-sm italic mt-8">[ Данные не найдены. Инициируйте новый канал связи. ]</p>
+        ) : (
+          <div className="space-y-3 mt-4">
+            {chats.map((chat) => (
+              <div
+                key={chat.userId}
+                className="relative border border-gray-800 bg-[#0a0f0d] hover:border-[#39ff14]/50 transition-colors group"
               >
-                <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
-                  {chat.avatarUrl ? (
-                    <img
-                      src={chat.avatarUrl}
-                      alt={chat.username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl">👤</span>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between items-start gap-2">
-                    <p className="text-white font-semibold truncate">{chat.username}</p>
-                    <p className="text-gray-500 text-xs whitespace-nowrap shrink-0">
-                      {new Date(chat.lastMessageTime).toLocaleDateString()}
-                    </p>
+                <Link href={`/chat/${chat.userId}`} className="block p-3 pr-12">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                      {chat.avatarUrl ? (
+                        <img src={chat.avatarUrl} alt={chat.username} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-gray-500">USR</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between items-start gap-2 border-b border-gray-800 pb-1 mb-1">
+                        <p className="text-[#39ff14] text-sm font-medium truncate">@{chat.username}</p>
+                        <p className="text-gray-600 text-[10px] whitespace-nowrap shrink-0">
+                          {new Date(chat.lastMessageTime).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-gray-500 text-[10px] uppercase tracking-wider">
+                        {chat.publicRole && chat.country ? `${chat.publicRole} // ${chat.country}` : chat.country || chat.publicRole || ''}
+                      </p>
+                      <p className="text-gray-400 text-sm truncate mt-1">
+                        {chat.lastMessage}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-gray-500 text-xs truncate">
-                    {chat.publicRole && chat.country
-                      ? `${chat.publicRole} · ${chat.country}`
-                      : chat.country || chat.publicRole || ''}
-                  </p>
-                  <p className="text-gray-400 text-sm truncate mt-1">
-                    {chat.lastMessage}
-                  </p>
-                </div>
+                </Link>
+                <button
+                  onClick={() => openDeleteChatModal(chat)}
+                  className="absolute top-1/2 -translate-y-1/2 right-3 p-2 text-gray-600 hover:text-red-500 transition-colors text-lg"
+                  title="Удалить чат"
+                >
+                  [x]
+                </button>
               </div>
-              </Link>
-              <button
-                onClick={() => openDeleteChatModal(chat)}
-                className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-red-400 text-lg"
-                title="Удалить чат"
-              >
-                🗑
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 pt-6 pb-3 shrink-0">
-              <h3 className="text-xl font-semibold text-white">Выберите собеседника</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-white text-2xl leading-none"
-                aria-label="Закрыть"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="px-6 pb-6 overflow-y-auto">
-              <PlayerSelector
-                players={allUsers}
-                getHref={(p) => `/chat/${p.id}`}
-                onSelect={() => setIsModalOpen(false)}
-                emptyText="Нет игроков по заданным фильтрам"
-              />
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="border border-[#39ff14] w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.2)]">
+              <div className="flex items-center justify-between p-4 border-b border-[#39ff14]/30 shrink-0">
+                <h3 className="text-sm text-[#39ff14] tracking-widest">&gt; ВЫБОР_АБОНЕНТА</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
+              </div>
+              <div className="p-4 overflow-y-auto">
+                <PlayerSelector
+                  players={allUsers}
+                  getHref={(p) => `/chat/${p.id}`}
+                  onSelect={() => setIsModalOpen(false)}
+                  emptyText="Нет доступных абонентов"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-            {deleteChatTarget && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-red-700">
-            <h3 className="text-xl font-semibold text-white mb-3">
-              🗑 Удалить чат?
-            </h3>
-            <p className="text-gray-400 text-sm mb-6">
-              Чат с{' '}
-              <span className="text-white font-semibold">
-                {deleteChatTarget.username || 'Неизвестный'}
-              </span>{' '}
-              будет удалён только у вас. У собеседника переписка останется.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteChatTarget(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={confirmDeleteChat}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
-              >
-                Удалить
-              </button>
+        {deleteChatTarget && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div className="border border-red-500 p-6 w-full max-w-md bg-[#050807] shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+              <h3 className="text-sm text-red-500 tracking-widest mb-3">&gt; УДАЛИТЬ_КАНАЛ?</h3>
+              <p className="text-gray-400 text-xs mb-6 leading-relaxed">
+                Канал связи с <span className="text-white font-semibold">{deleteChatTarget.username || 'Неизвестный'}</span> будет удалён только на вашем устройстве. У собеседника переписка останется.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setDeleteChatTarget(null)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none transition-colors">
+                  ОТМЕНА
+                </button>
+                <button onClick={confirmDeleteChat} className="px-4 py-2 border border-red-500 text-red-500 hover:bg-red-500/10 text-xs rounded-none transition-colors">
+                  УДАЛИТЬ
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

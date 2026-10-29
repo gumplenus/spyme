@@ -19,7 +19,6 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Авто-скролл вниз при загрузке и новых сообщениях
   useEffect(() => {
     setTimeout(() => {
       scrollToBottom();
@@ -131,44 +130,49 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ПОДКЛЮЧЕНИЕ_К_КАНАЛУ...</div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 h-[100dvh] w-full bg-gray-900 text-white flex flex-col overflow-hidden z-50">
-      <div className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
-        <Link href="/chat" className="text-green-400 hover:underline text-xl">
+    <div className="fixed inset-0 h-[100dvh] w-full bg-[#050807] text-gray-300 flex flex-col overflow-hidden z-50 font-mono">
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 shrink-0">
+        <Link href="/chat" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
-        <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-full border border-[#39ff14]/30 overflow-hidden flex items-center justify-center shrink-0">
           {contact?.avatarUrl ? (
             <img src={contact.avatarUrl} alt={contact.username} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-lg">👤</span>
+            <span className="text-xs text-gray-500">USR</span>
           )}
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-green-400 truncate">{contact?.username || 'Неизвестный'}</h1>
-          <p className="text-gray-400 text-xs truncate">
-            {contact?.publicRole && contact?.country ? `${contact.publicRole} · ${contact.country}` : contact?.country || contact?.publicRole || ''}
+          <h1 className="text-sm font-bold text-[#39ff14] truncate tracking-widest">@{contact?.username || 'Неизвестный'}</h1>
+          <p className="text-gray-500 text-[10px] truncate uppercase tracking-wider">
+            {contact?.publicRole && contact?.country ? `${contact.publicRole} // ${contact.country}` : contact?.country || contact?.publicRole || 'КАНАЛ_ЗАЩИЩЕН'}
           </p>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 ? (
-          <p className="text-gray-500 text-center mt-8">Начните диалог с {contact?.username || 'Неизвестный'}</p>
+          <p className="text-gray-600 text-sm italic text-center mt-8">[ КАНАЛ ПУСТ. ПЕРЕДАЙТЕ ПЕРВОЕ СООБЩЕНИЕ. ]</p>
         ) : (
           messages.map((msg) => {
             const isMine = msg.senderId === currentUserId;
             return (
               <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] p-3 rounded-lg ${isMine ? 'bg-green-500 text-white' : 'bg-gray-700 text-white'}`}>
-                  <p>{msg.content}</p>
-                  <p className="text-xs opacity-70 mt-1">{new Date(msg.createdAt).toLocaleTimeString()}</p>
+                <div className={`max-w-[85%] p-3 border ${isMine ? 'border-[#39ff14]/50 bg-[#39ff14]/5' : 'border-gray-800 bg-[#0a0f0d]'}`}>
+                  <div className="flex justify-between items-center gap-4 mb-1 border-b border-gray-800/50 pb-1">
+                    <span className={`text-[10px] tracking-wider ${isMine ? 'text-[#39ff14]' : 'text-gray-500'}`}>
+                      {isMine ? '> ВЫ' : `> ${contact?.username || 'АБОНЕНТ'}`}
+                    </span>
+                    <span className="text-[9px] text-gray-600">{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                  </div>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{msg.content}</p>
                 </div>
               </div>
             );
@@ -177,19 +181,19 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="px-4 py-3 bg-gray-800 border-t border-gray-700 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
+      <div className="px-4 py-3 bg-[#050807] border-t border-[#39ff14]/30 shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
         <div className="flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Введите сообщение..."
-            className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400 text-base"
+            placeholder="> ВВОД_СООБЩЕНИЯ..."
+            className="flex-1 p-3 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-700"
             disabled={sending}
           />
-          <button onClick={sendMessage} disabled={sending || !newMessage.trim()} className="px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold disabled:opacity-50">
-            {sending ? '...' : 'Отправить'}
+          <button onClick={sendMessage} disabled={sending || !newMessage.trim()} className="px-4 py-3 border border-[#39ff14] text-[#39ff14] hover:bg-[#39ff14]/10 text-xs font-semibold tracking-wider disabled:opacity-50 transition-colors rounded-none">
+            {sending ? '...' : 'ОТПРАВИТЬ'}
           </button>
         </div>
       </div>
