@@ -50,9 +50,8 @@ export function LoginForm() {
         .single();
 
       if (!profile?.country || !profile?.publicRole) {
-        await supabase.auth.signOut();
-        alert('Профиль не завершён. Пожалуйста, зарегистрируйтесь заново.');
-        router.push('/register');
+        // Если профиль не завершен, не выкидываем, а отправляем на выбор страны
+        router.push('/choose-country');
         return;
       }
 
