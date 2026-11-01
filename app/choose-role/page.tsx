@@ -84,7 +84,7 @@ export default function ChooseRolePage() {
 
       const { error: insertError } = await supabase
         .from('User')
-        .insert([{
+        .upsert([{
           id: user.id,
           email: user.email,
           username: username.trim(),
@@ -93,7 +93,7 @@ export default function ChooseRolePage() {
           balance: balance,
           createdAt: new Date().toISOString(),
           isBanned: false,
-        }]);
+        }], { onConflict: 'id' });
 
       if (insertError) {
         if (insertError.message.includes('User_username_key')) {
@@ -153,7 +153,7 @@ export default function ChooseRolePage() {
 
     const { error: insertError } = await supabase
       .from('User')
-      .insert([{
+      .upsert([{
         id: signUpData.user.id,
         email: signUpData.user.email,
         username: username.trim(),
@@ -162,7 +162,7 @@ export default function ChooseRolePage() {
         balance: balance,
         createdAt: new Date().toISOString(),
         isBanned: false,
-      }]);
+      }], { onConflict: 'id' });
 
     if (insertError) {
       if (insertError.message.includes('User_username_key')) {
