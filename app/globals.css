@@ -12,7 +12,7 @@ html, body {
   margin: 0;
   padding: 0;
   background: #050807;
-  overflow-x: hidden;
+  overflow: hidden; /* <-- ИЗМЕНЕНО ЗДЕСЬ */
   -webkit-overflow-scrolling: touch;
 }
 

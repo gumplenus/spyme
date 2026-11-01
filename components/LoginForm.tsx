@@ -203,10 +203,10 @@ export function LoginForm() {
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
     if (isNative) {
-      // Открываем нативный браузер поверх приложения
-      window.open(authUrl, '_system');
+      // Используем плагин Browser, чтобы избежать блокировки всплывающих окон
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url: authUrl });
     } else {
-      // В вебе ведем себя как раньше
       window.location.href = authUrl;
     }
   }}
