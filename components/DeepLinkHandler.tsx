@@ -11,8 +11,8 @@ export function DeepLinkHandler() {
   useEffect(() => {
     // Слушаем событие возврата в приложение по кастомной ссылке
     const listener = CapacitorApp.addListener('appUrlOpen', async (event) => {
-      // Если ссылка начинается с нашей схемы
-      if (event.url.startsWith('spyme://auth/callback')) {
+      // Если ссылка начинается с нашей схемы (Яндекс) ИЛИ наш домен (VK Universal Link)
+      if (event.url.startsWith('spyme://auth/callback') || event.url.startsWith('https://spyme.com.ru/auth/vk-id')) {
         
         // Закрываем системный браузер (Safari), если он открыт
         try {
