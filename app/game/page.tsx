@@ -376,7 +376,7 @@ export default function GamePage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] max-w-5xl mx-auto w-full">
+      <div className="flex-1 overflow-y-auto pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] max-w-2xl mx-auto w-full">
         {passiveIncomeMessage && (
           <div className="mb-6 p-4 border border-[#39ff14] text-[#39ff14] text-center font-semibold shadow-[0_0_15px_rgba(57,255,20,0.3)] bg-[#39ff14]/5">
             {passiveIncomeMessage}
