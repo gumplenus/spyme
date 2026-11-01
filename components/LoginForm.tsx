@@ -203,9 +203,12 @@ export function LoginForm() {
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
     if (isNative) {
-      // Используем плагин Browser, чтобы избежать блокировки всплывающих окон
-      const { Browser } = await import('@capacitor/browser');
-      await Browser.open({ url: authUrl });
+      try {
+        // Используем статический импорт Browser
+        await Browser.open({ url: authUrl });
+      } catch (err: any) {
+        alert('Ошибка открытия браузера: ' + err.message);
+      }
     } else {
       window.location.href = authUrl;
     }
