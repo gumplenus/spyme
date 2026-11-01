@@ -234,17 +234,14 @@ export function RegisterForm() {
           
           localStorage.setItem('vk_code_verifier', codeVerifier);
 
-          const clientId = '54869710'; // <-- НОВЫЙ ID
-          
+          const clientId = '54869710';
           const isNative = Capacitor.isNativePlatform();
-          
-          // <-- НОВЫЙ REDIRECT URI ДЛЯ НАТИВНОГО ПРИЛОЖЕНИЯ
           const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
           
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
           
           if (isNative) {
-            window.open(authUrl, '_system'); // <-- СИСТЕМНЫЙ БРАУЗЕР
+            await Browser.open({ url: authUrl }); // <-- ИЗМЕНЕНО ТОЛЬКО ЗДЕСЬ
           } else {
             window.location.href = authUrl;
           }
