@@ -585,17 +585,23 @@ export default function GamePage() {
 
       {/* МОДАЛКА ПЕРЕВОДА ВЛИ */}
       {isTransferOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="border border-yellow-500 w-full max-w-md max-h-[90dvh] flex flex-col overflow-hidden bg-[#050807] shadow-[0_0_20px_rgba(234,179,8,0.2)]">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100] pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+16px)]">
+          <div className="border border-yellow-500 w-full max-w-md flex flex-col bg-[#050807] shadow-[0_0_20px_rgba(234,179,8,0.2)]">
+            {/* Фиксированный верх: Заголовок */}
             <div className="flex items-center justify-between p-4 border-b border-yellow-500/30 shrink-0">
               <h3 className="text-sm text-yellow-500 tracking-widest">&gt; ПЕРЕВОД_ВЛИ</h3>
               <button onClick={() => setIsTransferOpen(false)} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
             </div>
-            <div className="p-4 overflow-y-auto flex-1 min-h-0">
-              <p className="text-gray-500 text-xs mb-4">
+
+            {/* Фиксированный верх: Баланс */}
+            <div className="px-4 pt-4 pb-2 shrink-0">
+              <p className="text-gray-500 text-xs">
                 ВАШ_БАЛАНС: <span className="text-yellow-400 font-semibold">{profile?.balance} ВЛИ</span>
               </p>
+            </div>
 
+            {/* Середина: Выбор игрока (список внутри прокручивается) */}
+            <div className="px-4 py-2 shrink-0">
               {!transferRecipient ? (
                 <PlayerSelector players={allUsers} onSelect={(p) => setTransferRecipient(p.id)} emptyText="Нет игроков по заданным фильтрам" />
               ) : (
@@ -619,8 +625,11 @@ export default function GamePage() {
                   <button onClick={() => setTransferRecipient('')} className="text-gray-500 hover:text-red-400 text-xs underline shrink-0">ИЗМЕНИТЬ</button>
                 </div>
               )}
+            </div>
 
-              <div className="space-y-4 mt-4">
+            {/* Фиксированный низ: Ввод и Кнопки */}
+            <div className="px-4 py-4 border-t border-yellow-500/30 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1 tracking-wider">СУММА (ВЛИ)</label>
                   <input type="number" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} min="1" placeholder="100" className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-yellow-500 text-sm rounded-none" />
@@ -632,13 +641,13 @@ export default function GamePage() {
                 {transferError && <div className="text-red-400 text-xs border border-red-500/50 p-2 bg-red-900/10">{transferError}</div>}
                 {transferSuccess && <div className="text-[#39ff14] text-xs border border-[#39ff14]/50 p-2 bg-[#39ff14]/10">{transferSuccess}</div>}
               </div>
-            </div>
 
-            <div className="flex justify-end space-x-3 p-4 border-t border-yellow-500/30 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
-              <button onClick={() => setIsTransferOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none">ОТМЕНА</button>
-              <button onClick={handleTransfer} disabled={transferring || !transferRecipient || !transferAmount} className="px-4 py-2 border border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 text-xs rounded-none disabled:opacity-50">
-                {transferring ? 'ОТПРАВКА...' : 'ПЕРЕВЕСТИ'}
-              </button>
+              <div className="flex justify-end space-x-3 mt-4">
+                <button onClick={() => setIsTransferOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white text-xs rounded-none">ОТМЕНА</button>
+                <button onClick={handleTransfer} disabled={transferring || !transferRecipient || !transferAmount} className="px-4 py-2 border border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 text-xs rounded-none disabled:opacity-50">
+                  {transferring ? 'ОТПРАВКА...' : 'ПЕРЕВЕСТИ'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

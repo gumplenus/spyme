@@ -134,7 +134,7 @@ export default function PlayerSelector({
       {filtered.length === 0 ? (
         <p className="text-gray-600 text-sm italic text-center py-6">[ {emptyText} ]</p>
       ) : (
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
           {filtered.map((p) => {
             const content = (
               <div className="flex items-center gap-3">
