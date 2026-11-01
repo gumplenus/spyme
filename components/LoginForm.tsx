@@ -152,7 +152,7 @@ export function LoginForm() {
           
           if (isNative) {
             // Открываем нативный браузер
-            await Browser.open({ url: authUrl });
+            window.open(authUrl, '_system');
           } else {
             // В вебе ведем себя как раньше
             window.location.href = authUrl;
@@ -204,7 +204,7 @@ export function LoginForm() {
     
     if (isNative) {
       // Открываем нативный браузер поверх приложения
-      await Browser.open({ url: authUrl });
+      window.open(authUrl, '_system');
     } else {
       // В вебе ведем себя как раньше
       window.location.href = authUrl;
