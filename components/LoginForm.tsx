@@ -192,13 +192,13 @@ export function LoginForm() {
     localStorage.setItem('vk_code_verifier', codeVerifier);
 
     // 4. Формируем URL для авторизации
-    const clientId = '54837536';
+    const clientId = '54869710'; // <-- НОВЫЙ ID
     
     // Проверяем, запущено ли приложение нативно
     const isNative = Capacitor.isNativePlatform();
     
     // Меняем ссылку возврата в зависимости от платформы
-    const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
+    const redirectUri = isNative ? 'https://spyme.com.ru/auth/vk-id' : 'https://spyme.com.ru/auth/callback';
     
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
