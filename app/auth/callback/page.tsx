@@ -18,41 +18,9 @@ function CallbackHandler() {
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
 
   const processActionLink = async (link: string) => {
-    try {
-      const urlObj = new URL(link);
-      if (urlObj.hash) {
-        const params = new URLSearchParams(urlObj.hash.substring(1));
-        const at = params.get('access_token');
-        const rt = params.get('refresh_token');
-        if (at && rt) {
-          const { error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
-          if (error) throw error;
-        }
-      } else if (urlObj.search) {
-        const params = new URLSearchParams(urlObj.search);
-        const th = params.get('token_hash');
-        const ty = params.get('type');
-        if (th && ty) {
-          const { error } = await supabase.auth.verifyOtp({ token_hash: th, type: ty as any });
-          if (error) throw error;
-        }
-      }
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error("Нет сессии");
-
-      const { data: existingProfile } = await supabase
-        .from('User').select('id').eq('id', session.user.id).single();
-
-      if (existingProfile) {
-        router.push('/game');
-      } else {
-        router.push('/choose-country');
-      }
-    } catch (err: any) {
-      setError('Ошибка авторизации: ' + err.message);
-      setStatus('');
-    }
+    // Просто перенаправляем браузер на ссылку от Supabase.
+    // Supabase сам проверит токен и перекинет на нужный адрес (/game или /choose-country).
+    window.location.replace(link);
   };
 
   useEffect(() => {
