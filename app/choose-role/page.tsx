@@ -126,7 +126,10 @@ export default function ChooseRolePage() {
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { captchaToken },
+      options: { 
+        captchaToken,
+        emailRedirectTo: 'https://spyme.com.ru/auth/callback' // <-- ВОТ ЭТА СТРОКА
+      },
     });
 
     if (signUpError) {
