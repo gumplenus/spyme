@@ -74,6 +74,14 @@
 			<key>CFBundleURLName</key>
 			<string>ru.spyme.app</string>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>VKAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vk54869710</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

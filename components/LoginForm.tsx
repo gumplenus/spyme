@@ -198,7 +198,7 @@ export function LoginForm() {
     const isNative = Capacitor.isNativePlatform();
     
     // Меняем ссылку возврата в зависимости от платформы
-    const redirectUri = isNative ? 'https://spyme.com.ru/auth/vk-id' : 'https://spyme.com.ru/auth/callback';
+    const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
     
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
