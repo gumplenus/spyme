@@ -42,34 +42,33 @@ export default function BannedPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ПРОВЕРКА_СТАТУСА...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)]">
-      <div className="bg-gray-800 p-8 rounded-xl border border-red-700 max-w-md w-full text-center">
-        <div className="text-6xl mb-4">🚫</div>
-        <h1 className="text-3xl font-bold text-red-500 mb-4">
-          Аккаунт ликвидирован
+    <div className="min-h-screen bg-[#050807] text-gray-300 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)] font-mono">
+      <div className="border border-red-500/50 p-8 max-w-md w-full text-center bg-[#0a0f0d] shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+        <div className="text-4xl mb-4 text-red-500">[ X ]</div>
+        <h1 className="text-sm font-bold text-red-500 mb-4 tracking-widest uppercase">
+          АККАУНТ_ЛИКВИДИРОВАН
         </h1>
-        <p className="text-gray-300 mb-2">
-          Игрок: <span className="text-white font-semibold">{profile?.username || 'Неизвестный'}</span>
+        <p className="text-gray-500 text-xs mb-2 uppercase tracking-wider">
+          ИГРОК: <span className="text-white font-semibold">{profile?.username || 'Неизвестный'}</span>
         </p>
-        <p className="text-gray-400 text-sm mb-6">
-          {profile?.banReason || 'Ликвидирован Военным за шпионаж'}
+        <p className="text-red-400/80 text-xs mb-6 border border-red-500/30 p-2 bg-red-900/10">
+          &gt; {profile?.banReason || 'Ликвидирован Военным за шпионаж'}
         </p>
-        <p className="text-gray-500 text-xs mb-6">
-          Вы больше не можете участвовать в текущем игровом цикле.
-          Дождитесь его окончания, чтобы начать заново.
+        <p className="text-gray-600 text-[10px] mb-6 uppercase tracking-wider leading-relaxed">
+          Вы больше не можете участвовать в текущем игровом цикле. Дождитесь его окончания, чтобы начать заново.
         </p>
         <button
           onClick={handleLogout}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+          className="w-full px-6 py-3 border border-red-500 text-red-500 hover:bg-red-500/10 text-xs font-semibold tracking-wider rounded-none transition-colors"
         >
-          Выйти
+          ВЫЙТИ_ИЗ_СИСТЕМЫ
         </button>
       </div>
     </div>

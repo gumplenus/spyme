@@ -50,7 +50,6 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // Проверка email
       const emailFree = await checkUnique("email", email.trim());
       if (!emailFree) {
         setError("Этот email уже зарегистрирован. Войдите или используйте другой.");
@@ -58,7 +57,6 @@ export function RegisterForm() {
         return;
       }
 
-      // Проверка имени
       const usernameFree = await checkUnique("username", username.trim());
       if (!usernameFree) {
         setError("Это имя уже занято. Придумайте другое.");
@@ -66,7 +64,6 @@ export function RegisterForm() {
         return;
       }
 
-      // Всё свободно — сохраняем в localStorage
       localStorage.setItem("pendingUsername", username.trim());
       localStorage.setItem("pendingEmail", email.trim());
       localStorage.setItem("pendingPassword", password);
@@ -94,48 +91,47 @@ export function RegisterForm() {
     );
 
   return (
-    <form onSubmit={handleRegister} className="space-y-4">
+    <form onSubmit={handleRegister} className="space-y-4 font-mono">
       <div>
-        <label className="block text-sm font-medium text-gray-300">Ваше имя</label>
+        <label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1">Ваше_имя</label>
         <input
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+          className="w-full p-3 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-700"
           placeholder="Агент Смит"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300">Email</label>
+        <label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1">EMAIL</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+          className="w-full p-3 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-700"
           placeholder="agent@spyme.ru"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300">Пароль</label>
+        <label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1">ПАРОЛЬ</label>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 pr-11 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+            className="w-full p-3 pr-11 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-700"
             placeholder="••••••••"
             required
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-green-400 flex items-center justify-center"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-[#39ff14] flex items-center justify-center transition-colors"
             tabIndex={-1}
-            aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
           >
             <EyeIcon crossed={showPassword} />
           </button>
@@ -143,22 +139,21 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300">Подтверждение пароля</label>
+        <label className="block text-[10px] text-gray-500 uppercase tracking-wider mb-1">ПОДТВЕРЖДЕНИЕ_ПАРОЛЯ</label>
         <div className="relative">
           <input
             type={showConfirmPassword ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full p-3 pr-11 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+            className="w-full p-3 pr-11 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-700"
             placeholder="••••••••"
             required
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-green-400 flex items-center justify-center"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-[#39ff14] flex items-center justify-center transition-colors"
             tabIndex={-1}
-            aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
           >
             <EyeIcon crossed={showConfirmPassword} />
           </button>
@@ -166,25 +161,25 @@ export function RegisterForm() {
       </div>
 
       {error && typeof error === "string" && (
-        <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded-lg border border-red-800">
-          {error}
+        <div className="text-red-500 text-xs border border-red-500/50 p-3 bg-red-900/10 rounded-none">
+          [ ОШИБКА ] {error}
         </div>
       )}
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-green-500 hover:bg-green-600 transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
+        className="w-full bg-[#39ff14]/10 hover:bg-[#39ff14]/20 border border-[#39ff14] text-[#39ff14] font-semibold py-3 rounded-none text-xs tracking-wider transition-colors disabled:opacity-50"
       >
-        {isLoading ? "Проверка..." : "Зарегистрироваться"}
+        {isLoading ? "ПРОВЕРКА..." : "ЗАРЕГИСТРИРОВАТЬСЯ"}
       </button>
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-600"></div>
+          <div className="w-full border-t border-gray-800"></div>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-gray-800 text-gray-400">или</span>
+        <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+          <span className="px-2 bg-[#050807] text-gray-500">или</span>
         </div>
       </div>
 
@@ -202,18 +197,14 @@ export function RegisterForm() {
             window.location.href = authUrl;
           }
         }}
-        className="w-full bg-[#FC3F1D] hover:bg-[#E53818] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 mb-2"
+        className="w-full bg-[#FC3F1D]/10 hover:bg-[#FC3F1D]/20 border border-[#FC3F1D] text-[#FC3F1D] transition-colors font-semibold py-3 rounded-none text-xs tracking-wider flex items-center justify-center gap-2 mb-2"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12.8 1.6H8.6C5.2 1.6 3 3.8 3 7.5C3 10.6 4.8 12.6 7.8 13.4L2.6 22.4H6.6L12.4 11.9H13.6V22.4H17V1.6H12.8ZM13.6 8.9H12.2C10 8.9 8.8 8 8.8 6C8.8 4.1 9.9 3.2 12 3.2H13.6V8.9Z" />
-        </svg>
-        Войти через Яндекс
+        ВОЙТИ_ЧЕРЕЗ_ЯНДЕКС
       </button>
 
       <button
         type="button"
         onClick={async () => {
-          // Сохраняем имя и почту из формы
           if (username) localStorage.setItem("pendingUsername", username.trim());
           if (email) localStorage.setItem("pendingEmail", email.trim());
 
@@ -235,31 +226,25 @@ export function RegisterForm() {
           localStorage.setItem('vk_code_verifier', codeVerifier);
 
           const isNative = Capacitor.isNativePlatform();
-          
-          // ВЫБИРАЕМ ID В ЗАВИСИМОСТИ ОТ ПЛАТФОРМЫ
           const clientId = isNative ? '54869710' : '54837536';
-          
           const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
           
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
           
           if (isNative) {
-            await Browser.open({ url: authUrl }); // <-- ИЗМЕНЕНО ТОЛЬКО ЗДЕСЬ
+            await Browser.open({ url: authUrl });
           } else {
             window.location.href = authUrl;
           }
         }}
-        className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+        className="w-full bg-[#0077FF]/10 hover:bg-[#0077FF]/20 border border-[#0077FF] text-[#0077FF] transition-colors font-semibold py-3 rounded-none text-xs tracking-wider flex items-center justify-center gap-2"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.625-3.504-1.686-1.565-1.765-1.602-.313-3.486 1.801-2.339 4.157-5.336 2.073-5.336h-3.981c-.772 0-.828.435-1.103 1.083-.995 2.347-2.886 5.387-3.604 4.922-.751-.485-.407-2.406-.35-5.261.015-.754.011-1.271-1.141-1.539-.814-.18-1.549-.26-2.21-.26-1.72 0-3.105.539-2.887 2.016.158 1.077.734 2.866 1.431 4.251-1.022 1.266-2.835 4.097-1.725 4.097h3.417c.5 0 .915-.256 1.126-.788.823-2.08 2.137-4.734 3.007-5.621.506-.515.858-.15.858.515v4.109c0 1.054.545 1.785 1.703 1.785z" />
-        </svg>
-        Войти через VK
+        ВОЙТИ_ЧЕРЕЗ_VK
       </button>
 
-      <p className="text-gray-400 text-sm mt-4 text-center">
+      <p className="text-gray-500 text-xs mt-4 text-center uppercase tracking-wider">
         Уже есть аккаунт?{" "}
-        <Link href="/login" className="text-green-400 hover:underline">
+        <Link href="/login" className="text-[#39ff14] hover:text-white transition-colors underline underline-offset-4 decoration-[#39ff14]/30">
           Войти
         </Link>
       </p>

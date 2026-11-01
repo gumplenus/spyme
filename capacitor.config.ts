@@ -16,7 +16,7 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      launchAutoHide: true,
+      launchAutoHide: false, // <-- ИЗМЕНЕНО: заставка висит, пока React не скроет её сам
       backgroundColor: "#050807",
       showSpinner: false,
       androidScaleType: "CENTER_CROP",

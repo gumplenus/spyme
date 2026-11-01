@@ -156,21 +156,14 @@ export default function EvidencePage() {
     }
 
     if (target.isSpy === true) {
-      const { data: { user: militaryUser } } = await supabase.auth.getUser();
+      // Вызываем безопасную SQL-функцию, которая обновит статус бана и начислит счетчик
+      const { data: banData, error: banError } = await supabase.rpc('ban_player_by_military', {
+        military_id: profile.id,
+        target_id: evidence.targetId,
+      });
 
-      const { error: banError } = await supabase
-        .from('User')
-        .update({
-          isBanned: true,
-          banReason: 'Ликвидирован Военным за шпионаж',
-          eliminatedBy: militaryUser?.id,
-          email: `banned-${evidence.targetId}@spyme.deleted`,
-          username: `Ликвидирован #${evidence.targetId.slice(0, 6)}`,
-        })
-        .eq('id', evidence.targetId);
-
-      if (banError) {
-        setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
+      if (banError || (banData && banData.success === false)) {
+        setMessage({ text: 'Ошибка ликвидации: ' + (banError?.message || 'неизвестная ошибка'), type: 'error' });
       } else {
         try {
           await fetch('/api/release-email', {
@@ -186,8 +179,6 @@ export default function EvidencePage() {
           .from('Evidence')
           .delete()
           .eq('targetId', evidence.targetId);
-
-        await incrementCounter('eliminationsCount');
 
         setMessage({
           text: `${target.username} ликвидирован! Он был шпионом.`,

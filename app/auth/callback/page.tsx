@@ -226,23 +226,23 @@ function CallbackHandler() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <div className="bg-gray-800 p-8 rounded-xl border border-green-500 max-w-md w-full">
+    <div className="min-h-screen bg-[#050807] flex flex-col items-center justify-center p-4 font-mono pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)]">
+      <div className="border border-[#39ff14]/50 p-8 w-full max-w-md bg-[#0a0f0d] shadow-[0_0_20px_rgba(57,255,20,0.2)]">
         
         {error ? (
           <div className="text-center">
-            <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-2xl font-bold text-red-400 mb-4">Ошибка</h1>
-            <p className="text-gray-300 mb-6">{error}</p>
-            <a href="/login" className="inline-block px-6 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold">
-              Вернуться к входу
+            <div className="text-4xl mb-4 text-red-500">[ X ]</div>
+            <h1 className="text-sm font-bold text-red-500 mb-4 tracking-widest uppercase">ОШИБКА</h1>
+            <p className="text-gray-400 text-xs mb-6">{error}</p>
+            <a href="/login" className="inline-block px-6 py-3 border border-gray-600 text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14] rounded-none text-xs font-semibold tracking-wider transition-colors">
+              &lt; ВЕРНУТЬСЯ_К_ВХОДУ
             </a>
           </div>
         ) : needsEmail ? (
           <div>
-            <div className="text-6xl mb-4 text-center">📧</div>
-            <h1 className="text-2xl font-bold text-green-400 mb-2 text-center">Введите ваш email</h1>
-            <p className="text-gray-300 mb-6 text-center text-sm">
+            <div className="text-4xl mb-4 text-[#39ff14] text-center">[ MAIL ]</div>
+            <h1 className="text-sm font-bold text-[#39ff14] mb-2 text-center tracking-widest uppercase">ВВЕДИТЕ_EMAIL</h1>
+            <p className="text-gray-400 mb-6 text-center text-[10px] uppercase tracking-wider">
               Привет, <span className="font-semibold text-white">{vkName}</span>!<br/>
               VK не передал нам вашу почту. Пожалуйста, укажите её для завершения регистрации.
             </p>
@@ -252,7 +252,7 @@ function CallbackHandler() {
                   type="email"
                   value={manualEmail}
                   onChange={(e) => setManualEmail(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-green-400"
+                  className="w-full p-3 bg-transparent text-[#39ff14] border border-gray-700 focus:outline-none focus:border-[#39ff14] text-sm rounded-none placeholder-gray-600"
                   placeholder="agent@spyme.ru"
                   required
                 />
@@ -260,17 +260,17 @@ function CallbackHandler() {
               <button
                 type="submit"
                 disabled={isSubmittingEmail}
-                className="w-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors text-white font-semibold py-3 rounded-lg disabled:opacity-50"
+                className="w-full bg-[#39ff14]/10 hover:bg-[#39ff14]/20 border border-[#39ff14] text-[#39ff14] font-semibold py-3 rounded-none text-xs tracking-wider transition-colors disabled:opacity-50"
               >
-                {isSubmittingEmail ? 'Регистрация...' : 'Продолжить'}
+                {isSubmittingEmail ? 'РЕГИСТРАЦИЯ...' : 'ПРОДОЛЖИТЬ'}
               </button>
             </form>
           </div>
         ) : (
           <div className="text-center">
-            <div className="text-6xl mb-4">⏳</div>
-            <h1 className="text-2xl font-bold text-green-400 mb-4">Авторизация</h1>
-            <p className="text-gray-300">{status}</p>
+            <div className="text-4xl mb-4 text-[#39ff14] animate-pulse">[ ⏳ ]</div>
+            <h1 className="text-sm font-bold text-[#39ff14] mb-4 tracking-widest uppercase">АВТОРИЗАЦИЯ</h1>
+            <p className="text-gray-400 text-xs">{status}</p>
           </div>
         )}
 
@@ -282,8 +282,8 @@ function CallbackHandler() {
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ЗАГРУЗКА...</div>
       </div>
     }>
       <CallbackHandler />
