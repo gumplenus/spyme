@@ -4,23 +4,40 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { COUNTRIES } from '@/lib/countries';
+import { supabase } from '@/lib/supabaseClient'; // <-- Добавили импорт supabase
 
 export default function ChooseCountryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Проверяем, что игрок начал регистрацию (есть данные в localStorage)
-    const pendingEmail = localStorage.getItem('pendingEmail');
-    const pendingUsername = localStorage.getItem('pendingUsername');
+    const checkUser = async () => {
+      // Проверяем, есть ли активная сессия (пользователь уже подтвердил почту)
+      const { data: { session } } = await supabase.auth.getSession();
 
-    if (!pendingEmail || !pendingUsername) {
-      // Регистрация не начата — отправляем на регистрацию
-      router.push('/register');
-      return;
-    }
+      // Проверяем данные в localStorage
+      const pendingEmail = localStorage.getItem('pendingEmail');
+      const pendingUsername = localStorage.getItem('pendingUsername');
 
-    setLoading(false);
+      // Если нет ни сессии, ни данных в localStorage — отправляем на регистрацию
+      if (!session && (!pendingEmail || !pendingUsername)) {
+        router.push('/register');
+        return;
+      }
+
+      // Если сессия есть, но данных нет в localStorage, попробуем достать из метаданных
+      if (session && (!pendingEmail || !pendingUsername)) {
+        const metaUsername = session.user.user_metadata?.pendingUsername;
+        const metaEmail = session.user.email;
+        
+        if (metaUsername) localStorage.setItem('pendingUsername', metaUsername);
+        if (metaEmail) localStorage.setItem('pendingEmail', metaEmail);
+      }
+
+      setLoading(false);
+    };
+
+    checkUser();
   }, [router]);
 
   const selectCountry = (countryCode: string) => {

@@ -30,11 +30,16 @@ export default function ChooseRolePage() {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const pendingUsername = localStorage.getItem('pendingUsername');
-      const pendingCountry = localStorage.getItem('pendingCountry');
+      // Если в localStorage пусто, берем данные из сессии (метаданных)
+      const pendingUsername = localStorage.getItem('pendingUsername') || session?.user?.user_metadata?.pendingUsername;
+      const pendingCountry = localStorage.getItem('pendingCountry') || session?.user?.user_metadata?.pendingCountry;
 
       if (!pendingUsername || !pendingCountry) {
-        router.push('/choose-country');
+        if (session) {
+          router.push('/choose-country');
+        } else {
+          router.push('/register');
+        }
         return;
       }
 
@@ -128,7 +133,13 @@ export default function ChooseRolePage() {
       password,
       options: { 
         captchaToken,
-        emailRedirectTo: 'https://spyme.com.ru/auth/callback' // <-- ВОТ ЭТА СТРОКА
+        emailRedirectTo: 'https://spyme.com.ru/auth/callback',
+        // Сохраняем имя, страну и роль прямо в профиль пользователя
+        data: { 
+          pendingUsername: username.trim(), 
+          pendingCountry: country, 
+          pendingRole: roleId 
+        }
       },
     });
 
