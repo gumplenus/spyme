@@ -86,7 +86,7 @@ export default function EvidencePage() {
     }
   };
 
-    const dismissEvidence = async (evidenceId: string) => {
+  const dismissEvidence = async (evidenceId: string) => {
     setEliminating(evidenceId);
     setMessage(null);
 
@@ -98,7 +98,7 @@ export default function EvidencePage() {
     if (error) {
       setMessage({ text: 'Ошибка удаления: ' + error.message, type: 'error' });
     } else {
-      setMessage({ text: '🗑 Улика удалена', type: 'success' });
+      setMessage({ text: 'Улика удалена из базы', type: 'success' });
       setEvidences((prev) => prev.filter((e) => e.id !== evidenceId));
       setTimeout(() => setMessage(null), 3000);
     }
@@ -129,7 +129,7 @@ export default function EvidencePage() {
         .eq('targetId', evidence.targetId);
 
       setMessage({
-        text: `ℹ️ ${target.username} уже был ликвидирован ранее. Улики удалены.`,
+        text: `${target.username} уже был ликвидирован ранее. Улики удалены.`,
         type: 'error',
       });
       setEvidences((prev) => prev.filter((e) => e.targetId !== evidence.targetId));
@@ -146,7 +146,7 @@ export default function EvidencePage() {
       if (hoursSince < 48) {
         const remaining = Math.ceil(48 - hoursSince);
         setMessage({
-          text: `🛡️ ${target.username} под дипломатическим иммунитетом. Ликвидация невозможна. Подождите ${remaining} ч.`,
+          text: `${target.username} под дипломатическим иммунитетом. Ликвидация невозможна. Подождите ${remaining} ч.`,
           type: 'error',
         });
         setEliminating(null);
@@ -172,7 +172,6 @@ export default function EvidencePage() {
       if (banError) {
         setMessage({ text: 'Ошибка ликвидации: ' + banError.message, type: 'error' });
       } else {
-        // Освобождаем email в auth.users (чтобы игрок мог зарегистрироваться заново)
         try {
           await fetch('/api/release-email', {
             method: 'POST',
@@ -191,7 +190,7 @@ export default function EvidencePage() {
         await incrementCounter('eliminationsCount');
 
         setMessage({
-          text: `✅ ${target.username} ликвидирован! Он был шпионом.`,
+          text: `${target.username} ликвидирован! Он был шпионом.`,
           type: 'success',
         });
         setEvidences((prev) => prev.filter((e) => e.targetId !== evidence.targetId));
@@ -212,7 +211,7 @@ export default function EvidencePage() {
         await incrementCounter('eliminationsFailed');
 
         setMessage({
-          text: `❌ ${target.username} не был шпионом. Вы заблокированы на 24 часа.`,
+          text: `${target.username} не был шпионом. Вы заблокированы на 24 часа.`,
           type: 'error',
         });
 
@@ -227,8 +226,8 @@ export default function EvidencePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-green-400 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
+        <div className="text-[#39ff14] text-xl animate-pulse">_ ЗАГРУЗКА_УЛИК...</div>
       </div>
     );
   }
@@ -236,26 +235,26 @@ export default function EvidencePage() {
   if (blockedUntil) {
     const hoursLeft = Math.ceil((blockedUntil.getTime() - Date.now()) / (1000 * 60 * 60));
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-        <div className="bg-gray-800 p-8 rounded-xl border border-red-700 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-3xl font-bold text-red-500 mb-4">
-            Вы заблокированы
+      <div className="min-h-screen bg-[#050807] text-gray-300 flex items-center justify-center p-4 font-mono pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)]">
+        <div className="border border-red-500/50 p-6 max-w-md w-full text-center bg-[#0a0f0d] shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+          <div className="text-4xl mb-4 text-red-500">[ X ]</div>
+          <h1 className="text-sm font-bold text-red-500 mb-4 tracking-widest uppercase">
+            ДОСТУП_ЗАБЛОКИРОВАН
           </h1>
-          <p className="text-gray-300 mb-2">
+          <p className="text-gray-400 text-xs mb-2">
             Вы ошиблись при ликвидации.
           </p>
-          <p className="text-yellow-400 font-semibold mb-6">
-            Осталось: {hoursLeft} ч.
+          <p className="text-yellow-500 text-xs font-semibold mb-6">
+            БЛОКИРОВКА: {hoursLeft} Ч.
           </p>
-          <p className="text-gray-500 text-xs mb-6">
+          <p className="text-gray-600 text-[10px] mb-6">
             Во время блокировки вы не можете просматривать улики и ликвидировать игроков.
           </p>
           <Link
             href="/game"
-            className="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold"
+            className="inline-block px-6 py-3 border border-gray-600 text-gray-300 hover:text-[#39ff14] hover:border-[#39ff14] rounded-none text-xs font-semibold tracking-wider transition-colors"
           >
-            ← Назад в игру
+            &lt; НАЗАД_В_ИГРУ
           </Link>
         </div>
       </div>
@@ -263,72 +262,74 @@ export default function EvidencePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center gap-3">
-        <Link href="/game" className="text-green-400 hover:underline text-xl shrink-0">
+    <div className="min-h-screen bg-[#050807] text-gray-300 font-mono pb-10">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center gap-3">
+        <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
-        <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">📂 Входящие улики</h1>
+        <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ ВХОДЯЩИЕ_УЛИКИ ]</h1>
       </header>
 
-      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4">
-      <p className="text-gray-400 mb-4">
-        Ваша страна: <span className="text-white">{profile?.country}</span>
-      </p>
+      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4 max-w-3xl mx-auto">
+        <p className="text-gray-500 text-xs mb-4 uppercase tracking-wider">
+          ЛОКАЦИЯ: <span className="text-white">{profile?.country}</span>
+        </p>
 
-      {message && (
-        <div
-          className={`mb-4 p-3 rounded-lg border ${
-            message.type === 'success'
-              ? 'bg-green-900/40 border-green-500 text-green-300'
-              : 'bg-red-900/40 border-red-500 text-red-300'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+        {message && (
+          <div
+            className={`mb-4 p-3 border text-xs ${
+              message.type === 'success'
+                ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/5'
+                : 'border-red-500/50 text-red-500 bg-red-900/10'
+            }`}
+          >
+            &gt; {message.text}
+          </div>
+        )}
 
-      {evidences.length === 0 ? (
-        <p className="text-gray-400 mt-8">У вас пока нет улик.</p>
-      ) : (
-        <div className="space-y-3 mt-4">
-          {evidences.map((e) => (
-            <div key={e.id} className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-              <p className="text-white font-semibold">
-                🎯 {e.target?.username || 'Неизвестный'}
-              </p>
-              <p className="text-gray-400 text-sm">
-                Страна: {e.target?.country} · Роль: {e.target?.publicRole}
-              </p>
-              <p className="text-gray-500 text-xs mt-2">
-                От: {e.reporter?.username || 'Неизвестный'} · {new Date(e.createdAt + 'Z').toLocaleDateString()}
-              </p>
-              <p className="text-gray-300 text-sm mt-2 bg-gray-900 p-2 rounded">
-                {e.content}
-              </p>
-              <p className="text-orange-400 text-xs mt-2">
-                Сила улики: {e.strength}%
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => eliminateTarget(e)}
-                  disabled={eliminating === e.id}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm disabled:opacity-50"
-                >
-                  {eliminating === e.id ? 'Ликвидация...' : '⚔️ Ликвидировать'}
-                </button>
-                <button
-                  onClick={() => dismissEvidence(e.id)}
-                  disabled={eliminating === e.id}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-sm disabled:opacity-50"
-                >
-                  🗑 Удалить
-                </button>
+        {evidences.length === 0 ? (
+          <p className="text-gray-600 text-sm italic mt-8">[ ДАННЫЕ НЕ НАЙДЕНЫ. ВХОДЯЩИЕ УЛИКИ ОТСУТСТВУЮТ. ]</p>
+        ) : (
+          <div className="space-y-3 mt-4">
+            {evidences.map((e) => (
+              <div key={e.id} className="border border-gray-800 bg-[#0a0f0d] p-4 relative">
+                <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-2">
+                  <span className="text-[#39ff14] text-sm font-semibold truncate">
+                    ЦЕЛЬ: @{e.target?.username || 'Неизвестный'}
+                  </span>
+                </div>
+                <p className="text-gray-500 text-[10px] uppercase tracking-wider">
+                  СТРАНА: {e.target?.country} {'//'} РОЛЬ: {e.target?.publicRole}
+                </p>
+                <p className="text-gray-600 text-[10px] uppercase tracking-wider mt-1">
+                  ОТ: {e.reporter?.username || 'Неизвестный'} {'//'} {new Date(e.createdAt + 'Z').toLocaleDateString()}
+                </p>
+                <p className="text-gray-300 text-sm mt-3 bg-black border border-gray-800 p-3">
+                  &gt; {e.content}
+                </p>
+                <p className="text-orange-400 text-xs mt-2 font-semibold">
+                  СИЛА_УЛИКИ: {e.strength}%
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => eliminateTarget(e)}
+                    disabled={eliminating === e.id}
+                    className="px-4 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500 text-xs font-semibold rounded-none transition-colors disabled:opacity-50"
+                  >
+                    {eliminating === e.id ? 'ЛИКВИДАЦИЯ...' : '> ЛИКВИДИРОВАТЬ'}
+                  </button>
+                  <button
+                    onClick={() => dismissEvidence(e.id)}
+                    disabled={eliminating === e.id}
+                    className="px-4 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-gray-400 text-xs rounded-none transition-colors disabled:opacity-50"
+                  >
+                    ОТКЛОНИТЬ
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

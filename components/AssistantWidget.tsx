@@ -142,7 +142,7 @@ export function AssistantWidget() {
       {isOpen && (
         <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full sm:w-96 h-[100dvh] sm:h-[500px] bg-[#050807] sm:border border-[#39ff14]/50 shadow-[0_0_20px_rgba(57,255,20,0.2)] flex flex-col overflow-hidden font-mono rounded-none">
           
-          <div className="flex items-center justify-between px-4 py-3 bg-[#0a0f0d] border-b border-[#39ff14]/30 shrink-0">
+          <div className="flex items-center justify-between px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] sm:py-3 bg-[#0a0f0d] border-b border-[#39ff14]/30 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-[#39ff14] text-sm font-bold tracking-widest uppercase">
                 &gt; {assistantName}
