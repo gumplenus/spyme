@@ -355,7 +355,7 @@ export default function GamePage() {
   const btnDanger = "border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500";
 
   return (
-    <div className="min-h-screen bg-[#050807] text-gray-300 pb-10 font-mono">
+    <div className="h-[100dvh] bg-[#050807] text-gray-300 flex flex-col overflow-hidden font-mono">
       <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between">
         <Link href="/game" className="text-lg font-bold text-[#39ff14] tracking-widest">
           [ SPY_ME ]
@@ -376,7 +376,7 @@ export default function GamePage() {
         </div>
       </header>
 
-      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4 max-w-5xl mx-auto">
+      <div className="flex-1 overflow-y-auto pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] max-w-5xl mx-auto w-full">
         {passiveIncomeMessage && (
           <div className="mb-6 p-4 border border-[#39ff14] text-[#39ff14] text-center font-semibold shadow-[0_0_15px_rgba(57,255,20,0.3)] bg-[#39ff14]/5">
             {passiveIncomeMessage}
@@ -558,7 +558,7 @@ export default function GamePage() {
 
       {/* МОДАЛКА СОЗДАНИЯ ПОСТА */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100] pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
           <div className="border border-[#39ff14] w-full max-w-md flex flex-col max-h-[90dvh] bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.2)]">
             <div className="p-4 border-b border-[#39ff14]/30 shrink-0">
               <h3 className="text-sm text-[#39ff14] tracking-widest">&gt; СОЗДАТЬ_ПОСТ</h3>
