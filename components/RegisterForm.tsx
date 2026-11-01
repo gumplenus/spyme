@@ -197,7 +197,7 @@ export function RegisterForm() {
           const authUrl = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=yandex`;
           
           if (isNative) {
-            await Browser.open({ url: authUrl });
+            window.open(authUrl, '_system');
           } else {
             window.location.href = authUrl;
           }
@@ -232,19 +232,19 @@ export function RegisterForm() {
           const base64 = btoa(binary);
           const codeChallenge = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           
-          // ВАЖНО: используем localStorage вместо sessionStorage
           localStorage.setItem('vk_code_verifier', codeVerifier);
 
-          const clientId = '54837536';
+          const clientId = '54869710'; // <-- НОВЫЙ ID
           
-          // Проверка на нативный запуск и смена ссылки
           const isNative = Capacitor.isNativePlatform();
-          const redirectUri = isNative ? 'spyme://auth/callback' : 'https://spyme.com.ru/auth/callback';
+          
+          // <-- НОВЫЙ REDIRECT URI ДЛЯ НАТИВНОГО ПРИЛОЖЕНИЯ
+          const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
           
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
           
           if (isNative) {
-            await Browser.open({ url: authUrl });
+            window.open(authUrl, '_system'); // <-- СИСТЕМНЫЙ БРАУЗЕР
           } else {
             window.location.href = authUrl;
           }
