@@ -192,10 +192,11 @@ export function LoginForm() {
     localStorage.setItem('vk_code_verifier', codeVerifier);
 
     // 4. Формируем URL для авторизации
-    const clientId = '54869710'; // <-- НОВЫЙ ID
-    
     // Проверяем, запущено ли приложение нативно
     const isNative = Capacitor.isNativePlatform();
+    
+    // ВЫБИРАЕМ ID В ЗАВИСИМОСТИ ОТ ПЛАТФОРМЫ
+    const clientId = isNative ? '54869710' : '54837536';
     
     // Меняем ссылку возврата в зависимости от платформы
     const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';

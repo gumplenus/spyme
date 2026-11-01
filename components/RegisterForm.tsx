@@ -234,8 +234,11 @@ export function RegisterForm() {
           
           localStorage.setItem('vk_code_verifier', codeVerifier);
 
-          const clientId = '54869710';
           const isNative = Capacitor.isNativePlatform();
+          
+          // ВЫБИРАЕМ ID В ЗАВИСИМОСТИ ОТ ПЛАТФОРМЫ
+          const clientId = isNative ? '54869710' : '54837536';
+          
           const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
           
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
