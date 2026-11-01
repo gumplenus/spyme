@@ -141,9 +141,9 @@ function CallbackHandler() {
             return;
           }
 
-          const pendingUsername = localStorage.getItem('pendingUsername');
-          const pendingCountry = localStorage.getItem('pendingCountry');
-          const pendingRole = localStorage.getItem('pendingRole') || 'REPORTER';
+          const pendingUsername = localStorage.getItem('pendingUsername') || data.user.user_metadata?.pendingUsername;
+          const pendingCountry = localStorage.getItem('pendingCountry') || data.user.user_metadata?.pendingCountry;
+          const pendingRole = localStorage.getItem('pendingRole') || data.user.user_metadata?.pendingRole || 'REPORTER';
 
           if (pendingUsername && pendingCountry) {
             setStatus('Создаём профиль...');
