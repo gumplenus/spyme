@@ -206,14 +206,14 @@ export default function ChooseRolePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* ФИКСИРОВАННЫЙ ХЭДЕР */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center gap-3">
         <Link href="/choose-country" className="text-green-400 hover:underline text-xl shrink-0">
           ←
         </Link>
         <h1 className="text-lg sm:text-2xl font-bold text-green-400 truncate">Выберите роль</h1>
       </header>
 
-      <div className="pt-20 px-4 pb-4 flex flex-col items-center min-h-screen">
+      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4 flex flex-col items-center min-h-screen">
         <h1 className="text-4xl font-bold text-green-400 mb-2 mt-4 text-center">SpyMe</h1>
         <p className="text-gray-400 mb-6 text-center">Выберите свою роль в игре</p>
         

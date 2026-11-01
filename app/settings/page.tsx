@@ -167,7 +167,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050807] text-gray-300 p-4 font-mono">
+    <div className="min-h-screen bg-[#050807] text-gray-300 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-[calc(env(safe-area-inset-top)+16px)] font-mono">
       <div className="max-w-2xl mx-auto">
         <Link href="/game" className="text-[#39ff14] hover:text-white mb-6 inline-block transition-colors text-sm">
           ← НАЗАД_В_ИГРУ

@@ -132,7 +132,7 @@ export function AssistantWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-4 z-50 w-14 h-14 border border-[#39ff14] bg-[#050807] text-[#39ff14] text-xl shadow-[0_0_15px_rgba(57,255,20,0.3)] flex items-center justify-center font-mono hover:bg-[#39ff14]/10 transition-colors rounded-none"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+24px)] right-4 z-50 w-14 h-14 border border-[#39ff14] bg-[#050807] text-[#39ff14] text-xl shadow-[0_0_15px_rgba(57,255,20,0.3)] flex items-center justify-center font-mono hover:bg-[#39ff14]/10 transition-colors rounded-none"
           title={`${assistantName} — помощник`}
         >
           [?]

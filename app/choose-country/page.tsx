@@ -31,10 +31,10 @@ export default function ChooseCountryPage() {
   if (loading) return <div className="text-white p-4">Загрузка...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+20px)]">
       <Link
         href="/register"
-        className="absolute top-4 left-4 text-green-400 hover:underline text-sm"
+        className="absolute top-[calc(env(safe-area-inset-top)+16px)] left-4 text-green-400 hover:underline text-sm"
       >
         ← Назад к регистрации
       </Link>

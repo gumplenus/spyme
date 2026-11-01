@@ -227,7 +227,7 @@ export default function InvestigatePage() {
 
   return (
     <div className="min-h-screen bg-[#050807] text-gray-300 font-mono">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center justify-between gap-2">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
             ←
@@ -242,7 +242,7 @@ export default function InvestigatePage() {
         </button>
       </header>
 
-      <div className="pt-20 px-4 pb-4">
+      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4">
         {successMessage && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 pointer-events-none">
             <div className="border border-[#39ff14] p-6 max-w-sm w-full text-center bg-[#050807] shadow-[0_0_20px_rgba(57,255,20,0.3)]">

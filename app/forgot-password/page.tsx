@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         <div className="bg-gray-800 p-8 rounded-xl border border-green-500 max-w-md w-full text-center">
           <div className="text-6xl mb-4">📧</div>
           <h1 className="text-2xl font-bold text-green-400 mb-4">Проверьте почту</h1>
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <div className="bg-gray-800 p-8 rounded-xl border border-gray-700 max-w-md w-full">
         <h1 className="text-2xl font-bold text-green-400 mb-2 text-center">Сброс пароля</h1>
         <p className="text-gray-400 text-sm mb-6 text-center">

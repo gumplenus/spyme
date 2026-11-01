@@ -49,7 +49,7 @@ export default function BannedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+20px)] pb-[calc(env(safe-area-inset-bottom)+20px)]">
       <div className="bg-gray-800 p-8 rounded-xl border border-red-700 max-w-md w-full text-center">
         <div className="text-6xl mb-4">🚫</div>
         <h1 className="text-3xl font-bold text-red-500 mb-4">

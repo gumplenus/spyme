@@ -5,14 +5,14 @@ import Link from 'next/link';
 export default function RulesPage() {
   return (
     <div className="min-h-screen bg-[#050807] text-gray-300 font-mono pb-10">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center gap-3">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center gap-3">
         <Link href="/game" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
         <h1 className="text-sm tracking-widest text-[#39ff14] truncate">[ ПРАВИЛА_ИГРЫ ]</h1>
       </header>
 
-      <div className="pt-20 px-4 pb-4 max-w-3xl mx-auto space-y-4">
+      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4 max-w-3xl mx-auto space-y-4">
         
         {/* ОБЩЕЕ ОПИСАНИЕ */}
         <section className="border border-gray-800 bg-[#0a0f0d] p-4">

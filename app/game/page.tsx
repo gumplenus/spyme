@@ -356,7 +356,7 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen bg-[#050807] text-gray-300 pb-10 font-mono">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 py-3 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between">
         <Link href="/game" className="text-lg font-bold text-[#39ff14] tracking-widest">
           [ SPY_ME ]
         </Link>
@@ -376,7 +376,7 @@ export default function GamePage() {
         </div>
       </header>
 
-      <div className="pt-20 px-4 pb-4 max-w-5xl mx-auto">
+      <div className="pt-[calc(env(safe-area-inset-top)+80px)] px-4 pb-4 max-w-5xl mx-auto">
         {passiveIncomeMessage && (
           <div className="mb-6 p-4 border border-[#39ff14] text-[#39ff14] text-center font-semibold shadow-[0_0_15px_rgba(57,255,20,0.3)] bg-[#39ff14]/5">
             {passiveIncomeMessage}

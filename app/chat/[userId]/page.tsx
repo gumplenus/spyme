@@ -138,7 +138,7 @@ export default function ChatPage({ params }: { params: { userId: string } }) {
 
   return (
     <div className="fixed inset-0 h-[100dvh] w-full bg-[#050807] text-gray-300 flex flex-col overflow-hidden z-50 font-mono">
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 shrink-0">
+      <div className="flex items-center gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] bg-[#050807]/90 backdrop-blur border-b border-[#39ff14]/30 shrink-0">
         <Link href="/chat" className="text-[#39ff14] hover:text-white text-xl shrink-0 transition-colors">
           ←
         </Link>
