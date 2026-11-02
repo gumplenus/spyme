@@ -161,31 +161,6 @@ export default function ChooseRolePage() {
       return;
     }
 
-    const balance = roleId === 'BUSINESSMAN' ? 1000 : 500;
-
-    const { error: insertError } = await supabase
-      .from('User')
-      .upsert([{
-        id: signUpData.user.id,
-        email: signUpData.user.email,
-        username: username.trim(),
-        country: country,
-        publicRole: roleId,
-        balance: balance,
-        createdAt: new Date().toISOString(),
-        isBanned: false,
-      }], { onConflict: 'id' });
-
-    if (insertError) {
-      if (insertError.message.includes('User_username_key')) {
-        setErrorMessage('Этот позывной уже занят. Придумайте другой и нажмите на роль еще раз.');
-      } else {
-        setErrorMessage('Не удалось создать профиль: ' + insertError.message);
-      }
-      setSaving(false);
-      return;
-    }
-
     localStorage.removeItem('pendingUsername');
     localStorage.removeItem('pendingEmail');
     localStorage.removeItem('pendingPassword');
