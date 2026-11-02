@@ -229,6 +229,10 @@ export function RegisterForm() {
           const clientId = isNative ? '54869710' : '54837536';
           const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
           
+          // СОХРАНЯЕМ ПАРАМЕТРЫ ДЛЯ EDGE-ФУНКЦИИ
+          localStorage.setItem('vk_client_id', clientId);
+          localStorage.setItem('vk_redirect_uri', redirectUri);
+          
           const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
           
           if (isNative) {

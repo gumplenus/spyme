@@ -200,6 +200,10 @@ export function LoginForm() {
     // Меняем ссылку возврата в зависимости от платформы
     const redirectUri = isNative ? 'vk54869710://vk.ru/blank.html' : 'https://spyme.com.ru/auth/callback';
     
+    // СОХРАНЯЕМ ПАРАМЕТРЫ ДЛЯ EDGE-ФУНКЦИИ
+    localStorage.setItem('vk_client_id', clientId);
+    localStorage.setItem('vk_redirect_uri', redirectUri);
+
     const authUrl = `https://id.vk.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email&state=vk&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     
     if (isNative) {

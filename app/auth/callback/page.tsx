@@ -96,7 +96,9 @@ function CallbackHandler() {
             body: JSON.stringify({ 
               code, 
               code_verifier: localStorage.getItem('vk_code_verifier'),
-              device_id: device_id 
+              device_id: device_id,
+              client_id: localStorage.getItem('vk_client_id'),
+              redirect_uri: localStorage.getItem('vk_redirect_uri')
             }),
           });
 
