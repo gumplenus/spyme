@@ -39,6 +39,14 @@ export default function GamePage() {
   const [postSearch, setPostSearch] = useState('');
   const [postCountryFilter, setPostCountryFilter] = useState('');
 
+  // Состояния для модерации постов
+  const [moderationTarget, setModerationTarget] = useState<{ id: string; username: string } | null>(null);
+  const [isModMenuOpen, setIsModMenuOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isBlockOpen, setIsBlockOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -333,6 +341,55 @@ export default function GamePage() {
     return diffHours > 0 ? Math.ceil(diffHours) : 0;
   };
 
+    const handleReportPost = async () => {
+    if (!user || !moderationTarget || !reportReason.trim()) return;
+    setActionLoading(true);
+
+    const { error } = await supabase
+      .from('Report')
+      .insert({
+        reporterId: user.id,
+        targetId: moderationTarget.id,
+        reason: reportReason.trim(),
+      });
+
+    if (error) {
+      alert('Ошибка отправки жалобы: ' + error.message);
+    } else {
+      alert('Жалоба отправлена. Модераторы рассмотрят её.');
+      setIsReportOpen(false);
+      setIsModMenuOpen(false);
+      setReportReason('');
+    }
+    setActionLoading(false);
+  };
+
+  const handleBlockUser = async () => {
+    if (!user || !moderationTarget) return;
+    setActionLoading(true);
+
+    const { error } = await supabase
+      .from('Block')
+      .insert({
+        blockerId: user.id,
+        blockedId: moderationTarget.id,
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        alert('Вы уже заблокировали этого игрока');
+      } else {
+        alert('Ошибка блокировки: ' + error.message);
+      }
+    } else {
+      alert('Игрок заблокирован. Вы больше не будете видеть его посты.');
+      setIsBlockOpen(false);
+      setIsModMenuOpen(false);
+      setPosts((prev) => prev.filter((p) => p.authorId !== moderationTarget.id));
+    }
+    setActionLoading(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050807] flex items-center justify-center font-mono">
@@ -533,19 +590,32 @@ export default function GamePage() {
               <div className="space-y-3">
                 {posts.map((post) => (
                   <div key={post.id} className="border border-gray-800 p-3 bg-[#0a0f0d]">
-                    <div className="flex items-center gap-3 mb-3 border-b border-gray-800 pb-2">
-                      <div className="w-8 h-8 border border-[#39ff14]/30 rounded-full overflow-hidden flex items-center justify-center shrink-0">
-                        {post.author?.avatarUrl ? (
-                          <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-xs text-gray-500">USR</span>
-                        )}
+                    <div className="flex items-center justify-between mb-3 border-b border-gray-800 pb-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 border border-[#39ff14]/30 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+                          {post.author?.avatarUrl ? (
+                            <img src={post.author.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs text-gray-500">USR</span>
+                          )}
+                        </div>
+                        <p className="text-gray-500 text-xs truncate">
+                          <span className="text-[#39ff14] font-medium">@{post.author?.username || 'unknown'}</span>
+                          {post.author?.country ? ` [${post.author.country}]` : ''}
+                          {' // '}{new Date(post.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-gray-500 text-xs">
-                        <span className="text-[#39ff14] font-medium">@{post.author?.username || 'unknown'}</span>
-                        {post.author?.country ? ` [${post.author.country}]` : ''}
-                        {' // '}{new Date(post.createdAt).toLocaleDateString()}
-                      </p>
+                      {post.authorId !== user?.id && (
+                        <button 
+                          onClick={() => {
+                            setModerationTarget({ id: post.authorId, username: post.author?.username || 'unknown' });
+                            setIsModMenuOpen(true);
+                          }}
+                          className="text-gray-600 hover:text-red-500 text-[10px] border border-gray-800 hover:border-red-500 px-1.5 py-0.5 rounded-none transition-colors shrink-0 ml-2"
+                        >
+                          [!]
+                        </button>
+                      )}
                     </div>
                     <p className="text-gray-300 text-sm whitespace-pre-wrap">{post.content}</p>
                   </div>
@@ -713,6 +783,76 @@ export default function GamePage() {
           </div>
         </div>
       )}
+
+            {/* МОДАЛКА МЕНЮ МОДЕРАЦИИ ПОСТА */}
+      {isModMenuOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="border border-gray-600 w-full max-w-sm bg-[#050807] shadow-[0_0_20px_rgba(255,255,255,0.1)] flex flex-col p-4">
+            <h3 className="text-sm text-white tracking-widest mb-4 border-b border-gray-800 pb-2">ДЕЙСТВИЯ_С_АВТОРОМ</h3>
+            
+            <button 
+              onClick={() => { setIsModMenuOpen(false); setIsReportOpen(true); }}
+              className="w-full text-left p-3 mb-2 border border-gray-700 hover:border-yellow-500 text-gray-300 hover:text-yellow-500 text-xs transition-colors"
+            >
+              {'>'} ПОЖАЛОВАТЬСЯ_НА_ПОСТ
+            </button>
+            <button 
+              onClick={() => { setIsModMenuOpen(false); setIsBlockOpen(true); }}
+              className="w-full text-left p-3 mb-4 border border-gray-700 hover:border-red-500 text-gray-300 hover:text-red-500 text-xs transition-colors"
+            >
+              {'>'} ЗАБЛОКИРОВАТЬ_ИГРОКА
+            </button>
+
+            <button onClick={() => setIsModMenuOpen(false)} className="w-full py-2 bg-gray-800 text-gray-400 text-xs hover:bg-gray-700">
+              ОТМЕНА
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* МОДАЛКА ЖАЛОБЫ (ПОСТ) */}
+      {isReportOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="border border-yellow-500 w-full max-w-sm bg-[#050807] shadow-[0_0_20px_rgba(234,179,8,0.2)] flex flex-col p-4">
+            <h3 className="text-sm text-yellow-500 tracking-widest mb-2">&gt; ЖАЛОБА_НА_ПОСТ</h3>
+            <p className="text-gray-400 text-[10px] mb-4">Опишите причину жалобы (оскорбления, спам, нарушение правил).</p>
+            
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="w-full p-3 bg-transparent text-white border border-gray-700 focus:outline-none focus:border-yellow-500 h-24 text-sm rounded-none placeholder-gray-700 mb-4"
+              placeholder="Причина..."
+            />
+            
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setIsReportOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 text-xs rounded-none">ОТМЕНА</button>
+              <button onClick={handleReportPost} disabled={actionLoading || !reportReason.trim()} className="px-4 py-2 border border-yellow-500 text-yellow-500 text-xs rounded-none disabled:opacity-50">
+                {actionLoading ? 'ОТПРАВКА...' : 'ОТПРАВИТЬ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* МОДАЛКА БЛОКИРОВКИ (ПОСТ) */}
+      {isBlockOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="border border-red-500 w-full max-w-sm bg-[#050807] shadow-[0_0_20px_rgba(239,68,68,0.2)] flex flex-col p-4">
+            <h3 className="text-sm text-red-500 tracking-widest mb-2">&gt; БЛОКИРОВКА_ИГРОКА</h3>
+            <p className="text-gray-400 text-xs mb-6 leading-relaxed">
+              Вы уверены, что хотите заблокировать <span className="text-white font-semibold">@{moderationTarget?.username}</span>? Вы больше не будете видеть его посты.
+            </p>
+            
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setIsBlockOpen(false)} className="px-4 py-2 border border-gray-600 text-gray-400 text-xs rounded-none">ОТМЕНА</button>
+              <button onClick={handleBlockUser} disabled={actionLoading} className="px-4 py-2 border border-red-500 text-red-500 text-xs rounded-none disabled:opacity-50">
+                {actionLoading ? 'БЛОКИРОВКА...' : 'ЗАБЛОКИРОВАТЬ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
